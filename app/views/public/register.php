@@ -13,11 +13,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
 
     <!-- CSS Files -->
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/variables.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/globals.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/modules/cards.module.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/modules/forms.module.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/modules/login.module.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/variables.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/globals.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/cards.module.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/forms.module.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/login.module.css">
 </head>
 
 <body>
@@ -93,7 +93,7 @@
                     </div>
                 </div>
 
-                <form method="POST" action="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/app/controllers/AuthController.php" class="auth-form" style="margin-top: 1.5rem;">
+                <form method="POST" action="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/controllers/AuthController.php" class="auth-form" style="margin-top: 1.5rem;">
                     <input type="hidden" name="action" value="register">
                     <input type="hidden" name="role" id="selected-role" value="">
 
@@ -169,9 +169,9 @@
                         <input type="checkbox" name="terms" required>
                         <span>
                             I agree to the
-                            <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/app/views/public/terms.php">Terms of Service</a>
+                            <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/public/terms.php">Terms of Service</a>
                             and
-                            <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/app/views/public/privacy.php">Privacy Policy</a>
+                            <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/public/privacy.php">Privacy Policy</a>
                         </span>
                     </label>
 
@@ -184,7 +184,7 @@
                 <!-- Sign In Link -->
                 <p class="auth-footer" style="margin-top: 1.5rem; font-size: 0.875rem;">
                     Already have an account?
-                    <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/app/views/public/login.php">
+                    <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/public/login.php">
                         Sign in
                     </a>
                 </p>

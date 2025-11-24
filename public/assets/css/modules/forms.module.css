@@ -134,6 +134,37 @@
     transform: translateY(0);
 }
 
+.btn-secondary {
+    background: var(--soft-blue);
+    color: #000;
+    box-shadow: 0 2px 8px rgba(96, 165, 250, 0.3);
+}
+
+.btn-secondary:hover {
+    background: var(--deep-blue);
+    color: white;
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn-secondary:active {
+    transform: translateY(0);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: #000;
+    border: 1px solid transparent;
+}
+
+.btn-ghost:hover {
+    background: rgba(96, 165, 250, 0.3);
+}
+
+.btn-ghost:active {
+    transform: translateY(0);
+}
+
 .btn-glass {
     background: var(--glass-bg);
     backdrop-filter: blur(10px);

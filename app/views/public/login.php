@@ -13,11 +13,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
 
     <!-- CSS Files -->
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/variables.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/globals.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/modules/cards.module.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/modules/forms.module.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/modules/login.module.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/variables.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/globals.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/cards.module.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/forms.module.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/login.module.css">
 </head>
 
 <body>
@@ -31,7 +31,7 @@
 
             <!-- Login Card -->
             <div class="auth-card">
-                <form method="POST" action="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/app/controllers/AuthController.php" class="auth-form">
+                <form method="POST" action="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/controllers/AuthController.php" class="auth-form">
                     <input type="hidden" name="action" value="login">
 
                     <!-- Email Input -->
@@ -75,7 +75,7 @@
                             <input type="checkbox" name="remember" id="remember">
                             <span>Remember me</span>
                         </label>
-                        <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/app/views/public/forgot-password.php" class="auth-link">
+                        <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/public/forgot-password.php" class="auth-link">
                             Forgot password?
                         </a>
                     </div>
@@ -129,7 +129,7 @@
             <!-- Sign Up Link -->
             <p class="auth-footer">
                 Don't have an account?
-                <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/app/views/public/register.php">
+                <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/public/register.php">
                     Sign up for free
                 </a>
             </p>
