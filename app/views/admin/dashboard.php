@@ -102,102 +102,96 @@
                 </div>
             </div>
 
-            <!-- Main Content Grid -->
-            <div class="content-grid">
-                <!-- Left Column -->
-                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                    <!-- Pending Actions -->
-                    <div class="glass-card" style="padding: 1.25rem;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-                            <h2 style="font-size: 1.25rem; font-weight: 700; color: #000;">Pending Actions</h2>
-                            <span style="padding: 0.25rem 0.75rem; background-color: #fee2e2; color: #b91c1c; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">3 items</span>
-                        </div>
-                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                            <?php
-                            $pendingActions = [
-                                ['id' => 1, 'type' => 'Listing Approval', 'description' => 'Modern Studio Downtown - David Martinez', 'priority' => 'high'],
-                                ['id' => 2, 'type' => 'User Verification', 'description' => 'Sarah Johnson - Landlord Account', 'priority' => 'medium'],
-                                ['id' => 3, 'type' => 'Complaint Review', 'description' => 'Report #1234 - Inappropriate Content', 'priority' => 'high'],
-                            ];
+            <!-- 3 Column Grid: Recent Activity | Pending Actions | Notification Status -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 2rem;">
+                <!-- Column 1: Recent Activity -->
+                <div class="glass-card" style="padding: 1.25rem;">
+                    <h3 style="font-size: 1.125rem; font-weight: 700; color: #000; margin-bottom: 1rem;">Recent Activity</h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <?php
+                        $recentActivities = [
+                            ['user' => 'John Doe', 'action' => 'created a new listing', 'time' => '5 minutes ago', 'icon' => 'home'],
+                            ['user' => 'Jane Smith', 'action' => 'verified their account', 'time' => '15 minutes ago', 'icon' => 'user-check'],
+                            ['user' => 'Mike Johnson', 'action' => 'sent an inquiry', 'time' => '1 hour ago', 'icon' => 'message-square'],
+                            ['user' => 'Sarah Williams', 'action' => 'booked an appointment', 'time' => '2 hours ago', 'icon' => 'calendar'],
+                            ['user' => 'Tom Brown', 'action' => 'updated their profile', 'time' => '3 hours ago', 'icon' => 'user'],
+                        ];
 
-                            foreach ($pendingActions as $action): 
-                                $priorityClass = $action['priority'] === 'high' ? 'priority-high' : 'priority-medium';
-                            ?>
-                            <div class="action-item">
-                                <div style="flex: 1; min-width: 0;">
-                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                                        <p style="font-size: 0.875rem; font-weight: 600; color: #000;"><?php echo $action['type']; ?></p>
-                                        <span class="priority-badge <?php echo $priorityClass; ?>"><?php echo ucfirst($action['priority']); ?></span>
-                                    </div>
-                                    <p style="font-size: 0.75rem; color: rgba(0,0,0,0.6);"><?php echo $action['description']; ?></p>
-                                </div>
-                                <button class="btn btn-primary btn-sm" style="margin-left: 0.75rem;">Review</button>
+                        foreach ($recentActivities as $activity): 
+                        ?>
+                        <div class="glass-subtle" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-radius: 0.75rem;">
+                            <div style="width: 2rem; height: 2rem; background-color: rgba(59, 130, 246, 0.1); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <i data-lucide="<?php echo $activity['icon']; ?>" style="width: 1rem; height: 1rem; color: var(--blue);"></i>
                             </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-
-                    <!-- Recent Activity -->
-                    <div class="glass-card" style="padding: 1.25rem;">
-                        <h3 style="font-size: 1.125rem; font-weight: 700; color: #000; margin-bottom: 1rem;">Recent Activity</h3>
-                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                            <?php
-                            $recentActivities = [
-                                ['user' => 'John Doe', 'action' => 'created a new listing', 'time' => '5 minutes ago', 'icon' => 'home'],
-                                ['user' => 'Jane Smith', 'action' => 'verified their account', 'time' => '15 minutes ago', 'icon' => 'user-check'],
-                                ['user' => 'Mike Johnson', 'action' => 'sent an inquiry', 'time' => '1 hour ago', 'icon' => 'message-square'],
-                                ['user' => 'Sarah Williams', 'action' => 'booked an appointment', 'time' => '2 hours ago', 'icon' => 'calendar'],
-                                ['user' => 'Tom Brown', 'action' => 'updated their profile', 'time' => '3 hours ago', 'icon' => 'user'],
-                            ];
-
-                            foreach ($recentActivities as $activity): 
-                            ?>
-                            <div class="glass-subtle" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-radius: 0.75rem;">
-                                <div style="width: 2rem; height: 2rem; background-color: rgba(59, 130, 246, 0.1); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                    <i data-lucide="<?php echo $activity['icon']; ?>" style="width: 1rem; height: 1rem; color: var(--blue);"></i>
-                                </div>
-                                <div style="flex: 1; min-width: 0;">
-                                    <p style="font-size: 0.875rem; color: #000; margin-bottom: 0.125rem;">
-                                        <span style="font-weight: 600;"><?php echo $activity['user']; ?></span> <?php echo $activity['action']; ?>
-                                    </p>
-                                    <p style="font-size: 0.75rem; color: rgba(0,0,0,0.5);"><?php echo $activity['time']; ?></p>
-                                </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <p style="font-size: 0.875rem; color: #000; margin-bottom: 0.125rem;">
+                                    <span style="font-weight: 600;"><?php echo $activity['user']; ?></span> <?php echo $activity['action']; ?>
+                                </p>
+                                <p style="font-size: 0.75rem; color: rgba(0,0,0,0.5);"><?php echo $activity['time']; ?></p>
                             </div>
-                            <?php endforeach; ?>
                         </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
 
-                <!-- Right Column -->
-                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                    <!-- Notification Status (Email Only) -->
-                    <div class="glass-card" style="padding: 1.25rem;">
-                        <h3 style="font-size: 1.125rem; font-weight: 700; color: #000; margin-bottom: 1rem;">Notification Status</h3>
-                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                            <?php
-                            $notificationStats = [
-                                ['label' => 'Emails Sent Today', 'value' => '234', 'status' => 'success', 'icon' => 'check-circle'],
-                                ['label' => 'Failed Deliveries', 'value' => '3', 'status' => 'error', 'icon' => 'x-circle'],
-                                ['label' => 'Pending Queue', 'value' => '12', 'status' => 'warning', 'icon' => 'clock'],
-                            ];
+                <!-- Column 2: Pending Actions -->
+                <div class="glass-card" style="padding: 1.25rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                        <h2 style="font-size: 1.25rem; font-weight: 700; color: #000;">Pending Actions</h2>
+                        <span style="padding: 0.25rem 0.75rem; background-color: #fee2e2; color: #b91c1c; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">3 items</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <?php
+                        $pendingActions = [
+                            ['id' => 1, 'type' => 'Listing Approval', 'description' => 'Modern Studio Downtown - David Martinez', 'priority' => 'high'],
+                            ['id' => 2, 'type' => 'User Verification', 'description' => 'Sarah Johnson - Landlord Account', 'priority' => 'medium'],
+                            ['id' => 3, 'type' => 'Complaint Review', 'description' => 'Report #1234 - Inappropriate Content', 'priority' => 'high'],
+                        ];
 
-                            foreach ($notificationStats as $stat): 
-                                $iconColor = '';
-                                switch ($stat['status']) {
-                                    case 'success': $iconColor = 'color: #16a34a;'; break;
-                                    case 'error': $iconColor = 'color: #dc2626;'; break;
-                                    case 'warning': $iconColor = 'color: #ca8a04;'; break;
-                                }
-                            ?>
-                            <div class="glass-subtle" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; border-radius: 0.75rem;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <i data-lucide="<?php echo $stat['icon']; ?>" style="width: 1rem; height: 1rem; <?php echo $iconColor; ?>"></i>
-                                    <p style="font-size: 0.875rem; color: rgba(0,0,0,0.7);"><?php echo $stat['label']; ?></p>
+                        foreach ($pendingActions as $action): 
+                            $priorityClass = $action['priority'] === 'high' ? 'priority-high' : 'priority-medium';
+                        ?>
+                        <div class="action-item">
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                    <p style="font-size: 0.875rem; font-weight: 600; color: #000;"><?php echo $action['type']; ?></p>
+                                    <span class="priority-badge <?php echo $priorityClass; ?>"><?php echo ucfirst($action['priority']); ?></span>
                                 </div>
-                                <p style="font-size: 1.125rem; font-weight: 700; color: #000;"><?php echo $stat['value']; ?></p>
+                                <p style="font-size: 0.75rem; color: rgba(0,0,0,0.6);"><?php echo $action['description']; ?></p>
                             </div>
-                            <?php endforeach; ?>
+                            <button class="btn btn-primary btn-sm" style="margin-left: 0.75rem;">Review</button>
                         </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- Column 3: Notification Status -->
+                <div class="glass-card" style="padding: 1.25rem;">
+                    <h3 style="font-size: 1.125rem; font-weight: 700; color: #000; margin-bottom: 1rem;">Notification Status</h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <?php
+                        $notificationStats = [
+                            ['label' => 'Emails Sent Today', 'value' => '234', 'status' => 'success', 'icon' => 'check-circle'],
+                            ['label' => 'Failed Deliveries', 'value' => '3', 'status' => 'error', 'icon' => 'x-circle'],
+                            ['label' => 'Pending Queue', 'value' => '12', 'status' => 'warning', 'icon' => 'clock'],
+                        ];
+
+                        foreach ($notificationStats as $stat): 
+                            $iconColor = '';
+                            switch ($stat['status']) {
+                                case 'success': $iconColor = 'color: #16a34a;'; break;
+                                case 'error': $iconColor = 'color: #dc2626;'; break;
+                                case 'warning': $iconColor = 'color: #ca8a04;'; break;
+                            }
+                        ?>
+                        <div class="glass-subtle" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; border-radius: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i data-lucide="<?php echo $stat['icon']; ?>" style="width: 1rem; height: 1rem; <?php echo $iconColor; ?>"></i>
+                                <p style="font-size: 0.875rem; color: rgba(0,0,0,0.7);"><?php echo $stat['label']; ?></p>
+                            </div>
+                            <p style="font-size: 1.125rem; font-weight: 700; color: #000;"><?php echo $stat['value']; ?></p>
+                        </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
             </div>
