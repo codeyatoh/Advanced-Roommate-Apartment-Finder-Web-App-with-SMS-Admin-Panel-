@@ -13,6 +13,91 @@
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/admin.module.css">
 </head>
 <body>
+    <?php
+    // Start session and load models
+    session_start();
+    require_once __DIR__ . '/../../models/User.php';
+    
+    $userModel = new User();
+    
+    // Get notification statistics from database
+    $today = date('Y-m-d');
+    $conn = $userModel->getConnection();
+    
+    // Count emails sent today
+    $sql = "SELECT COUNT(*) as count FROM notifications WHERE DATE(created_at) = :today AND type = 'email'";
+    $stmt = $conn->prepare($sql);
+    $stmt->bindValue(':today', $today);
+    $stmt->execute();
+    $result = $stmt->fetch();
+    $emailsSentToday = $result['count'] ?? 0;
+    
+    // Count SMS sent today (no SMS in current schema - set to 0)
+    $smsSentToday = 0;
+    
+    // Count failed deliveries
+    $sql = "SELECT COUNT(*) as count FROM notifications WHERE status = 'failed'";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch();
+    $failedDeliveries = $result['count'] ?? 0;
+    
+    // Count pending notifications
+    $sql = "SELECT COUNT(*) as count FROM notifications WHERE status = 'pending'";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetch();
+    $pendingQueue = $result['count'] ?? 0;
+    
+    // Get all notifications with user details
+    $sql = "SELECT n.*, 
+                u.first_name, u.last_name, u.email as user_email, u.phone
+            FROM notifications n
+            LEFT JOIN users u ON n.user_id = u.user_id
+            ORDER BY n.created_at DESC
+            LIMIT 20";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute();
+    $notificationsData = $stmt->fetchAll();
+    
+    // Helper function for time ago
+    function notif_time_ago($datetime) {
+        $time = strtotime($datetime);
+        $now = time();
+        $diff = $now - $time;
+        
+        if ($diff < 60) return 'just now';
+        if ($diff < 3600) {
+            $mins = floor($diff/60);
+            return $mins . ' ' . ($mins == 1 ? 'minute' : 'minutes') . ' ago';
+        }
+        if ($diff < 86400) {
+            $hours = floor($diff/3600);
+            return $hours . ' ' . ($hours == 1 ? 'hour' : 'hours') . ' ago';
+        }
+        $days = floor($diff/86400);
+        return $days . ' ' . ($days == 1 ? 'day' : 'days') . ' ago';
+    }
+    
+    // Format notification data
+    $notifications = [];
+    foreach ($notificationsData as $notifData) {
+        $recipientName = ($notifData['first_name'] ?? 'Unknown') . ' ' . ($notifData['last_name'] ?? 'User');
+        $recipient = $notifData['type'] === 'email' ? ($notifData['user_email'] ?? 'N/A') : ($notifData['phone'] ?? 'N/A');
+        
+        $notifications[] = [
+            'id' => $notifData['notification_id'],
+            'type' => $notifData['type'] ?? 'email',
+            'recipient' => $recipient,
+            'recipientName' => $recipientName,
+            'subject' => $notifData['message'] ?? 'No subject',
+            'status' => $notifData['status'],
+            'sentAt' => notif_time_ago($notifData['created_at']),
+            'deliveredAt' => ($notifData['status'] === 'sent' || $notifData['status'] === 'delivered') ? notif_time_ago($notifData['created_at']) : null,
+            'error' => $notifData['status'] === 'failed' ? 'Delivery failed' : null,
+        ];
+    }
+    ?>
     <div class="admin-page">
         <?php include __DIR__ . '/../includes/navbar.php'; ?>
 
@@ -31,7 +116,7 @@
                             <i data-lucide="mail" class="stat-icon"></i>
                         </div>
                     </div>
-                    <p class="stat-value">234</p>
+                    <p class="stat-value"><?php echo $emailsSentToday; ?></p>
                     <p class="stat-label">Emails Sent Today</p>
                 </div>
 
@@ -41,7 +126,7 @@
                             <i data-lucide="message-square" class="stat-icon"></i>
                         </div>
                     </div>
-                    <p class="stat-value">156</p>
+                    <p class="stat-value"><?php echo $smsSentToday; ?></p>
                     <p class="stat-label">SMS Sent Today</p>
                 </div>
 
@@ -51,7 +136,7 @@
                             <i data-lucide="x-circle" class="stat-icon"></i>
                         </div>
                     </div>
-                    <p class="stat-value">8</p>
+                    <p class="stat-value"><?php echo $failedDeliveries; ?></p>
                     <p class="stat-label">Failed Deliveries</p>
                 </div>
 
@@ -61,7 +146,7 @@
                             <i data-lucide="clock" class="stat-icon"></i>
                         </div>
                     </div>
-                    <p class="stat-value">12</p>
+                    <p class="stat-value"><?php echo $pendingQueue; ?></p>
                     <p class="stat-label">Pending Queue</p>
                 </div>
             </div>
@@ -117,58 +202,7 @@
                         </thead>
                         <tbody>
                             <?php
-                            $notifications = [
-                                [
-                                    'id' => 1,
-                                    'type' => 'email',
-                                    'recipient' => 'sarah.j@email.com',
-                                    'recipientName' => 'Sarah Johnson',
-                                    'subject' => 'Your listing has been approved',
-                                    'status' => 'delivered',
-                                    'sentAt' => '2 minutes ago',
-                                    'deliveredAt' => '2 minutes ago',
-                                ],
-                                [
-                                    'id' => 2,
-                                    'type' => 'sms',
-                                    'recipient' => '+1 (555) 123-4567',
-                                    'recipientName' => 'Mike Chen',
-                                    'subject' => 'Viewing appointment confirmed',
-                                    'status' => 'delivered',
-                                    'sentAt' => '15 minutes ago',
-                                    'deliveredAt' => '15 minutes ago',
-                                ],
-                                [
-                                    'id' => 3,
-                                    'type' => 'email',
-                                    'recipient' => 'david.m@email.com',
-                                    'recipientName' => 'David Martinez',
-                                    'subject' => 'New inquiry for your property',
-                                    'status' => 'failed',
-                                    'sentAt' => '1 hour ago',
-                                    'error' => 'Invalid email address',
-                                ],
-                                [
-                                    'id' => 4,
-                                    'type' => 'sms',
-                                    'recipient' => '+1 (555) 234-5678',
-                                    'recipientName' => 'Emily Rodriguez',
-                                    'subject' => 'Payment reminder',
-                                    'status' => 'pending',
-                                    'sentAt' => '5 minutes ago',
-                                ],
-                                [
-                                    'id' => 5,
-                                    'type' => 'email',
-                                    'recipient' => 'lisa.w@email.com',
-                                    'recipientName' => 'Lisa Wong',
-                                    'subject' => 'Welcome to RoomFinder',
-                                    'status' => 'delivered',
-                                    'sentAt' => '3 hours ago',
-                                    'deliveredAt' => '3 hours ago',
-                                ],
-                            ];
-
+                            // Notifications already loaded from database above
                             foreach ($notifications as $notification): 
                                 $statusClass = '';
                                 $statusIcon = '';
