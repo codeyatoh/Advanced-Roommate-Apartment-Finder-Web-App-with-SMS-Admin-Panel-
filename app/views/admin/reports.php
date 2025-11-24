@@ -68,25 +68,23 @@
 
             <!-- Search & Filters -->
             <div class="glass-card animate-slide-up" style="padding: 1rem; margin-bottom: 1.5rem;">
-                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                    <div style="display: flex; flex-direction: column; gap: 0.75rem; @media (min-width: 768px) { flex-direction: row; }">
-                        <div style="position: relative; flex: 1;">
-                            <i data-lucide="search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); width: 1.25rem; height: 1.25rem; color: rgba(0,0,0,0.4);"></i>
-                            <input type="text" class="form-input" placeholder="Search reports..." style="padding-left: 2.75rem;">
-                        </div>
-                        <select class="form-select">
-                            <option>All Types</option>
-                            <option>Listing Reports</option>
-                            <option>User Reports</option>
-                            <option>Message Reports</option>
-                        </select>
-                        <select class="form-select">
-                            <option>All Status</option>
-                            <option>Pending</option>
-                            <option>Investigating</option>
-                            <option>Resolved</option>
-                        </select>
+                <div class="filter-container">
+                    <div class="filter-search">
+                        <i data-lucide="search" class="search-icon-sm"></i>
+                        <input type="text" class="form-input-sm" placeholder="Search reports...">
                     </div>
+                    <select class="form-select-sm">
+                        <option>All Types</option>
+                        <option>Listing Reports</option>
+                        <option>User Reports</option>
+                        <option>Message Reports</option>
+                    </select>
+                    <select class="form-select-sm">
+                        <option>All Status</option>
+                        <option>Pending</option>
+                        <option>Investigating</option>
+                        <option>Resolved</option>
+                    </select>
                 </div>
             </div>
 

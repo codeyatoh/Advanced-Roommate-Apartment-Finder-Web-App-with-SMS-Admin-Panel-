@@ -68,24 +68,22 @@
 
             <!-- Search & Filters -->
             <div class="glass-card animate-slide-up" style="padding: 1rem; margin-bottom: 1.5rem;">
-                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                    <div style="display: flex; flex-direction: column; gap: 0.75rem; @media (min-width: 768px) { flex-direction: row; }">
-                        <div style="position: relative; flex: 1;">
-                            <i data-lucide="search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); width: 1.25rem; height: 1.25rem; color: rgba(0,0,0,0.4);"></i>
-                            <input type="text" class="form-input" placeholder="Search notifications..." style="padding-left: 2.75rem;">
-                        </div>
-                        <select class="form-select">
-                            <option>All Types</option>
-                            <option>Email</option>
-                            <option>SMS</option>
-                        </select>
-                        <select class="form-select">
-                            <option>All Status</option>
-                            <option>Delivered</option>
-                            <option>Failed</option>
-                            <option>Pending</option>
-                        </select>
+                <div class="filter-container">
+                    <div class="filter-search">
+                        <i data-lucide="search" class="search-icon-sm"></i>
+                        <input type="text" class="form-input-sm" placeholder="Search notifications...">
                     </div>
+                    <select class="form-select-sm">
+                        <option>All Types</option>
+                        <option>Email</option>
+                        <option>SMS</option>
+                    </select>
+                    <select class="form-select-sm">
+                        <option>All Status</option>
+                        <option>Delivered</option>
+                        <option>Failed</option>
+                        <option>Pending</option>
+                    </select>
                 </div>
             </div>
 

@@ -175,6 +175,7 @@
                 </style>
             </div>
         </div>
+        <?php include __DIR__ . '/../includes/report_widget.php'; ?>
     </div>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>lucide.createIcons();</script>
