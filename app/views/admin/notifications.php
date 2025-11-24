@@ -24,78 +24,91 @@
     $today = date('Y-m-d');
     $conn = $userModel->getConnection();
     
-    // Count emails sent today
-    $sql = "SELECT COUNT(*) as count FROM notifications WHERE DATE(created_at) = :today AND type = 'email'";
-    $stmt = $conn->prepare($sql);
-    $stmt->bindValue(':today', $today);
-    $stmt->execute();
-    $result = $stmt->fetch();
-    $emailsSentToday = $result['count'] ?? 0;
-    
-    // Count SMS sent today (no SMS in current schema - set to 0)
+    // Initialize default values
+    $emailsSentToday = 0;
     $smsSentToday = 0;
-    
-    // Count failed deliveries
-    $sql = "SELECT COUNT(*) as count FROM notifications WHERE status = 'failed'";
-    $stmt = $conn->prepare($sql);
-    $stmt->execute();
-    $result = $stmt->fetch();
-    $failedDeliveries = $result['count'] ?? 0;
-    
-    // Count pending notifications
-    $sql = "SELECT COUNT(*) as count FROM notifications WHERE status = 'pending'";
-    $stmt = $conn->prepare($sql);
-    $stmt->execute();
-    $result = $stmt->fetch();
-    $pendingQueue = $result['count'] ?? 0;
-    
-    // Get all notifications with user details
-    $sql = "SELECT n.*, 
-                u.first_name, u.last_name, u.email as user_email, u.phone
-            FROM notifications n
-            LEFT JOIN users u ON n.user_id = u.user_id
-            ORDER BY n.created_at DESC
-            LIMIT 20";
-    $stmt = $conn->prepare($sql);
-    $stmt->execute();
-    $notificationsData = $stmt->fetchAll();
-    
-    // Helper function for time ago
-    function notif_time_ago($datetime) {
-        $time = strtotime($datetime);
-        $now = time();
-        $diff = $now - $time;
-        
-        if ($diff < 60) return 'just now';
-        if ($diff < 3600) {
-            $mins = floor($diff/60);
-            return $mins . ' ' . ($mins == 1 ? 'minute' : 'minutes') . ' ago';
-        }
-        if ($diff < 86400) {
-            $hours = floor($diff/3600);
-            return $hours . ' ' . ($hours == 1 ? 'hour' : 'hours') . ' ago';
-        }
-        $days = floor($diff/86400);
-        return $days . ' ' . ($days == 1 ? 'day' : 'days') . ' ago';
-    }
-    
-    // Format notification data
+    $failedDeliveries = 0;
+    $pendingQueue = 0;
     $notifications = [];
-    foreach ($notificationsData as $notifData) {
-        $recipientName = ($notifData['first_name'] ?? 'Unknown') . ' ' . ($notifData['last_name'] ?? 'User');
-        $recipient = $notifData['type'] === 'email' ? ($notifData['user_email'] ?? 'N/A') : ($notifData['phone'] ?? 'N/A');
+    
+    try {
+        // Count emails sent today
+        $sql = "SELECT COUNT(*) as count FROM notifications WHERE DATE(created_at) = :today AND type = 'email'";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindValue(':today', $today);
+        $stmt->execute();
+        $result = $stmt->fetch();
+        $emailsSentToday = $result['count'] ?? 0;
         
-        $notifications[] = [
-            'id' => $notifData['notification_id'],
-            'type' => $notifData['type'] ?? 'email',
-            'recipient' => $recipient,
-            'recipientName' => $recipientName,
-            'subject' => $notifData['message'] ?? 'No subject',
-            'status' => $notifData['status'],
-            'sentAt' => notif_time_ago($notifData['created_at']),
-            'deliveredAt' => ($notifData['status'] === 'sent' || $notifData['status'] === 'delivered') ? notif_time_ago($notifData['created_at']) : null,
-            'error' => $notifData['status'] === 'failed' ? 'Delivery failed' : null,
-        ];
+        // Count SMS sent today (no SMS in current schema - set to 0)
+        $smsSentToday = 0;
+        
+        // Count failed deliveries
+        $sql = "SELECT COUNT(*) as count FROM notifications WHERE status = 'failed'";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->fetch();
+        $failedDeliveries = $result['count'] ?? 0;
+        
+        // Count pending notifications
+        $sql = "SELECT COUNT(*) as count FROM notifications WHERE status = 'pending'";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->fetch();
+        $pendingQueue = $result['count'] ?? 0;
+        
+        // Get all notifications with user details
+        $sql = "SELECT n.*, 
+                    u.first_name, u.last_name, u.email as user_email, u.phone
+                FROM notifications n
+                LEFT JOIN users u ON n.user_id = u.user_id
+                ORDER BY n.created_at DESC
+                LIMIT 20";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        $notificationsData = $stmt->fetchAll();
+        
+        // Helper function for time ago
+        function notif_time_ago($datetime) {
+            $time = strtotime($datetime);
+            $now = time();
+            $diff = $now - $time;
+            
+            if ($diff < 60) return 'just now';
+            if ($diff < 3600) {
+                $mins = floor($diff/60);
+                return $mins . ' ' . ($mins == 1 ? 'minute' : 'minutes') . ' ago';
+            }
+            if ($diff < 86400) {
+                $hours = floor($diff/3600);
+                return $hours . ' ' . ($hours == 1 ? 'hour' : 'hours') . ' ago';
+            }
+            $days = floor($diff/86400);
+            return $days . ' ' . ($days == 1 ? 'day' : 'days') . ' ago';
+        }
+        
+        // Format notification data
+        foreach ($notificationsData as $notifData) {
+            $recipientName = ($notifData['first_name'] ?? 'Unknown') . ' ' . ($notifData['last_name'] ?? 'User');
+            $recipient = $notifData['type'] === 'email' ? ($notifData['user_email'] ?? 'N/A') : ($notifData['phone'] ?? 'N/A');
+            
+            $notifications[] = [
+                'id' => $notifData['notification_id'],
+                'type' => $notifData['type'] ?? 'email',
+                'recipient' => $recipient,
+                'recipientName' => $recipientName,
+                'subject' => $notifData['message'] ?? 'No subject',
+                'status' => $notifData['status'],
+                'sentAt' => notif_time_ago($notifData['created_at']),
+                'deliveredAt' => ($notifData['status'] === 'sent' || $notifData['status'] === 'delivered') ? notif_time_ago($notifData['created_at']) : null,
+                'error' => $notifData['status'] === 'failed' ? 'Delivery failed' : null,
+            ];
+        }
+    } catch (PDOException $e) {
+        // Table doesn't exist yet - use default values (all zeros)
+        error_log("Notifications table not found: " . $e->getMessage());
+        // Stats already initialized to 0 above
+        // $notifications already initialized to empty array above
     }
     ?>
     <div class="admin-page">
