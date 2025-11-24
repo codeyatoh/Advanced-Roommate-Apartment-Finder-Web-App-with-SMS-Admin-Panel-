@@ -8,6 +8,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- Drop existing tables to ensure a clean installation
 DROP TABLE IF EXISTS roommate_matches;
 DROP TABLE IF EXISTS reports;
+DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS appointments;
 DROP TABLE IF EXISTS messages;
 DROP TABLE IF EXISTS landlord_profiles;
@@ -232,4 +233,23 @@ CREATE TABLE roommate_matches (
     INDEX idx_seeker (seeker_id),
     INDEX idx_target (target_seeker_id),
     INDEX idx_mutual (is_mutual)
+);
+
+-- =============================================================================
+-- 9. NOTIFICATIONS TABLE
+-- Stores user notifications for matches, appointments, messages
+-- =============================================================================
+CREATE TABLE notifications (
+    notification_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    type ENUM('match', 'appointment', 'message') NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    message TEXT NOT NULL,
+    related_id INT,  -- ID of related entity (match_id, appointment_id, etc.)
+    is_read TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    INDEX idx_user_unread (user_id, is_read),
+    INDEX idx_created (created_at)
 );
