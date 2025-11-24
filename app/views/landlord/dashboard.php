@@ -38,6 +38,9 @@
     // Fetch pending viewings (appointments with status 'pending')
     $pendingViewings = $appointmentModel->getPendingForLandlord($landlordId);
     
+    // Fetch recent inquiries (messages to landlord)
+    $recentInquiriesData = []; // Placeholder - will implement later
+    
     // Calculate performance metrics
     // Monthly Revenue: Sum of prices from all active listings
     $monthlyRevenue = 0;
@@ -68,8 +71,6 @@
                     <h1 class="page-title">Landlord Dashboard</h1>
                     <p class="page-subtitle">Manage your properties and tenant inquiries</p>
                 </div>
-            </div>
-                </a>
             </div>
 
             <!-- Stats Grid -->
@@ -159,7 +160,47 @@
                     </div>
                 </div>
 
+
                 <!-- Right Column - Sidebar -->
+                <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                    <!-- Pending Viewings -->
+                    <div class="glass-card" style="padding: 1.25rem;">
+                        <h3 style="font-size: 1rem; font-weight: 700; color: #000; margin-bottom: 1rem;">Pending Viewings</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.625rem;">
+                            <?php
+                            if (empty($pendingViewings)):
+                            ?>
+                                <p style="color: rgba(0,0,0,0.5); text-align: center; padding: 2rem; font-size: 0.875rem;">No pending viewings</p>
+                            <?php
+                            else:
+                                foreach ($pendingViewings as $viewing):
+                                    $tenant = $userModel->getById($viewing['seeker_id']);
+                                    $listing = $listingModel->getById($viewing['listing_id']);
+                                    $appointmentDate = new DateTime($viewing['appointment_date'] . ' ' . $viewing['appointment_time']);
+                                    $dateFormatted = $appointmentDate->format('M j, Y');
+                                    $timeFormatted = $appointmentDate->format('g:i A');
+                            ?>
+                            <div class="glass-subtle" style="padding: 0.75rem; border-radius: 0.75rem;">
+                                <div style="display: flex; align-items: flex-start; gap: 0.625rem; margin-bottom: 0.75rem;">
+                                    <div style="width: 2.25rem; height: 2.25rem; background-color: rgba(30, 58, 138, 0.2); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i data-lucide="calendar" style="width: 1rem; height: 1rem; color: var(--deep-blue);"></i>
+                                    </div>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <p style="font-weight: 600; font-size: 0.875rem; color: #000; margin-bottom: 0.25rem;"><?php echo htmlspecialchars($tenant['first_name'] . ' ' . $tenant['last_name']); ?></p>
+                                        <p style="font-size: 0.75rem; color: rgba(0,0,0,0.6); margin-bottom: 0.25rem;"><?php echo htmlspecialchars($listing['title']); ?></p>
+                                        <p style="font-size: 0.75rem; color: rgba(0,0,0,0.5);"><?php echo $dateFormatted; ?>, <?php echo $timeFormatted; ?></p>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <button class="btn btn-primary btn-sm" style="flex: 1; font-size: 0.75rem;">Approve</button>
+                                    <button class="btn btn-ghost btn-sm" style="flex: 1; font-size: 0.75rem;">Decline</button>
+                                </div>
+                            </div>
+                            <?php
+                                endforeach;
+                            endif;
+                            ?>
+                        </div>
                     </div>
                 </div>
             </div>

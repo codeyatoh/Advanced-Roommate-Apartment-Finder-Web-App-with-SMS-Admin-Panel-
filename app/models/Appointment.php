@@ -74,6 +74,26 @@ class Appointment extends BaseModel {
     }
 
     /**
+     * Get all pending appointments for a landlord with full details
+     * @param int $landlordId
+     * @return array
+     */
+    public function getPendingForLandlord($landlordId) {
+        $sql = "SELECT a.*, l.title as listing_title
+                FROM {$this->table} a
+                INNER JOIN listings l ON a.listing_id = l.listing_id
+                WHERE l.landlord_id = :landlord_id 
+                AND a.status = 'pending'
+                ORDER BY a.appointment_date ASC, a.appointment_time ASC
+                LIMIT 10";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':landlord_id', $landlordId, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    /**
      * Update appointment status
      * @param int $appointmentId
      * @param string $status
