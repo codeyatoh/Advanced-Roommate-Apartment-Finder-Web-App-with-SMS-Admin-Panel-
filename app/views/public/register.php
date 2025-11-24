@@ -13,11 +13,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
 
     <!-- CSS Files -->
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/public/assets/css/variables.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/public/assets/css/globals.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/public/assets/css/modules/cards.module.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/public/assets/css/modules/forms.module.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/public/assets/css/modules/register.module.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/variables.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/globals.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/modules/cards.module.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/modules/forms.module.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/modules/register.module.css">
 </head>
 
 <body>
@@ -209,7 +209,7 @@
 
                     <p class="register-footer">
                         Already have an account?
-                        <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/app/views/public/login.php" class="register-footer-link">Sign in</a>
+                        <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/app/views/public/login.php" class="register-footer-link">Sign in</a>
                     </p>
                 </div>
             </div>
@@ -223,8 +223,8 @@
     </script>
 
     <!-- JavaScript Files -->
-    <script src="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/public/assets/js/forms.js"></script>
-    <script src="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/public/assets/js/register.js"></script>
+    <script src="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/js/forms.js"></script>
+    <script src="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/js/register.js"></script>
 </body>
 
 </html>

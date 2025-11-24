@@ -14,15 +14,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
 
     <!-- CSS Files -->
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/public/assets/css/variables.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/public/assets/css/globals.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/public/assets/css/modules/cards.module.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/public/assets/css/modules/forms.module.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/public/assets/css/modules/carousel.module.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/public/assets/css/modules/room-card.module.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/public/assets/css/modules/navbar.module.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/public/assets/css/modules/footer.module.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/public/assets/css/modules/landing.module.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/variables.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/globals.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/modules/cards.module.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/modules/forms.module.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/modules/carousel.module.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/modules/room-card.module.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/modules/navbar.module.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/modules/footer.module.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/modules/landing.module.css">
 </head>
 
 <body>
@@ -30,12 +30,12 @@
         <!-- Navbar -->
         <nav class="navbar">
             <div class="navbar-container">
-                <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/app/views/public/landing.php" class="navbar-logo">RoomFinder</a>
+                <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/app/views/public/landing.php" class="navbar-logo">RoomFinder</a>
 
                 <div class="navbar-menu">
                     <ul class="navbar-links">
                         <li>
-                            <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/app/views/public/landing.php" class="navbar-link">
+                            <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/app/views/public/landing.php" class="navbar-link">
                                 <i data-lucide="home" class="navbar-icon"></i>
                                 Home
                             </a>
@@ -49,7 +49,7 @@
                     </ul>
 
                     <div class="navbar-actions">
-                        <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/app/views/public/login.php" class="btn btn-login">
+                        <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/app/views/public/login.php" class="btn btn-login">
                             <i data-lucide="log-in" class="btn-icon"></i>
                             Login
                         </a>
@@ -65,7 +65,7 @@
             <div class="navbar-mobile-menu">
                 <ul class="navbar-mobile-links">
                     <li>
-                        <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/app/views/public/landing.php" class="navbar-mobile-link">
+                        <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/app/views/public/landing.php" class="navbar-mobile-link">
                             <i data-lucide="home" class="navbar-icon-mobile"></i>
                             Home
                         </a>
@@ -77,7 +77,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/app/views/public/login.php" class="navbar-mobile-link">
+                        <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/app/views/public/login.php" class="navbar-mobile-link">
                             <i data-lucide="log-in" class="navbar-icon-mobile"></i>
                             Login
                         </a>
@@ -94,7 +94,7 @@
                         <div class="carousel-slides">
                             <!-- Slide 1: Find Your Perfect Room Today -->
                             <div class="carousel-slide active">
-                                <img src="https://images.unsplash.com/photo-1502672260066-6bc2c9f0e6c7?w=1600&h=900&fit=crop" alt="Modern apartment interior" />
+                                <img src="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/images/modern-apartment.jpg" alt="Modern apartment interior" />
                                 <div class="carousel-overlay carousel-overlay-gradient-dark">
                                     <div class="carousel-content">
                                         <h1 class="carousel-title">Find Your Perfect Room Today</h1>
@@ -120,7 +120,7 @@
                                     <div class="carousel-content">
                                         <h1 class="carousel-title">Meet Your Ideal Roommate</h1>
                                         <p class="carousel-description">Match with compatible people based on lifestyle and preferences</p>
-                                        <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/app/views/public/register.php" class="btn btn-login btn-lg">
+                                        <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/app/views/public/register.php" class="btn btn-login btn-lg">
                                             <i data-lucide="users" class="btn-icon"></i>
                                             Start Matching
                                         </a>
@@ -135,7 +135,7 @@
                                     <div class="carousel-content">
                                         <h1 class="carousel-title">List Your Property</h1>
                                         <p class="carousel-description">Reach thousands of verified room seekers instantly</p>
-                                        <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/app/views/public/register.php" class="btn btn-login btn-lg">
+                                        <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/app/views/public/register.php" class="btn btn-login btn-lg">
                                             <i data-lucide="home" class="btn-icon"></i>
                                             List Now
                                         </a>
@@ -310,7 +310,7 @@
     </script>
 
     <!-- JavaScript Files -->
-    <script src="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel/public/assets/js/carousel.js"></script>
+    <script src="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/js/carousel.js"></script>
 
     <!-- Mobile Menu Toggle -->
     <script>

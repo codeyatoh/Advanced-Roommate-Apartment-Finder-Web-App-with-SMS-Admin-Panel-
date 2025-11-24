@@ -1,8 +1,11 @@
 /* Footer Component Styles */
 
 .footer {
-    background: linear-gradient(135deg, var(--deep-blue) 0%, #1e40af 100%);
-    color: white;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    color: var(--deep-blue); /* Changed to dark text for glass background */
     padding: var(--spacing-4xl) 0 var(--spacing-xl);
     margin-top: var(--spacing-4xl);
 }
@@ -30,6 +33,7 @@
     font-size: var(--font-size-2xl);
     font-weight: var(--font-bold);
     margin-bottom: var(--spacing-sm);
+    font-family: 'Pacifico', cursive; /* Added Pacifico to footer logo too for consistency */
 }
 
 .footer-description {
@@ -51,14 +55,16 @@
 }
 
 .footer-link {
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--deep-blue);
+    opacity: 0.8;
     text-decoration: none;
     transition: all var(--transition-base) var(--transition-smooth);
     display: inline-block;
 }
 
 .footer-link:hover {
-    color: white;
+    color: var(--soft-blue);
+    opacity: 1;
     transform: translateX(4px);
 }
 
@@ -74,15 +80,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.05); /* Adjusted for light background */
     border-radius: var(--radius-full);
-    color: white;
+    color: var(--deep-blue);
     text-decoration: none;
     transition: all var(--transition-base) var(--transition-smooth);
 }
 
 .footer-social-link:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.1);
     transform: translateY(-4px);
 }
 
@@ -93,7 +99,7 @@
 
 .footer-bottom {
     padding-top: var(--spacing-xl);
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    border-top: 1px solid rgba(0, 0, 0, 0.1); /* Adjusted border color */
     text-align: center;
     opacity: 0.8;
 }

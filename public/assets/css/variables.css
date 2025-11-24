@@ -10,6 +10,12 @@
     --sage: #d1fae5;
     --neutral: #f3f4f6;
     --beige-bg: #f4f1ea;
+    --softBlue-20: rgba(96, 165, 250, 0.2);
+    --deepBlue-10: rgba(30, 58, 138, 0.1);
+    --deepBlue-80: rgba(30, 58, 138, 0.8);
+    --softBlue-80: rgba(96, 165, 250, 0.8);
+    --black-60: rgba(0, 0, 0, 0.6);
+
     /* New background color */
 
     /* Gradient Colors */
