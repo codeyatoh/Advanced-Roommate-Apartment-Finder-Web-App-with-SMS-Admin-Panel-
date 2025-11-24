@@ -6,200 +6,286 @@
     <title>Profile Settings - RoomFinder</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/variables.css">
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/globals.css">
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/navbar.module.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/cards.module.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/forms.module.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/profile-settings.module.css">
 </head>
 <body>
-    <div style="min-height: 100vh; background: linear-gradient(to bottom right, var(--softBlue-20), var(--neutral), var(--deepBlue-10));">
+    <div class="profile-page">
         <?php include __DIR__ . '/../includes/navbar.php'; ?>
-        <div style="padding-top: 6rem; padding-bottom: 5rem; padding-left: 1rem; padding-right: 1rem;">
-            <div style="max-width: 1024px; margin: 0 auto;">
-                <div style="margin-bottom: 2rem; animation: slideUp 0.3s ease-out;">
-                    <h1 style="font-size: 1.875rem; font-weight: 700; color: #000000; margin-bottom: 0.5rem;">Profile Settings</h1>
-                    <p style="color: rgba(0, 0, 0, 0.6);">Manage your account information and preferences</p>
-                </div>
 
-                <div class="profile-layout">
-                    <!-- Sidebar -->
-                    <aside class="profile-sidebar">
-                        <!-- Profile Picture -->
-                        <div class="card card-glass" style="padding: 1.5rem; text-align: center;">
-                            <div style="position: relative; display: inline-block; margin-bottom: 1rem;">
-                                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400" alt="Profile" style="width: 8rem; height: 8rem; border-radius: 9999px; object-fit: cover; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                                <button style="position: absolute; bottom: 0.5rem; right: 0.5rem; width: 2.5rem; height: 2.5rem; background: #10b981; border-radius: 9999px; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s;">
-                                    <i data-lucide="camera" style="width: 1.25rem; height: 1.25rem;"></i>
+        <div class="profile-container">
+            <!-- Header -->
+            <div class="profile-header">
+                <h1 class="page-title">Profile Settings</h1>
+                <p class="page-subtitle">Manage your account settings and preferences</p>
+            </div>
+
+            <!-- 2 Column Layout -->
+            <div class="profile-grid">
+                <!-- Left Column -->
+                <div class="column">
+                    <!-- 1. Profile Section -->
+                    <div class="profile-card">
+                        <div class="profile-header-content">
+                            <div class="profile-image-wrapper">
+                                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400" alt="Profile" class="profile-image">
+                                <button class="camera-button">
+                                    <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
                                 </button>
                             </div>
-                            <h2 style="font-size: 1.25rem; font-weight: 700; color: #000000; margin-bottom: 0.25rem;">John Doe</h2>
-                            <p style="color: rgba(0,0,0,0.6); font-size: 0.875rem; margin-bottom: 1.5rem;">Software Engineer</p>
-                            <button class="btn btn-primary btn-sm" style="width: 100%;">Upload New Photo</button>
-                            <p style="font-size: 0.75rem; color: rgba(0,0,0,0.5); margin-top: 0.75rem;">JPG, PNG or GIF. Max 2MB.</p>
-                        </div>
-
-                        <!-- Lifestyle Preferences -->
-                        <div class="card card-glass" style="padding: 1.5rem;">
-                            <h2 style="font-size: 1.125rem; font-weight: 700; color: #000000; margin-bottom: 1rem;">Lifestyle</h2>
-                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                                <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--glass-bg-subtle); border-radius: 0.5rem; cursor: pointer; transition: background 0.2s;">
-                                    <input type="checkbox" checked style="width: 1.125rem; height: 1.125rem; border-radius: 0.25rem; border: 1px solid rgba(0,0,0,0.3); accent-color: #10b981; cursor: pointer;">
-                                    <span style="font-size: 0.875rem; color: #000; font-weight: 500;">Non-smoker</span>
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--glass-bg-subtle); border-radius: 0.5rem; cursor: pointer; transition: background 0.2s;">
-                                    <input type="checkbox" style="width: 1.125rem; height: 1.125rem; border-radius: 0.25rem; border: 1px solid rgba(0,0,0,0.3); accent-color: #10b981; cursor: pointer;">
-                                    <span style="font-size: 0.875rem; color: #000; font-weight: 500;">Pet-friendly</span>
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--glass-bg-subtle); border-radius: 0.5rem; cursor: pointer; transition: background 0.2s;">
-                                    <input type="checkbox" checked style="width: 1.125rem; height: 1.125rem; border-radius: 0.25rem; border: 1px solid rgba(0,0,0,0.3); accent-color: #10b981; cursor: pointer;">
-                                    <span style="font-size: 0.875rem; color: #000; font-weight: 500;">Quiet environment</span>
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--glass-bg-subtle); border-radius: 0.5rem; cursor: pointer; transition: background 0.2s;">
-                                    <input type="checkbox" style="width: 1.125rem; height: 1.125rem; border-radius: 0.25rem; border: 1px solid rgba(0,0,0,0.3); accent-color: #10b981; cursor: pointer;">
-                                    <span style="font-size: 0.875rem; color: #000; font-weight: 500;">Social/outgoing</span>
-                                </label>
+                            <div style="flex: 1;">
+                                <h2 class="profile-name">John Doe</h2>
+                                <p class="profile-occupation">Software Engineer</p>
                             </div>
                         </div>
-                    </aside>
+                    </div>
 
-                    <!-- Main Content -->
-                    <main class="profile-content">
-                        <!-- Personal Information -->
-                        <div class="card card-glass" style="padding: 1.5rem;">
-                            <h2 style="font-size: 1.25rem; font-weight: 700; color: #000000; margin-bottom: 1.5rem;">Personal Information</h2>
-                            <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
-                                <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
-                                    <div class="form-group">
-                                        <label class="form-label">Full Name</label>
-                                        <div class="form-input-wrapper">
-                                            <i data-lucide="user" class="form-input-icon"></i>
-                                            <input type="text" class="form-input" value="John Doe">
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label">Email Address</label>
-                                        <div class="form-input-wrapper">
-                                            <i data-lucide="mail" class="form-input-icon"></i>
-                                            <input type="email" class="form-input" value="john.doe@email.com">
-                                        </div>
-                                    </div>
+                    <!-- 2. About Me Section -->
+                    <div class="profile-card">
+                        <h3 class="card-title">About Me</h3>
+                        <textarea class="form-textarea" rows="3" placeholder="Tell potential roommates about yourself...">Looking for a quiet, clean space near downtown. Non-smoker, no pets.</textarea>
+                    </div>
+
+                    <!-- 3. Personal Information -->
+                    <div class="profile-card">
+                        <h3 class="card-title">Personal Information</h3>
+                        <div class="form-group-stack">
+                            <div>
+                                <label class="form-label">Full Name</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="user" class="input-icon"></i>
+                                    <input type="text" class="form-input" value="John Doe">
                                 </div>
-                                <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
-                                    <div class="form-group">
-                                        <label class="form-label">Phone Number</label>
-                                        <div class="form-input-wrapper">
-                                            <i data-lucide="phone" class="form-input-icon"></i>
-                                            <input type="tel" class="form-input" value="+1 (555) 123-4567">
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label">Location</label>
-                                        <div class="form-input-wrapper">
-                                            <i data-lucide="map-pin" class="form-input-icon"></i>
-                                            <input type="text" class="form-input" value="San Francisco, CA">
-                                        </div>
-                                    </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Email Address</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="mail" class="input-icon"></i>
+                                    <input type="email" class="form-input" value="john.doe@email.com">
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label">Occupation</label>
-                                    <div class="form-input-wrapper">
-                                        <i data-lucide="briefcase" class="form-input-icon"></i>
-                                        <input type="text" class="form-input" value="Software Engineer">
-                                    </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Phone Number</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="phone" class="input-icon"></i>
+                                    <input type="tel" class="form-input" value="+1 (555) 123-4567">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Location</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="map-pin" class="input-icon"></i>
+                                    <input type="text" class="form-input" value="San Francisco, CA">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Occupation</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="briefcase" class="input-icon"></i>
+                                    <input type="text" class="form-input" value="Software Engineer">
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- About Me -->
-                        <div class="card card-glass" style="padding: 1.5rem;">
-                            <h2 style="font-size: 1.25rem; font-weight: 700; color: #000000; margin-bottom: 1rem;">About Me</h2>
-                            <textarea style="width: 100%; padding: 1rem; border-radius: 0.75rem; background: var(--glass-bg); color: #000; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.2); outline: none; min-height: 150px; font-family: inherit; line-height: 1.6;" placeholder="Tell potential roommates about yourself...">Looking for a quiet, clean space near downtown. Non-smoker, no pets.</textarea>
-                        </div>
-
-                        <!-- Room Preferences -->
-                        <div class="card card-glass" style="padding: 1.5rem;">
-                            <h2 style="font-size: 1.25rem; font-weight: 700; color: #000000; margin-bottom: 1.5rem;">Room Preferences</h2>
-                            <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
-                                <div class="form-group">
-                                    <label class="form-label">Monthly Budget</label>
-                                    <div class="form-input-wrapper">
-                                        <i data-lucide="dollar-sign" class="form-input-icon"></i>
-                                        <input type="number" class="form-input" value="1200">
-                                    </div>
+                    <!-- 6. Room Details Section -->
+                    <div class="profile-card">
+                        <h3 class="card-title">Room Details</h3>
+                        <div class="form-group-stack">
+                            <div>
+                                <label class="form-label">Monthly Budget</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="dollar-sign" class="input-icon"></i>
+                                    <input type="number" class="form-input" value="1200">
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label">Move-in Date</label>
-                                    <div class="form-input-wrapper">
-                                        <i data-lucide="calendar" class="form-input-icon"></i>
-                                        <input type="date" class="form-input" value="2024-02-01">
-                                    </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Move-in Date</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="calendar" class="input-icon"></i>
+                                    <input type="date" class="form-input" value="2024-02-01">
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Save Button -->
-                        <div style="display: flex; justify-content: flex-end; padding-top: 1rem;">
-                            <button class="btn btn-primary btn-lg">
-                                <i data-lucide="save" class="btn-icon"></i>
-                                Save Changes
-                            </button>
-                        </div>
-                    </main>
+                    </div>
                 </div>
 
-                <style>
-                    .profile-layout {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 1.5rem;
-                        align-items: start;
-                    }
+                <!-- Right Column -->
+                <div class="column">
+                    <!-- 4. Lifestyle Section -->
+                    <div class="profile-card">
+                        <h3 class="card-title">Lifestyle</h3>
+                        <div class="form-group-stack">
+                            <div>
+                                <label class="form-label">Sleep Schedule</label>
+                                <select class="form-select">
+                                    <option value="">Select...</option>
+                                    <option value="early">Early Bird</option>
+                                    <option value="night">Night Owl</option>
+                                    <option value="flexible">Flexible</option>
+                                </select>
+                            </div>
 
-                    .profile-sidebar {
-                        width: 100%;
-                        display: flex;
-                        flex-direction: column;
-                        gap: 1.5rem;
-                    }
+                            <div>
+                                <label class="form-label">Social Level</label>
+                                <select class="form-select">
+                                    <option value="">Select...</option>
+                                    <option value="outgoing">Social/Outgoing</option>
+                                    <option value="balanced">Balanced</option>
+                                    <option value="quiet">Quiet/Private</option>
+                                </select>
+                            </div>
 
-                    .profile-content {
-                        width: 100%;
-                        display: flex;
-                        flex-direction: column;
-                        gap: 1.5rem;
-                    }
+                            <div>
+                                <label class="form-label">Guests</label>
+                                <select class="form-select">
+                                    <option value="">Select...</option>
+                                    <option value="rarely">Rarely</option>
+                                    <option value="occasionally">Occasionally</option>
+                                    <option value="frequently">Frequently</option>
+                                </select>
+                            </div>
 
-                    @media (min-width: 768px) {
-                        div[style*="grid-template-columns: 1fr"] {
-                            grid-template-columns: repeat(2, 1fr) !important;
-                        }
-                    }
+                            <div>
+                                <label class="form-label">Cleanliness</label>
+                                <select class="form-select">
+                                    <option value="">Select...</option>
+                                    <option value="very">Very Clean</option>
+                                    <option value="moderate">Moderate</option>
+                                    <option value="relaxed">Relaxed</option>
+                                </select>
+                            </div>
 
-                    @media (min-width: 1024px) {
-                        .profile-layout {
-                            flex-direction: row;
-                            gap: 2rem;
-                        }
+                            <div>
+                                <label class="form-label">Work Schedule</label>
+                                <select class="form-select">
+                                    <option value="">Select...</option>
+                                    <option value="office">Office (9-5)</option>
+                                    <option value="hybrid">Hybrid</option>
+                                    <option value="remote">Remote</option>
+                                    <option value="shift">Shift Work</option>
+                                </select>
+                            </div>
 
-                        .profile-sidebar {
-                            width: 20rem;
-                            flex-shrink: 0;
-                            position: sticky;
-                            top: 6rem;
-                        }
+                            <div>
+                                <label class="form-label">Noise Level</label>
+                                <select class="form-select">
+                                    <option value="">Select...</option>
+                                    <option value="quiet">Quiet</option>
+                                    <option value="moderate">Moderate</option>
+                                    <option value="lively">Lively</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
 
-                        .profile-content {
-                            flex: 1;
-                            min-width: 0;
-                        }
-                    }
-                </style>
+                    <!-- 5. Preferences Section -->
+                    <div class="profile-card">
+                        <div class="preferences-header">
+                            <h3 class="card-title" style="margin-bottom: 0;">My Preferences</h3>
+                            <span class="preferences-count" id="preference-counter">0/6 selected</span>
+                        </div>
+                        <p class="preferences-subtitle">Select up to 6 preferences that matter most to you</p>
+
+                        <div class="preferences-list">
+                            <?php
+                            $preferences = [
+                                ['key' => 'veryClean', 'label' => 'Very Clean', 'icon' => 'sparkles'],
+                                ['key' => 'quietEnvironment', 'label' => 'Quiet Environment', 'icon' => 'volume-2'],
+                                ['key' => 'nonSmoker', 'label' => 'Non-smoker', 'icon' => 'cigarette'],
+                                ['key' => 'petFriendly', 'label' => 'Pet-friendly', 'icon' => 'paw-print'],
+                                ['key' => 'socialOutgoing', 'label' => 'Social/Outgoing', 'icon' => 'users'],
+                                ['key' => 'earlyBird', 'label' => 'Early Bird', 'icon' => 'sun'],
+                                ['key' => 'nightOwl', 'label' => 'Night Owl', 'icon' => 'moon'],
+                                ['key' => 'enjoysCooking', 'label' => 'Enjoys Cooking', 'icon' => 'utensils'],
+                                ['key' => 'fitnessEnthusiast', 'label' => 'Fitness Enthusiast', 'icon' => 'target'],
+                                ['key' => 'studentFriendly', 'label' => 'Student-friendly', 'icon' => 'graduation-cap'],
+                                ['key' => 'workingProfessional', 'label' => 'Working Professional', 'icon' => 'briefcase'],
+                                ['key' => 'veganVegetarian', 'label' => 'Vegan/Vegetarian', 'icon' => 'leaf'],
+                                ['key' => 'organized', 'label' => 'Organized', 'icon' => 'target'],
+                                ['key' => 'relaxedEasygoing', 'label' => 'Relaxed/Easygoing', 'icon' => 'smile']
+                            ];
+                            
+                            foreach ($preferences as $pref): ?>
+                            <label class="preference-option" data-key="<?php echo $pref['key']; ?>">
+                                <input type="checkbox" class="preference-checkbox" style="display: none;"> <!-- Hidden checkbox for logic -->
+                                <div style="display: flex; align-items: center; gap: 0.375rem;">
+                                    <!-- Custom Checkbox Visual -->
+                                    <div class="custom-checkbox" style="width: 14px; height: 14px; border: 1px solid #d1d5db; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
+                                        <i data-lucide="check" style="width: 10px; height: 10px; color: white; opacity: 0;"></i>
+                                    </div>
+                                    <i data-lucide="<?php echo $pref['icon']; ?>" class="preference-icon"></i>
+                                    <span class="preference-label"><?php echo $pref['label']; ?></span>
+                                </div>
+                            </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer - Save Button -->
+            <div class="profile-footer">
+                <button class="btn-primary">
+                    <i data-lucide="save" style="width: 20px; height: 20px;"></i>
+                    Save Changes
+                </button>
             </div>
         </div>
     </div>
+
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script>lucide.createIcons();</script>
+    <script>
+        lucide.createIcons();
+
+        // Preference Logic
+        const maxPreferences = 6;
+        const options = document.querySelectorAll('.preference-option');
+        const counter = document.getElementById('preference-counter');
+
+        function updateCounter() {
+            const selected = document.querySelectorAll('.preference-option.selected').length;
+            counter.textContent = `${selected}/${maxPreferences} selected`;
+        }
+
+        options.forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.preventDefault(); // Prevent default label behavior to handle custom logic
+                
+                const isSelected = option.classList.contains('selected');
+                const currentSelectedCount = document.querySelectorAll('.preference-option.selected').length;
+
+                if (!isSelected && currentSelectedCount >= maxPreferences) {
+                    return; // Max limit reached
+                }
+
+                option.classList.toggle('selected');
+                
+                // Update visual state of custom checkbox
+                const checkboxVisual = option.querySelector('.custom-checkbox');
+                const checkIcon = checkboxVisual.querySelector('i');
+                
+                if (option.classList.contains('selected')) {
+                    checkboxVisual.style.backgroundColor = '#2563eb';
+                    checkboxVisual.style.borderColor = '#2563eb';
+                    checkIcon.style.opacity = '1';
+                } else {
+                    checkboxVisual.style.backgroundColor = 'transparent';
+                    checkboxVisual.style.borderColor = '#d1d5db';
+                    checkIcon.style.opacity = '0';
+                }
+
+                updateCounter();
+            });
+        });
+    </script>
 </body>
 </html>

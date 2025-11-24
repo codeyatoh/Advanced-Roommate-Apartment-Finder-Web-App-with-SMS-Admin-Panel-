@@ -19,62 +19,60 @@
 <body>
     <div style="min-height: 100vh; background: linear-gradient(to bottom right, var(--softBlue-20), var(--neutral), var(--deepBlue-10));">
         <?php include __DIR__ . '/../includes/navbar.php'; ?>
-        <div style="padding-top: 6rem; padding-bottom: 5rem; padding-left: 1rem; padding-right: 1rem;">
-            <div style="max-width: 1280px; margin: 0 auto;">
-                <div style="margin-bottom: 1.5rem; animation: slideUp 0.3s ease-out;">
-                    <h1 style="font-size: 1.875rem; font-weight: 700; color: #000000; margin-bottom: 0.5rem;">Find Your Perfect Roommate</h1>
-                    <p style="color: rgba(0, 0, 0, 0.6);">Review profiles and find your match</p>
+        <div style="padding-top: 5rem; padding-bottom: 2rem; padding-left: 1rem; padding-right: 1rem;">
+            <div style="max-width: 1400px; margin: 0 auto;">
+                <div style="margin-bottom: 1rem; animation: slideUp 0.3s ease-out;">
+                    <h1 style="font-size: 1.5rem; font-weight: 700; color: #000000; margin-bottom: 0.25rem;">Find Your Perfect Roommate</h1>
+                    <p style="color: rgba(0, 0, 0, 0.6); font-size: 0.875rem;">Review profiles and find your match</p>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
+                <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
                     <!-- Profile Card -->
                     <div style="grid-column: 1/-1;">
-                        <div class="card card-glass" style="overflow: hidden;">
-                            <div style="display: flex; flex-direction: column; gap: 1.5rem; padding: 1.5rem;">
-                                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                                    <!-- Photo -->
-                                    <div style="width: 100%; flex-shrink: 0;">
-                                        <div style="position: relative; border-radius: 1rem; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
-                                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800" alt="Sarah Johnson" style="width: 100%; height: 600px; object-fit: cover;">
+                        <div class="card card-glass" style="overflow: hidden; height: 100%;">
+                            <div class="profile-card-content" style="display: flex; flex-direction: column; gap: 1.5rem; padding: 1.5rem; height: 100%;">
+                                <!-- Photo -->
+                                <div class="profile-image-container" style="width: 100%; flex-shrink: 0;">
+                                    <div style="position: relative; border-radius: 1rem; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15); height: 100%;">
+                                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800" alt="Sarah Johnson" class="profile-image" style="width: 100%; height: 400px; object-fit: cover;">
+                                    </div>
+                                </div>
+                                <!-- Details -->
+                                <div style="flex: 1; display: flex; flex-direction: column; gap: 1rem; justify-content: center;">
+                                    <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+                                        <div>
+                                            <h2 style="font-size: 1.5rem; font-weight: 700; color: #000000; margin: 0 0 0.25rem 0;">Sarah Johnson, 25</h2>
+                                            <div style="display: flex; align-items: center; gap: 0.5rem; color: rgba(0, 0, 0, 0.7);">
+                                                <i data-lucide="briefcase" style="width: 1rem; height: 1rem;"></i>
+                                                <span style="font-size: 0.875rem;">Software Engineer</span>
+                                            </div>
+                                        </div>
+                                        <div style="padding: 0.5rem 1rem; background: rgba(16,185,129,0.2); border-radius: 9999px; display: flex; align-items: center; gap: 0.5rem;">
+                                            <i data-lucide="trending-up" style="width: 1.25rem; height: 1.25rem; color: #10b981;"></i>
+                                            <span style="font-weight: 700; color: #10b981; font-size: 1.125rem;">92%</span>
                                         </div>
                                     </div>
-                                    <!-- Details -->
-                                    <div style="flex: 1; display: flex; flex-direction: column; gap: 1.25rem;">
-                                        <div style="display: flex; align-items: flex-start; justify-content: space-between;">
-                                            <div>
-                                                <h2 style="font-size: 1.875rem; font-weight: 700; color: #000000; margin: 0 0 0.25rem 0;">Sarah Johnson, 25</h2>
-                                                <div style="display: flex; align-items: center; gap: 0.5rem; color: rgba(0, 0, 0, 0.7);">
-                                                    <i data-lucide="briefcase" style="width: 1rem; height: 1rem;"></i>
-                                                    <span style="font-size: 0.875rem;">Software Engineer</span>
-                                                </div>
-                                            </div>
-                                            <div style="padding: 0.5rem 1rem; background: rgba(16,185,129,0.2); border-radius: 9999px; display: flex; align-items: center; gap: 0.5rem;">
-                                                <i data-lucide="trending-up" style="width: 1.25rem; height: 1.25rem; color: #10b981;"></i>
-                                                <span style="font-weight: 700; color: #10b981; font-size: 1.125rem;">92%</span>
-                                            </div>
+                                    <div>
+                                        <h3 style="font-size: 0.75rem; font-weight: 700; color: rgba(0, 0, 0, 0.6); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.5rem 0;">About</h3>
+                                        <p style="color: rgba(0, 0, 0, 0.8); line-height: 1.5; margin: 0; font-size: 0.95rem;">Love hiking, cooking, and good coffee. Looking for a clean and respectful roommate who enjoys a balanced lifestyle.</p>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <h3 style="font-size: 0.75rem; font-weight: 700; color: rgba(0, 0, 0, 0.6); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.5rem 0;">Interests</h3>
+                                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                            <?php foreach (['Hiking', 'Cooking', 'Coffee', 'Yoga', 'Reading'] as $interest): ?>
+                                            <span style="padding: 0.375rem 0.75rem; background: var(--glass-bg-subtle); backdrop-filter: blur(8px); border-radius: 9999px; font-size: 0.8rem; color: #000000; font-weight: 500;"><?php echo $interest; ?></span>
+                                            <?php endforeach; ?>
                                         </div>
-                                        <div>
-                                            <h3 style="font-size: 0.875rem; font-weight: 700; color: rgba(0, 0, 0, 0.6); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.5rem 0;">About</h3>
-                                            <p style="color: rgba(0, 0, 0, 0.8); line-height: 1.6; margin: 0;">Love hiking, cooking, and good coffee. Looking for a clean and respectful roommate who enjoys a balanced lifestyle.</p>
-                                        </div>
-                                        <div style="flex: 1;">
-                                            <h3 style="font-size: 0.875rem; font-weight: 700; color: rgba(0, 0, 0, 0.6); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.75rem 0;">Interests</h3>
-                                            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                                                <?php foreach (['Hiking', 'Cooking', 'Coffee', 'Yoga', 'Reading'] as $interest): ?>
-                                                <span style="padding: 0.5rem 1rem; background: var(--glass-bg-subtle); backdrop-filter: blur(8px); border-radius: 9999px; font-size: 0.875rem; color: #000000; font-weight: 500;"><?php echo $interest; ?></span>
-                                                <?php endforeach; ?>
-                                            </div>
-                                        </div>
-                                        <div style="display: flex; gap: 0.75rem; padding-top: 1rem;">
-                                            <button class="btn btn-glass btn-lg" style="flex: 1; border: 2px solid #f87171;">
-                                                <i data-lucide="x" style="width: 1.25rem; height: 1.25rem; color: #ef4444;"></i>
-                                                Pass
-                                            </button>
-                                            <button class="btn btn-primary btn-lg" style="flex: 1; background: #10b981;">
-                                                <i data-lucide="heart" style="width: 1.25rem; height: 1.25rem;"></i>
-                                                Match
-                                            </button>
-                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 0.75rem; padding-top: 0.5rem;">
+                                        <button class="btn btn-glass btn-lg" style="flex: 1;">
+                                            <i data-lucide="x" class="btn-icon"></i>
+                                            Pass
+                                        </button>
+                                        <button class="btn btn-primary btn-lg" style="flex: 1;">
+                                            <i data-lucide="heart" class="btn-icon"></i>
+                                            Match
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -147,18 +145,22 @@
                                     ['name' => 'Lisa Wong', 'age' => 26, 'lastMessage' => 'That sounds great! See you then', 'time' => '1d ago', 'image' => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400']
                                 ];
                                 foreach ($matched as $person): ?>
-                                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; background: var(--glass-bg-subtle); border-radius: 0.5rem; cursor: pointer;">
-                                    <div style="position: relative;">
-                                        <img src="<?php echo $person['image']; ?>" alt="<?php echo $person['name']; ?>" style="width: 3rem; height: 3rem; border-radius: 9999px; object-fit: cover;">
-                                        <div style="position: absolute; bottom: -0.25rem; right: -0.25rem; width: 1rem; height: 1rem; background: #10b981; border-radius: 9999px; border: 2px solid white;"></div>
-                                    </div>
-                                    <div style="flex: 1; min-width: 0;">
-                                        <p style="font-size: 0.875rem; font-weight: 600; color: #000000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;"><?php echo $person['name']; ?>, <?php echo $person['age']; ?></p>
-                                        <p style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;"><?php echo $person['lastMessage']; ?></p>
-                                    </div>
+                                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; background: var(--glass-bg-subtle); border-radius: 0.5rem;">
+                                    <a href="match_profile.php" style="display: flex; align-items: center; gap: 0.75rem; flex: 1; min-width: 0; text-decoration: none; color: inherit;">
+                                        <div style="position: relative;">
+                                            <img src="<?php echo $person['image']; ?>" alt="<?php echo $person['name']; ?>" style="width: 3rem; height: 3rem; border-radius: 9999px; object-fit: cover;">
+                                            <div style="position: absolute; bottom: -0.25rem; right: -0.25rem; width: 1rem; height: 1rem; background: #10b981; border-radius: 9999px; border: 2px solid white;"></div>
+                                        </div>
+                                        <div style="flex: 1; min-width: 0;">
+                                            <p style="font-size: 0.875rem; font-weight: 600; color: #000000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;"><?php echo $person['name']; ?>, <?php echo $person['age']; ?></p>
+                                            <p style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;"><?php echo $person['lastMessage']; ?></p>
+                                        </div>
+                                    </a>
                                     <div style="display: flex; flex-direction: column; align-items: flex-end;">
-                                        <i data-lucide="message-square" style="width: 1rem; height: 1rem; color: #10b981; margin-bottom: 0.25rem;"></i>
-                                        <span style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.5);"><?php echo $person['time']; ?></span>
+                                        <a href="messages.php" style="text-decoration: none; display: flex; align-items: center; justify-content: center; padding: 0.25rem; border-radius: 0.25rem; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='rgba(16, 185, 129, 0.1)'" onmouseout="this.style.backgroundColor='transparent'">
+                                            <i data-lucide="message-square" style="width: 1rem; height: 1rem; color: #10b981;"></i>
+                                        </a>
+                                        <span style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.5); margin-top: 0.125rem;"><?php echo $person['time']; ?></span>
                                     </div>
                                 </div>
                                 <?php endforeach; ?>
@@ -171,13 +173,27 @@
                 <style>
                     @media (min-width: 1024px) {
                         div[style*="grid-template-columns: 1fr"] {
-                            grid-template-columns: 2fr 1fr !important;
+                            grid-template-columns: 2.5fr 1fr !important;
                         }
                         div[style*="grid-column: 1/-1"] {
                             grid-column: 1/2 !important;
                         }
                         div > div[style*="flex-direction: column"][style*="gap: 1rem"] {
                             grid-column: 2/3 !important;
+                        }
+                        
+                        /* Horizontal Card Layout */
+                        .profile-card-content {
+                            flex-direction: row !important;
+                            align-items: stretch;
+                        }
+                        .profile-image-container {
+                            width: 350px !important;
+                            height: auto !important;
+                        }
+                        .profile-image {
+                            height: 100% !important;
+                            min-height: 400px;
                         }
                     }
                 </style>

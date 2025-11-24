@@ -73,21 +73,27 @@
                                     <div class="chat-header-avatar">
                                         <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400" alt="David Martinez">
                                     </div>
-                                    <div>
-                                        <h3 class="chat-header-name">David Martinez</h3>
-                                        <p class="chat-header-status">Online</p>
+                                    <div style="flex: 1;">
+                                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                            <h3 class="chat-header-name" style="margin: 0;">David Martinez</h3>
+                                            <span style="padding: 0.125rem 0.5rem; background: rgba(16, 185, 129, 0.15); color: var(--green); border-radius: 9999px; font-size: 0.625rem; font-weight: 600; line-height: 1;">
+                                                Matched Roommate
+                                            </span>
+                                        </div>
+                                        <!-- For Landlord, show: Owner • Property Name -->
+                                        <!-- For Matched Roommate, show: Property Name -->
+                                        <p style="color: rgba(0,0,0,0.6); font-size: 0.875rem; margin: 0 0 0.25rem 0;">Modern Studio Downtown</p>
+                                        <div style="display: flex; align-items: center; gap: 1rem; font-size: 0.75rem; color: rgba(0,0,0,0.5);">
+                                            <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                                <i data-lucide="mail" style="width: 0.875rem; height: 0.875rem;"></i>
+                                                <span>david.m@email.com</span>
+                                            </div>
+                                            <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                                <i data-lucide="phone" style="width: 0.875rem; height: 0.875rem;"></i>
+                                                <span>+1 (555) 123-4567</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="chat-header-actions">
-                                    <button class="btn btn-glass btn-sm" style="width: 2rem; height: 2rem; padding: 0;">
-                                        <i data-lucide="phone" style="width: 1rem; height: 1rem;"></i>
-                                    </button>
-                                    <button class="btn btn-glass btn-sm" style="width: 2rem; height: 2rem; padding: 0;">
-                                        <i data-lucide="video" style="width: 1rem; height: 1rem;"></i>
-                                    </button>
-                                    <button class="btn btn-glass btn-sm" style="width: 2rem; height: 2rem; padding: 0;">
-                                        <i data-lucide="more-vertical" style="width: 1rem; height: 1rem;"></i>
-                                    </button>
                                 </div>
                             </div>
 
@@ -111,7 +117,18 @@
 
                             <div class="chat-input">
                                 <div class="chat-input-form">
-                                    <input type="text" class="form-input" placeholder="Type a message..." style="flex: 1; font-size: 0.875rem;">
+                                    <button type="button" title="Attach file" style="background: none; border: none; padding: 0.5rem; cursor: pointer; color: rgba(0,0,0,0.6); transition: color 0.2s;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='rgba(0,0,0,0.6)'">
+                                        <i data-lucide="paperclip" style="width: 1.25rem; height: 1.25rem;"></i>
+                                    </button>
+                                    <button type="button" title="Attach image" style="background: none; border: none; padding: 0.5rem; cursor: pointer; color: rgba(0,0,0,0.6); transition: color 0.2s;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='rgba(0,0,0,0.6)'">
+                                        <i data-lucide="image" style="width: 1.25rem; height: 1.25rem;"></i>
+                                    </button>
+                                    <div class="form-input-wrapper" style="flex: 1; position: relative;">
+                                        <button type="button" title="Emoji" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 0; cursor: pointer; color: rgba(0,0,0,0.6); transition: color 0.2s; z-index: 1;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='rgba(0,0,0,0.6)'">
+                                            <i data-lucide="smile" style="width: 1.25rem; height: 1.25rem;"></i>
+                                        </button>
+                                        <input type="text" class="form-input" placeholder="Type a message..." style="padding-left: 2.75rem; font-size: 0.875rem;">
+                                    </div>
                                     <button class="btn btn-primary btn-sm">
                                         <i data-lucide="send" class="btn-icon"></i>
                                         Send
