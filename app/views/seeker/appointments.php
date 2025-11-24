@@ -1,3 +1,34 @@
+<?php
+// Start session and load models
+session_start();
+require_once __DIR__ . '/../../models/Appointment.php';
+require_once __DIR__ . '/../../models/Listing.php';
+require_once __DIR__ . '/../../models/User.php';
+
+// Get current user
+$userId = $_SESSION['user_id'] ?? 1; // Fallback for development
+
+$appointmentModel = new Appointment();
+$listingModel = new Listing();
+$userModel = new User();
+
+// Fetch appointments for this seeker
+$appointments = $appointmentModel->getUpcoming($userId, 'seeker');
+
+// Group appointments by status
+$upcomingAppointments = [];
+$pastAppointments = [];
+$today = date('Y-m-d');
+
+foreach ($appointments as $apt) {
+    if ($apt['status'] === 'completed' || $apt['status'] === 'cancelled' || 
+        ($apt['appointment_date'] < $today)) {
+        $pastAppointments[] = $apt;
+    } else {
+        $upcomingAppointments[] = $apt;
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,135 +66,185 @@
                     </p>
                 </div>
 
-                <!-- Appointments List -->
-                <div class="appointments-list">
-                    <?php 
-                    $appointments = [
-                        [
-                            'id' => 1,
-                            'property' => 'Modern Studio Downtown',
-                            'landlord' => 'David Martinez',
-                            'date' => 'Tomorrow',
-                            'time' => '2:00 PM',
-                            'location' => '123 Market St, San Francisco',
-                            'status' => 'confirmed',
-                            'image' => 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400'
-                        ],
-                        [
-                            'id' => 2,
-                            'property' => 'Cozy Apartment',
-                            'landlord' => 'Lisa Wong',
-                            'date' => 'Feb 2, 2024',
-                            'time' => '10:00 AM',
-                            'location' => '456 Oak Ave, Oakland',
-                            'status' => 'pending',
-                            'image' => 'https://images.unsplash.com/photo-1502672260066-6bc2c9f0e6c7?w=400'
-                        ],
-                        [
-                            'id' => 3,
-                            'property' => 'Spacious Loft',
-                            'landlord' => 'John Smith',
-                            'date' => 'Jan 28, 2024',
-                            'time' => '3:00 PM',
-                            'location' => '789 Pine St, Berkeley',
-                            'status' => 'completed',
-                            'image' => 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400'
-                        ]
-                    ];
-                    
-                    foreach ($appointments as $index => $apt): 
-                    ?>
-                    <div class="card card-glass appointment-card" style="animation-delay: <?php echo $index * 0.1; ?>s;">
-                        <div class="appointment-card-content" style="display: flex; flex-direction: column; gap: 1.25rem; padding: 1.25rem;">
-                            <!-- Image -->
-                            <div class="appointment-image">
-                                <img src="<?php echo $apt['image']; ?>" alt="<?php echo $apt['property']; ?>">
-                            </div>
-
-                            <!-- Content -->
-                            <div class="appointment-details">
-                                <div class="appointment-header">
-                                    <div class="appointment-title">
-                                        <h3><?php echo $apt['property']; ?></h3>
-                                        <div class="appointment-landlord">
-                                            <i data-lucide="user"></i>
-                                            <span>with <?php echo $apt['landlord']; ?></span>
-                                        </div>
-                                    </div>
-                                    <span class="appointment-status <?php echo $apt['status']; ?>">
-                                        <?php if ($apt['status'] === 'confirmed'): ?>
-                                            <i data-lucide="check-circle"></i>
-                                        <?php elseif ($apt['status'] === 'pending'): ?>
-                                            <i data-lucide="alert-circle"></i>
-                                        <?php else: ?>
-                                            <i data-lucide="check-circle"></i>
-                                        <?php endif; ?>
-                                        <?php echo ucfirst($apt['status']); ?>
-                                    </span>
+                <!-- Upcoming Appointments -->
+                <?php if (!empty($upcomingAppointments)): ?>
+                <div style="margin-bottom: 3rem;">
+                    <h2 style="font-size: 1.25rem; font-weight: 700; color: #000000; margin-bottom: 1.5rem;">Upcoming</h2>
+                    <div class="appointments-list">
+                        <?php foreach ($upcomingAppointments as $index => $apt): 
+                            // Get landlord info
+                            $landlord = $userModel->getById($apt['landlord_id']);
+                            $landlordName = htmlspecialchars($landlord['first_name'] . ' ' . $landlord['last_name']);
+                            
+                            // Format date
+                            $date = new DateTime($apt['appointment_date']);
+                            $today = new DateTime();
+                            $tomorrow = new DateTime('tomorrow');
+                            
+                            if ($date->format('Y-m-d') === $today->format('Y-m-d')) {
+                                $dateDisplay = 'Today';
+                            } elseif ($date->format('Y-m-d') === $tomorrow->format('Y-m-d')) {
+                                $dateDisplay = 'Tomorrow';
+                            } else {
+                                $dateDisplay = $date->format('M j, Y');
+                            }
+                            
+                            // Format time
+                            $time = new DateTime($apt['appointment_time']);
+                            $timeDisplay = $time->format('g:i A');
+                            
+                            // Get property image
+                            $image = !empty($apt['primary_image']) 
+                                ? htmlspecialchars($apt['primary_image'])
+                                : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400';
+                        ?>
+                        <div class="card card-glass appointment-card" style="animation-delay: <?php echo $index * 0.1; ?>s;">
+                            <div class="appointment-card-content" style="display: flex; flex-direction: column; gap: 1.25rem; padding: 1.25rem;">
+                                <!-- Image -->
+                                <div class="appointment-image">
+                                    <img src="<?php echo $image; ?>" alt="<?php echo htmlspecialchars($apt['title']); ?>">
                                 </div>
 
-                                <div class="appointment-info-grid">
-                                    <div class="appointment-info-item">
-                                        <div class="appointment-info-icon">
+                                <!-- Content -->
+                                <div class="appointment-details">
+                                    <div class="appointment-header">
+                                        <div class="appointment-title">
+                                            <h3><?php echo htmlspecialchars($apt['title']); ?></h3>
+                                            <div class="appointment-landlord">
+                                                <i data-lucide="user"></i>
+                                                <span>with <?php echo $landlordName; ?></span>
+                                            </div>
+                                        </div>
+                                        <span class="appointment-status <?php echo $apt['status']; ?>">
+                                            <?php if ($apt['status'] === 'confirmed'): ?>
+                                                <i data-lucide="check-circle"></i>
+                                            <?php elseif ($apt['status'] === 'pending'): ?>
+                                                <i data-lucide="clock"></i>
+                                            <?php elseif ($apt['status'] === 'declined'): ?>
+                                                <i data-lucide="x-circle"></i>
+                                            <?php endif; ?>
+                                            <span><?php echo ucfirst($apt['status']); ?></span>
+                                        </span>
+                                    </div>
+
+                                    <div class="appointment-info">
+                                        <div class="appointment-info-item">
                                             <i data-lucide="calendar"></i>
+                                            <span><?php echo $dateDisplay; ?></span>
                                         </div>
-                                        <div class="appointment-info-text">
-                                            <p>Date</p>
-                                            <p><?php echo $apt['date']; ?></p>
-                                        </div>
-                                    </div>
-                                    <div class="appointment-info-item">
-                                        <div class="appointment-info-icon">
+                                        <div class="appointment-info-item">
                                             <i data-lucide="clock"></i>
+                                            <span><?php echo $timeDisplay; ?></span>
                                         </div>
-                                        <div class="appointment-info-text">
-                                            <p>Time</p>
-                                            <p><?php echo $apt['time']; ?></p>
-                                        </div>
-                                    </div>
-                                    <div class="appointment-info-item">
-                                        <div class="appointment-info-icon">
+                                        <div class="appointment-info-item">
                                             <i data-lucide="map-pin"></i>
-                                        </div>
-                                        <div class="appointment-info-text">
-                                            <p>Location</p>
-                                            <p><?php echo $apt['location']; ?></p>
+                                            <span><?php echo htmlspecialchars($apt['location']); ?></span>
                                         </div>
                                     </div>
-                                </div>
 
-                                <?php if ($apt['status'] === 'confirmed'): ?>
-                                <div class="appointment-actions">
-                                    <button class="btn btn-glass btn-sm">Reschedule</button>
-                                    <button class="btn btn-ghost btn-sm">Cancel</button>
+                                    <?php if ($apt['status'] === 'pending'): ?>
+                                    <div class="appointment-actions">
+                                        <button class="btn btn-ghost btn-sm" onclick="cancelAppointment(<?php echo $apt['appointment_id']; ?>)">
+                                            <i data-lucide="x"></i>
+                                            Cancel
+                                        </button>
+                                        <button class="btn btn-glass btn-sm">
+                                            <i data-lucide="calendar"></i>
+                                            Reschedule
+                                        </button>
+                                    </div>
+                                    <?php elseif ($apt['status'] === 'confirmed'): ?>
+                                    <div class="appointment-actions">
+                                        <button class="btn btn-ghost btn-sm" onclick="cancelAppointment(<?php echo $apt['appointment_id']; ?>)">
+                                            <i data-lucide="x"></i>
+                                            Cancel
+                                        </button>
+                                    </div>
+                                    <?php endif; ?>
                                 </div>
-                                <?php elseif ($apt['status'] === 'pending'): ?>
-                                <div class="appointment-actions">
-                                    <button class="btn btn-primary btn-sm">Confirm</button>
-                                    <button class="btn btn-ghost btn-sm">Decline</button>
-                                </div>
-                                <?php endif; ?>
                             </div>
                         </div>
+                        <?php endforeach; ?>
                     </div>
-                    <?php endforeach; ?>
                 </div>
+                <?php endif; ?>
 
-                <style>
-                    @media (min-width: 768px) {
-                        .appointment-card-content {
-                            flex-direction: row !important;
-                        }
-                    }
-                </style>
+                <!-- Past Appointments -->
+                <?php if (!empty($pastAppointments)): ?>
+                <div>
+                    <h2 style="font-size: 1.25rem; font-weight: 700; color: #000000; margin-bottom: 1.5rem;">Past</h2>
+                    <div class="appointments-list">
+                        <?php foreach ($pastAppointments as $index => $apt): 
+                            $landlord = $userModel->getById($apt['landlord_id']);
+                            $landlordName = htmlspecialchars($landlord['first_name'] . ' ' . $landlord['last_name']);
+                            $date = new DateTime($apt['appointment_date']);
+                            $dateDisplay = $date->format('M j, Y');
+                            $time = new DateTime($apt['appointment_time']);
+                            $timeDisplay = $time->format('g:i A');
+                            $image = !empty($apt['primary_image']) 
+                                ? htmlspecialchars($apt['primary_image'])
+                                : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400';
+                        ?>
+                        <div class="card card-glass appointment-card" style="opacity: 0.7; animation-delay: <?php echo $index * 0.1; ?>s;">
+                            <div class="appointment-card-content" style="display: flex; flex-direction: column; gap: 1.25rem; padding: 1.25rem;">
+                                <div class="appointment-image">
+                                    <img src="<?php echo $image; ?>" alt="<?php echo htmlspecialchars($apt['title']); ?>">
+                                </div>
+                                <div class="appointment-details">
+                                    <div class="appointment-header">
+                                        <div class="appointment-title">
+                                            <h3><?php echo htmlspecialchars($apt['title']); ?></h3>
+                                            <div class="appointment-landlord">
+                                                <i data-lucide="user"></i>
+                                                <span>with <?php echo $landlordName; ?></span>
+                                            </div>
+                                        </div>
+                                        <span class="appointment-status <?php echo $apt['status']; ?>">
+                                            <i data-lucide="check-circle"></i>
+                                            <span><?php echo ucfirst($apt['status']); ?></span>
+                                        </span>
+                                    </div>
+                                    <div class="appointment-info">
+                                        <div class="appointment-info-item">
+                                            <i data-lucide="calendar"></i>
+                                            <span><?php echo $dateDisplay; ?></span>
+                                        </div>
+                                        <div class="appointment-info-item">
+                                            <i data-lucide="clock"></i>
+                                            <span><?php echo $timeDisplay; ?></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <!-- Empty State -->
+                <?php if (empty($upcomingAppointments) && empty($pastAppointments)): ?>
+                <div class="card card-glass" style="padding: 3rem; text-align: center;">
+                    <i data-lucide="calendar-x" style="width: 4rem; height: 4rem; color: rgba(0,0,0,0.3); margin: 0 auto 1rem;"></i>
+                    <h3 style="font-size: 1.25rem; font-weight: 700; color: #000000; margin-bottom: 0.5rem;">No Appointments Yet</h3>
+                    <p style="color: rgba(0,0,0,0.6); margin-bottom: 1.5rem;">Browse rooms and schedule viewings to get started!</p>
+                    <a href="browse_rooms.php" class="btn btn-primary">Browse Rooms</a>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
-
-    <!-- Lucide Icons -->
+    
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script>lucide.createIcons();</script>
+    
     <script>
-        lucide.createIcons();
+        function cancelAppointment(appointmentId) {
+            if (confirm('Are you sure you want to cancel this appointment?')) {
+                // TODO: Implement cancel via AJAX
+                alert('Cancel functionality coming soon!');
+            }
+        }
     </script>
 </body>
 </html>

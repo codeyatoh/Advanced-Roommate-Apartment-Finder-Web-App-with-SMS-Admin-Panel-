@@ -13,6 +13,26 @@
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/admin.module.css">
 </head>
 <body>
+    <?php
+    // Start session and check authentication
+    session_start();
+    
+    // Load models
+    require_once __DIR__ . '/../../models/User.php';
+    require_once __DIR__ . '/../../models/Listing.php';
+    require_once __DIR__ . '/../../models/Report.php';
+    require_once __DIR__ . '/../../models/Message.php';
+    
+    $userModel = new User();
+    $listingModel = new Listing();
+    $reportModel = new Report();
+    $messageModel = new Message();
+    
+    // Fetch admin dashboard stats
+    $userStats = $userModel->getStats();
+    $listingStats = $listingModel->getStats();
+    $reportStats = $reportModel->getStats();
+    ?>
     <div class="admin-page">
         <?php include __DIR__ . '/../includes/navbar.php'; ?>
 
@@ -32,10 +52,10 @@
                         </div>
                         <div style="display: flex; align-items: center; gap: 0.25rem;">
                             <i data-lucide="trending-up" style="width: 1rem; height: 1rem; color: #16a34a;"></i>
-                            <span style="font-size: 0.875rem; font-weight: 600; color: #16a34a;">+12%</span>
+                            <span style="font-size: 0.875rem; font-weight: 600; color: #16a34a;">New</span>
                         </div>
                     </div>
-                    <p class="stat-value">1,234</p>
+                    <p class="stat-value"><?php echo number_format($userStats['total_users'] ?? 0); ?></p>
                     <p class="stat-label">Total Users</p>
                 </div>
 
@@ -45,11 +65,11 @@
                             <i data-lucide="home" class="stat-icon"></i>
                         </div>
                         <div style="display: flex; align-items: center; gap: 0.25rem;">
-                            <i data-lucide="trending-up" style="width: 1rem; height: 1rem; color: #16a34a;"></i>
-                            <span style="font-size: 0.875rem; font-weight: 600; color: #16a34a;">+8%</span>
+                            <i data-lucide="check-circle" style="width: 1rem; height: 1rem; color: #16a34a;"></i>
+                            <span style="font-size: 0.875rem; font-weight: 600; color: #16a34a;"><?php echo intval($listingStats['available_listings'] ?? 0); ?> active</span>
                         </div>
                     </div>
-                    <p class="stat-value">456</p>
+                    <p class="stat-value"><?php echo number_format($listingStats['total_listings'] ?? 0); ?></p>
                     <p class="stat-label">Total Listings</p>
                 </div>
 
@@ -59,62 +79,31 @@
                             <i data-lucide="alert-triangle" class="stat-icon"></i>
                         </div>
                         <div style="display: flex; align-items: center; gap: 0.25rem;">
-                            <i data-lucide="trending-down" style="width: 1rem; height: 1rem; color: #16a34a;"></i>
-                            <span style="font-size: 0.875rem; font-weight: 600; color: #16a34a;">-5%</span>
+                            <i data-lucide="alert-circle" style="width: 1rem; height: 1rem; color: #dc2626;"></i>
+                            <span style="font-size: 0.875rem; font-weight: 600; color: #dc2626;"><?php echo intval($reportStats['pending_reports'] ?? 0); ?> pending</span>
                         </div>
                     </div>
-                    <p class="stat-value">23</p>
-                    <p class="stat-label">Active Complaints</p>
+                    <p class="stat-value"><?php echo number_format($reportStats['total_reports'] ?? 0); ?></p>
+                    <p class="stat-label">Total Reports</p>
                 </div>
 
                 <div class="glass-card stat-card animate-slide-up" style="animation-delay: 0.4s;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
                         <div class="stat-icon-wrapper" style="background-color: #a855f7;">
-                            <i data-lucide="mail" class="stat-icon"></i>
+                            <i data-lucide="users-2" class="stat-icon"></i>
                         </div>
                         <div style="display: flex; align-items: center; gap: 0.25rem;">
-                            <i data-lucide="trending-up" style="width: 1rem; height: 1rem; color: #16a34a;"></i>
-                            <span style="font-size: 0.875rem; font-weight: 600; color: #16a34a;">+15%</span>
+                            <i data-lucide="user-check" style="width: 1rem; height: 1rem; color: #16a34a;"></i>
+                            <span style="font-size: 0.875rem; font-weight: 600; color: #16a34a;"><?php echo intval($userStats['total_seekers'] ?? 0); ?> seekers</span>
                         </div>
                     </div>
-                    <p class="stat-value">8,901</p>
-                    <p class="stat-label">Messages Sent</p>
+                    <p class="stat-value"><?php echo number_format($userStats['total_landlords'] ?? 0); ?></p>
+                    <p class="stat-label">Total Landlords</p>
                 </div>
             </div>
 
             <!-- Main Content Grid -->
             <div class="content-grid">
-                <!-- Left Column -->
-                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                    <!-- Recent Activity -->
-                    <div class="glass-card" style="padding: 1.25rem;">
-                        <h2 style="font-size: 1.25rem; font-weight: 700; color: #000; margin-bottom: 1rem;">Recent Activity</h2>
-                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                            <?php
-                            $recentActivity = [
-                                ['id' => 1, 'type' => 'user', 'action' => 'New user registered', 'user' => 'Sarah Johnson', 'time' => '5 minutes ago', 'icon' => 'users'],
-                                ['id' => 2, 'type' => 'listing', 'action' => 'New listing submitted', 'user' => 'David Martinez', 'time' => '15 minutes ago', 'icon' => 'home'],
-                                ['id' => 3, 'type' => 'report', 'action' => 'New complaint filed', 'user' => 'Mike Chen', 'time' => '1 hour ago', 'icon' => 'alert-triangle'],
-                                ['id' => 4, 'type' => 'notification', 'action' => 'Email notification sent', 'user' => 'System', 'time' => '2 hours ago', 'icon' => 'mail'],
-                            ];
-
-                            foreach ($recentActivity as $activity): ?>
-                            <div class="activity-item">
-                                <div class="activity-icon-wrapper">
-                                    <i data-lucide="<?php echo $activity['icon']; ?>" class="activity-icon"></i>
-                                </div>
-                                <div style="flex: 1; min-width: 0;">
-                                    <p style="font-size: 0.875rem; font-weight: 600; color: #000; margin-bottom: 0.25rem;"><?php echo $activity['action']; ?></p>
-                                    <p style="font-size: 0.75rem; color: rgba(0,0,0,0.6);"><?php echo $activity['user']; ?> • <?php echo $activity['time']; ?></p>
-                                </div>
-                            </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-
-                    <!-- Pending Actions -->
-                    <div class="glass-card" style="padding: 1.25rem;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
                             <h2 style="font-size: 1.25rem; font-weight: 700; color: #000;">Pending Actions</h2>
                             <span style="padding: 0.25rem 0.75rem; background-color: #fee2e2; color: #b91c1c; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">3 items</span>
                         </div>

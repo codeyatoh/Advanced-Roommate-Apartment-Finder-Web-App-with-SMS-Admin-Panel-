@@ -1,3 +1,27 @@
+<?php
+// Start session and check authentication
+session_start();
+
+// For now, using hardcoded user ID - should come from session in production
+$userId = $_SESSION['user_id'] ?? 1;
+$userName = $_SESSION['first_name'] ?? 'John';
+
+// Load models
+require_once __DIR__ . '/../../models/User.php';
+require_once __DIR__ . '/../../models/Listing.php';
+require_once __DIR__ . '/../../models/Message.php';
+require_once __DIR__ . '/../../models/Appointment.php';
+
+$userModel = new User();
+$listingModel = new Listing();
+$messageModel = new Message();
+$appointmentModel = new Appointment();
+
+// Fetch dashboard data
+$unreadMessages = $messageModel->getUnreadCount($userId);
+$upcomingAppointments = $appointmentModel->getUpcoming($userId, 'seeker');
+$recommendedListings = $listingModel->getAvailable(2); // Get 2 listings
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,7 +44,7 @@
         <div style="padding-top: 6rem; padding-bottom: 5rem; padding-left: 1rem; padding-right: 1rem;">
             <div style="max-width: 1280px; margin: 0 auto;">
                 <div style="margin-bottom: 2rem; animation: slideUp 0.3s ease-out;">
-                    <h1 style="font-size: 1.875rem; font-weight: 700; color: #000000; margin-bottom: 0.5rem;">Welcome back, John! 👋</h1>
+                    <h1 style="font-size: 1.875rem; font-weight: 700; color: #000000; margin-bottom: 0.5rem;">Welcome back, <?php echo htmlspecialchars($userName); ?>! 👋</h1>
                     <p style="color: rgba(0, 0, 0, 0.6);">Here's what's happening with your room search</p>
                 </div>
 
@@ -28,10 +52,10 @@
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2.5rem;">
                     <?php 
                     $stats = [
-                        ['icon' => 'heart', 'value' => '12', 'label' => 'Saved Rooms'],
-                        ['icon' => 'message-square', 'value' => '5', 'label' => 'Messages'],
-                        ['icon' => 'users', 'value' => '8', 'label' => 'Matches'],
-                        ['icon' => 'calendar', 'value' => '3', 'label' => 'Viewings']
+                        ['icon' => 'heart', 'value' => '0', 'label' => 'Saved Rooms'], // TODO: Implement favorites
+                        ['icon' => 'message-square', 'value' => $unreadMessages, 'label' => 'Messages'],
+                        ['icon' => 'users', 'value' => '0', 'label' => 'Matches'], // TODO: Implement matching
+                        ['icon' => 'calendar', 'value' => count($upcomingAppointments), 'label' => 'Viewings']
                     ];
                     foreach ($stats as $stat): ?>
                     <div class="card card-glass" style="padding: 1.25rem;">
@@ -61,27 +85,30 @@
                             </div>
                             <div style="display: grid; grid-template-columns: 1fr; gap: 1.25rem;">
                                 <?php 
-                                $rooms = [
-                                    ['image' => 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800', 'title' => 'Modern Studio Downtown', 'location' => 'San Francisco, CA', 'price' => 1200, 'bedrooms' => 1, 'bathrooms' => 1, 'roommates' => 0, 'available' => 'Now'],
-                                    ['image' => 'https://images.unsplash.com/photo-1502672260066-6bc2c9f0e6c7?w=800', 'title' => 'Cozy Room with View', 'location' => 'Portland, OR', 'price' => 850, 'bedrooms' => 1, 'bathrooms' => 1, 'roommates' => 2, 'available' => 'Feb 1']
-                                ];
-                                foreach ($rooms as $room): ?>
+                                if (empty($recommendedListings)) {
+                                    echo '<p style="color: rgba(0,0,0,0.5); text-align: center; padding: 2rem;">No listings available at the moment.</p>';
+                                }
+                                
+                                foreach ($recommendedListings as $room): 
+                                    $image = $room['primary_image'] ?? 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800';
+                                    $availableText = !empty($room['available_from']) ? date('M j', strtotime($room['available_from'])) : 'Now';
+                                ?>
                                 <div class="room-card">
                                     <div class="room-card-image-wrapper">
-                                        <img src="<?php echo $room['image']; ?>" alt="<?php echo $room['title']; ?>" class="room-card-image">
+                                        <img src="<?php echo htmlspecialchars($image); ?>" alt="<?php echo htmlspecialchars($room['title']); ?>" class="room-card-image">
                                         <button class="room-card-favorite"><i data-lucide="heart"></i></button>
-                                        <div class="room-card-badge">Available <?php echo $room['available']; ?></div>
+                                        <div class="room-card-badge">Available <?php echo htmlspecialchars($availableText); ?></div>
                                     </div>
                                     <div class="room-card-content">
-                                        <h3 class="room-card-title"><?php echo $room['title']; ?></h3>
-                                        <div class="room-card-location"><i data-lucide="map-pin"></i><?php echo $room['location']; ?></div>
+                                        <h3 class="room-card-title"><?php echo htmlspecialchars($room['title']); ?></h3>
+                                        <div class="room-card-location"><i data-lucide="map-pin"></i><?php echo htmlspecialchars($room['location']); ?></div>
                                         <div class="room-card-details">
-                                            <div class="room-card-detail"><i data-lucide="bed"></i><?php echo $room['bedrooms']; ?> bed</div>
-                                            <div class="room-card-detail"><i data-lucide="bath"></i><?php echo $room['bathrooms']; ?> bath</div>
-                                            <div class="room-card-detail"><i data-lucide="users"></i><?php echo $room['roommates']; ?> roommates</div>
+                                            <div class="room-card-detail"><i data-lucide="bed"></i><?php echo intval($room['bedrooms'] ?? 1); ?> bed</div>
+                                            <div class="room-card-detail"><i data-lucide="bath"></i><?php echo intval($room['bathrooms'] ?? 1); ?> bath</div>
+                                            <div class="room-card-detail"><i data-lucide="users"></i><?php echo intval($room['current_roommates'] ?? 0); ?> roommates</div>
                                         </div>
                                         <div style="padding-top: 0.75rem; border-top: 1px solid rgba(0,0,0,0.1);">
-                                            <div class="room-card-price"><span>$<?php echo $room['price']; ?></span><span class="room-card-price-period">/month</span></div>
+                                            <div class="room-card-price"><span>$<?php echo number_format($room['price'], 0); ?></span><span class="room-card-price-period">/month</span></div>
                                         </div>
                                     </div>
                                 </div>
@@ -93,23 +120,12 @@
                         <div class="card card-glass" style="padding: 1.25rem;">
                             <h3 style="font-size: 1.125rem; font-weight: 700; color: #000000; margin: 0 0 1rem 0;">Recent Activity</h3>
                             <div style="display: flex; flex-direction: column; gap: 1rem;">
-                                <?php 
-                                $activities = [
-                                    ['icon' => 'heart', 'text' => 'You saved "Modern Studio Downtown"', 'time' => '2 hours ago'],
-                                    ['icon' => 'message-square', 'text' => 'New message from Sarah Johnson', 'time' => '5 hours ago'],
-                                    ['icon' => 'calendar', 'text' => 'Viewing scheduled for tomorrow', 'time' => '1 day ago']
-                                ];
-                                foreach ($activities as $activity): ?>
-                                <div style="display: flex; align-items: flex-start; gap: 0.75rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
-                                    <div style="width: 2.5rem; height: 2.5rem; background: rgba(16,185,129,0.2); border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                        <i data-lucide="<?php echo $activity['icon']; ?>" style="width: 1.25rem; height: 1.25rem; color: #10b981;"></i>
-                                    </div>
-                                    <div style="flex: 1;">
-                                        <p style="font-size: 0.875rem; color: #000000; font-weight: 500; margin: 0 0 0.125rem 0;"><?php echo $activity['text']; ?></p>
-                                        <p style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.5); margin: 0;"><?php echo $activity['time']; ?></p>
-                                    </div>
-                                </div>
-                                <?php endforeach; ?>
+                                <p style="color: rgba(0,0,0,0.5); text-align: center; padding: 2rem;">
+                                    Activity tracking coming soon...
+                                </p>
+                                <?php
+                                // TODO: Implement activity logging system
+                                ?>
                             </div>
                         </div>
                     </div>
@@ -121,28 +137,34 @@
                             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
                                 <div>
                                     <h3 style="font-size: 1rem; font-weight: 700; color: #000000; margin: 0 0 0.125rem 0;">Roommate Matches</h3>
-                                    <p style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.6); margin: 0;">Top compatibility</p>
+                                    <p style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.6); margin: 0;">Other room seekers</p>
                                 </div>
                                 <button class="btn btn-ghost btn-sm" style="font-size: 0.75rem;">See All</button>
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 0.625rem;">
                                 <?php 
-                                $matches = [
-                                    ['name' => 'Sarah Johnson', 'occupation' => 'Software Engineer', 'compatibility' => 92, 'image' => 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400'],
-                                    ['name' => 'Mike Chen', 'occupation' => 'Graphic Designer', 'compatibility' => 88, 'image' => 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400']
-                                ];
-                                foreach ($matches as $match): ?>
+                                // Fetch other room seekers from database
+                                $matches = $userModel->getOtherSeekers($userId, 3);
+                                
+                                if (empty($matches)) {
+                                    echo '<p style="color: rgba(0,0,0,0.5); text-align: center; padding: 1rem;">No other seekers found yet.</p>';
+                                }
+                                
+                                foreach ($matches as $match): 
+                                    $fullName = htmlspecialchars($match['first_name'] . ' ' . $match['last_name']);
+                                    $occupation = htmlspecialchars($match['occupation'] ?? 'Room Seeker');
+                                    $photo = !empty($match['profile_photo']) 
+                                        ? htmlspecialchars($match['profile_photo']) 
+                                        : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=10b981&color=fff';
+                                ?>
                                 <div style="display: flex; align-items: center; gap: 0.625rem; padding: 0.75rem; background: var(--glass-bg-subtle); border-radius: 0.75rem; cursor: pointer;">
-                                    <img src="<?php echo $match['image']; ?>" alt="<?php echo $match['name']; ?>" style="width: 2.75rem; height: 2.75rem; border-radius: 9999px; object-fit: cover;">
+                                    <img src="<?php echo $photo; ?>" alt="<?php echo $fullName; ?>" style="width: 2.75rem; height: 2.75rem; border-radius: 9999px; object-fit: cover;">
                                     <div style="flex: 1; min-width: 0;">
-                                        <p style="font-weight: 600; font-size: 0.875rem; color: #000000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0 0 0.125rem 0;"><?php echo $match['name']; ?></p>
-                                        <p style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.6); margin: 0;"><?php echo $match['occupation']; ?></p>
+                                        <p style="font-weight: 600; font-size: 0.875rem; color: #000000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0 0 0.125rem 0;"><?php echo $fullName; ?></p>
+                                        <p style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.6); margin: 0;"><?php echo $occupation; ?></p>
                                     </div>
                                     <div>
-                                        <div style="display: flex; align-items: center; gap: 0.25rem;">
-                                            <i data-lucide="trending-up" style="width: 0.875rem; height: 0.875rem; color: #10b981;"></i>
-                                            <span style="font-size: 0.875rem; font-weight: 700; color: #10b981;"><?php echo $match['compatibility']; ?>%</span>
-                                        </div>
+                                        <i data-lucide="message-square" style="width: 1rem; height: 1rem; color: #10b981;"></i>
                                     </div>
                                 </div>
                                 <?php endforeach; ?>

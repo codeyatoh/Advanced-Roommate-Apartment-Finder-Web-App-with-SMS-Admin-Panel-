@@ -1,14 +1,13 @@
 <?php
 session_start();
-require_once '../config/database.php';
+require_once __DIR__ . '/../config/Database.php';
 
 class AuthController {
-    private $db;
     private $conn;
 
     public function __construct() {
-        $this->db = new Database();
-        $this->conn = $this->db->getConnection();
+        $db = new Database();
+        $this->conn = $db->getConnection();
     }
 
     public function register($data) {
@@ -17,6 +16,7 @@ class AuthController {
         $email = htmlspecialchars(strip_tags($data['email']));
         $password = htmlspecialchars(strip_tags($data['password']));
         $role = htmlspecialchars(strip_tags($data['role']));
+        $gender = isset($data['gender']) && !empty($data['gender']) ? htmlspecialchars(strip_tags($data['gender'])) : null;
         
         // Validate role
         $allowed_roles = ['room_seeker', 'landlord'];
@@ -37,8 +37,9 @@ class AuthController {
         // Hash password
         $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
-        // Insert user
-        $query = "INSERT INTO users (first_name, last_name, email, password_hash, role) VALUES (:first_name, :last_name, :email, :password_hash, :role)";
+        // Insert user with gender field
+        $query = "INSERT INTO users (first_name, last_name, email, password_hash, role, gender) 
+                  VALUES (:first_name, :last_name, :email, :password_hash, :role, :gender)";
         $stmt = $this->conn->prepare($query);
         
         $stmt->bindParam(':first_name', $first_name);
@@ -46,6 +47,7 @@ class AuthController {
         $stmt->bindParam(':email', $email);
         $stmt->bindParam(':password_hash', $password_hash);
         $stmt->bindParam(':role', $role);
+        $stmt->bindParam(':gender', $gender);
 
         if ($stmt->execute()) {
             // Registration successful

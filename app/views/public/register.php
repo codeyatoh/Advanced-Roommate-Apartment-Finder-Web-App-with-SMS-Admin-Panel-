@@ -132,6 +132,27 @@
                         </div>
                     </div>
 
+                    <!-- Gender Selection -->
+                    <div class="form-group">
+                        <label for="gender" class="form-label">Gender</label>
+                        <div class="form-input-wrapper">
+                            <select 
+                                id="gender" 
+                                name="gender" 
+                                class="form-input" 
+                                style="appearance: none; cursor: pointer; padding-right: 3rem;"
+                            >
+                                <option value="">Prefer not to say</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                                <option value="prefer_not_to_say">Prefer not to say</option>
+                            </select>
+                            <i data-lucide="user" class="form-input-icon"></i>
+                            <i data-lucide="chevron-down" class="form-input-icon" style="right: 1rem; left: auto; pointer-events: none;"></i>
+                        </div>
+                    </div>
+
                     <!-- Email Input -->
                     <div class="form-group">
                         <label for="email" class="form-label">Email Address</label>

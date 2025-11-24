@@ -30,7 +30,7 @@
                 <div class="inquiries-sidebar">
                     <div style="padding: 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.1);">
                         <div style="position: relative;">
-                            <i data-lucide="search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); width: 1rem; height: 1rem; color: rgba(0,0,0,0.4);"></i>
+                            <i data-lucide="search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); width: 1.25rem; height: 1.25rem; color: rgba(0,0,0,0.4); z-index: 10;"></i>
                             <input type="text" class="form-input" placeholder="Search inquiries..." style="padding-left: 2.25rem; padding-top: 0.5rem; padding-bottom: 0.5rem; font-size: 0.875rem;">
                         </div>
                     </div>
@@ -109,14 +109,7 @@
                                 </div>
                             </div>
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <button class="btn btn-glass btn-sm" style="font-size: 0.75rem;" onclick="console.log('Email')">
-                                    <i data-lucide="mail" style="width: 1rem; height: 1rem;"></i>
-                                    Email
-                                </button>
-                                <button class="btn btn-glass btn-sm" style="font-size: 0.75rem;" onclick="console.log('SMS')">
-                                    <i data-lucide="message-square" style="width: 1rem; height: 1rem;"></i>
-                                    SMS
-                                </button>
+                                <!-- Buttons removed as per request -->
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 1rem; font-size: 0.75rem; color: rgba(0,0,0,0.6);">
@@ -146,13 +139,23 @@
                     <!-- Reply Input -->
                     <div style="padding: 1rem; border-top: 1px solid rgba(0,0,0,0.1);">
                         <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
-                            <input type="text" class="form-input" placeholder="Type your reply..." style="flex: 1; font-size: 0.875rem;">
+                            <button type="button" title="Attach file" style="background: none; border: none; padding: 0.5rem; cursor: pointer; color: rgba(0,0,0,0.6); transition: color 0.2s;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='rgba(0,0,0,0.6)'">
+                                <i data-lucide="paperclip" style="width: 1.25rem; height: 1.25rem;"></i>
+                            </button>
+                            <button type="button" title="Attach image" style="background: none; border: none; padding: 0.5rem; cursor: pointer; color: rgba(0,0,0,0.6); transition: color 0.2s;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='rgba(0,0,0,0.6)'">
+                                <i data-lucide="image" style="width: 1.25rem; height: 1.25rem;"></i>
+                            </button>
+                            <div style="flex: 1; position: relative;">
+                                <button type="button" title="Emoji" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 0; cursor: pointer; color: rgba(0,0,0,0.6); transition: color 0.2s; z-index: 1;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='rgba(0,0,0,0.6)'">
+                                    <i data-lucide="smile" style="width: 1.25rem; height: 1.25rem;"></i>
+                                </button>
+                                <input type="text" class="form-input" placeholder="Type your reply..." style="width: 100%; padding-left: 2.75rem; font-size: 0.875rem;">
+                            </div>
                             <button class="btn btn-primary btn-sm">
                                 <i data-lucide="send" style="width: 1rem; height: 1rem;"></i>
                                 Send
                             </button>
                         </div>
-                        <p style="font-size: 0.75rem; color: rgba(0,0,0,0.5);">Tenant will receive your reply via email and SMS</p>
                     </div>
                 </div>
             </div>

@@ -55,7 +55,7 @@
                             <textarea class="form-input" placeholder="Describe your property..." style="min-height: 120px; resize: vertical;" required></textarea>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div>
                                 <label class="form-label">Monthly Rent</label>
                                 <div style="position: relative;">
@@ -64,16 +64,32 @@
                                 </div>
                             </div>
                             <div>
+                                <label class="form-label">Security Deposit</label>
+                                <div style="position: relative;">
+                                    <i data-lucide="shield" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); width: 1.25rem; height: 1.25rem; color: rgba(0,0,0,0.4);"></i>
+                                    <input type="number" class="form-input" placeholder="1200" style="padding-left: 2.75rem;" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div>
                                 <label class="form-label">Available From</label>
                                 <input type="date" class="form-input" required>
+                            </div>
+                            <div style="display: flex; align-items: flex-end;">
+                                <label class="glass-subtle" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s; width: 100%; height: 3rem;">
+                                    <input type="checkbox" style="width: 1rem; height: 1rem; border-radius: 0.25rem; accent-color: var(--deep-blue);">
+                                    <span style="font-size: 0.875rem; font-weight: 500; color: #000;">Utilities Included</span>
+                                </label>
                             </div>
                         </div>
 
                         <div>
-                            <label class="form-label">Location</label>
+                            <label class="form-label">Full Address</label>
                             <div style="position: relative;">
                                 <i data-lucide="map-pin" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); width: 1.25rem; height: 1.25rem; color: rgba(0,0,0,0.4);"></i>
-                                <input type="text" class="form-input" placeholder="City, State" style="padding-left: 2.75rem;" required>
+                                <input type="text" class="form-input" placeholder="e.g., 123 Market St, San Francisco, CA" style="padding-left: 2.75rem;" required>
                             </div>
                         </div>
                     </div>
@@ -137,6 +153,156 @@
                             <i data-lucide="dumbbell" style="width: 1.25rem; height: 1.25rem; color: var(--deep-blue);"></i>
                             <span style="font-size: 0.875rem; font-weight: 500; color: #000;">Gym</span>
                         </label>
+                        <label class="glass-subtle" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" style="width: 1rem; height: 1rem; border-radius: 0.25rem; accent-color: var(--deep-blue);">
+                            <i data-lucide="wind" style="width: 1.25rem; height: 1.25rem; color: var(--deep-blue);"></i>
+                            <span style="font-size: 0.875rem; font-weight: 500; color: #000;">Air Conditioning</span>
+                        </label>
+                        <label class="glass-subtle" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" style="width: 1rem; height: 1rem; border-radius: 0.25rem; accent-color: var(--deep-blue);">
+                            <i data-lucide="flame" style="width: 1.25rem; height: 1.25rem; color: var(--deep-blue);"></i>
+                            <span style="font-size: 0.875rem; font-weight: 500; color: #000;">Heating</span>
+                        </label>
+                        <label class="glass-subtle" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" style="width: 1rem; height: 1rem; border-radius: 0.25rem; accent-color: var(--deep-blue);">
+                            <i data-lucide="shirt" style="width: 1.25rem; height: 1.25rem; color: var(--deep-blue);"></i>
+                            <span style="font-size: 0.875rem; font-weight: 500; color: #000;">Washer/Dryer</span>
+                        </label>
+                        <label class="glass-subtle" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" style="width: 1rem; height: 1rem; border-radius: 0.25rem; accent-color: var(--deep-blue);">
+                            <i data-lucide="utensils" style="width: 1.25rem; height: 1.25rem; color: var(--deep-blue);"></i>
+                            <span style="font-size: 0.875rem; font-weight: 500; color: #000;">Dishwasher</span>
+                        </label>
+                        <label class="glass-subtle" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" style="width: 1rem; height: 1rem; border-radius: 0.25rem; accent-color: var(--deep-blue);">
+                            <i data-lucide="arrow-up-circle" style="width: 1.25rem; height: 1.25rem; color: var(--deep-blue);"></i>
+                            <span style="font-size: 0.875rem; font-weight: 500; color: #000;">Elevator</span>
+                        </label>
+                        <label class="glass-subtle" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" style="width: 1rem; height: 1rem; border-radius: 0.25rem; accent-color: var(--deep-blue);">
+                            <i data-lucide="sun" style="width: 1.25rem; height: 1.25rem; color: var(--deep-blue);"></i>
+                            <span style="font-size: 0.875rem; font-weight: 500; color: #000;">Balcony/Patio</span>
+                        </label>
+                        <label class="glass-subtle" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" style="width: 1rem; height: 1rem; border-radius: 0.25rem; accent-color: var(--deep-blue);">
+                            <i data-lucide="waves" style="width: 1.25rem; height: 1.25rem; color: var(--deep-blue);"></i>
+                            <span style="font-size: 0.875rem; font-weight: 500; color: #000;">Pool</span>
+                        </label>
+                        <label class="glass-subtle" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" style="width: 1rem; height: 1rem; border-radius: 0.25rem; accent-color: var(--deep-blue);">
+                            <i data-lucide="shield-check" style="width: 1.25rem; height: 1.25rem; color: var(--deep-blue);"></i>
+                            <span style="font-size: 0.875rem; font-weight: 500; color: #000;">Security System</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- House Rules -->
+                <div class="glass-card" style="padding: 1.5rem;">
+                    <h2 style="font-size: 1.25rem; font-weight: 700; color: #000; margin-bottom: 1rem;">House Rules</h2>
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(255,255,255,0.4); border-radius: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <i data-lucide="cigarette" style="width: 1.25rem; height: 1.25rem; color: rgba(0,0,0,0.6);"></i>
+                                <span style="font-weight: 500;">Smoking Allowed</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(255,255,255,0.4); border-radius: 0.75rem;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <i data-lucide="paw-print" style="width: 1.25rem; height: 1.25rem; color: rgba(0,0,0,0.6);"></i>
+                                    <span style="font-weight: 500;">Pets Allowed</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="petsAllowedCheckbox" onchange="togglePetsDetails()">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div id="petsDetails" style="display: none; padding-left: 0.75rem;">
+                                <input type="text" class="form-input" placeholder="e.g., Cats only, Small dogs under 20lbs" style="font-size: 0.875rem;">
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(255,255,255,0.4); border-radius: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <i data-lucide="music" style="width: 1.25rem; height: 1.25rem; color: rgba(0,0,0,0.6);"></i>
+                                <span style="font-weight: 500;">No Parties/Events</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(255,255,255,0.4); border-radius: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <i data-lucide="users" style="width: 1.25rem; height: 1.25rem; color: rgba(0,0,0,0.6);"></i>
+                                <span style="font-weight: 500;">No Overnight Guests</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(255,255,255,0.4); border-radius: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <i data-lucide="trash-2" style="width: 1.25rem; height: 1.25rem; color: rgba(0,0,0,0.6);"></i>
+                                <span style="font-weight: 500;">Clean Up After Yourself</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(255,255,255,0.4); border-radius: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <i data-lucide="footprints" style="width: 1.25rem; height: 1.25rem; color: rgba(0,0,0,0.6);"></i>
+                                <span style="font-weight: 500;">No Shoes Inside</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(255,255,255,0.4); border-radius: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <i data-lucide="recycle" style="width: 1.25rem; height: 1.25rem; color: rgba(0,0,0,0.6);"></i>
+                                <span style="font-weight: 500;">Recycling Required</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(255,255,255,0.4); border-radius: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <i data-lucide="sparkles" style="width: 1.25rem; height: 1.25rem; color: rgba(0,0,0,0.6);"></i>
+                                <span style="font-weight: 500;">Keep Common Areas Clean</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(255,255,255,0.4); border-radius: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <i data-lucide="lightbulb" style="width: 1.25rem; height: 1.25rem; color: rgba(0,0,0,0.6);"></i>
+                                <span style="font-weight: 500;">Turn Off Lights When Leaving</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="form-label">Quiet Hours</label>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="time" class="form-input">
+                                <span style="color: rgba(0,0,0,0.4);">to</span>
+                                <input type="time" class="form-input">
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -207,6 +373,17 @@
             console.log('Form submitted');
             // Add actual submission logic here
         });
+
+        function togglePetsDetails() {
+            const checkbox = document.getElementById('petsAllowedCheckbox');
+            const details = document.getElementById('petsDetails');
+            if (checkbox.checked) {
+                details.style.display = 'block';
+                details.classList.add('animate-slide-up');
+            } else {
+                details.style.display = 'none';
+            }
+        }
     </script>
 </body>
 </html>

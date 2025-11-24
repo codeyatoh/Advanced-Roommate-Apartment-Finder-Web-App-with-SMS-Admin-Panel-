@@ -24,18 +24,31 @@
             </div>
 
             <!-- Search & Filters -->
-            <div class="glass-card animate-slide-up" style="padding: 1rem; margin-bottom: 1.5rem;">
-                <div class="filter-container">
-                    <div class="filter-search">
-                        <i data-lucide="search" class="search-icon-sm"></i>
-                        <input type="text" class="form-input-sm" placeholder="Search users...">
+            <div class="glass-card animate-slide-up" style="padding: 1rem; margin-bottom: 1.5rem; background: transparent; border: none; box-shadow: none;">
+                <div class="search-bar-container">
+                    <div class="search-input-wrapper">
+                        <i data-lucide="search" class="search-icon"></i>
+                        <input type="text" class="search-input-clean" placeholder="Search users...">
                     </div>
-                    <select class="form-select-sm">
+                    <div class="search-actions">
+                        <button class="btn-filters" onclick="document.getElementById('filterOptions').style.display = document.getElementById('filterOptions').style.display === 'none' ? 'flex' : 'none'">
+                            <i data-lucide="sliders-horizontal" style="width: 1rem; height: 1rem;"></i>
+                            Filters
+                        </button>
+                        <button class="btn-search">
+                            Search
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Expanded Filters -->
+                <div id="filterOptions" style="display: none; gap: 1rem; margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border-radius: 1rem;">
+                    <select class="form-select-sm" style="flex: 1;">
                         <option>All Roles</option>
                         <option>Seekers</option>
                         <option>Landlords</option>
                     </select>
-                    <select class="form-select-sm">
+                    <select class="form-select-sm" style="flex: 1;">
                         <option>All Status</option>
                         <option>Verified</option>
                         <option>Pending</option>

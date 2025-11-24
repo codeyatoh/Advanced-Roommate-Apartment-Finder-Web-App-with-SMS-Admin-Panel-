@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/variables.css">
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/globals.css">
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/navbar.module.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/landlord.module.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/landlord.module.css?v=<?php echo time(); ?>">
 </head>
 <body>
     <div class="landlord-page">
@@ -27,6 +27,41 @@
                     <i data-lucide="plus" style="width: 1.25rem; height: 1.25rem;"></i>
                     Add New Listing
                 </a>
+            </div>
+
+            <!-- Search & Filters -->
+            <div style="margin-bottom: 2rem;">
+                <div class="search-bar-container">
+                    <div class="search-input-wrapper">
+                        <i data-lucide="search" class="search-icon"></i>
+                        <input type="text" class="search-input-clean" placeholder="Search my listings...">
+                    </div>
+                    <div class="search-actions">
+                        <button class="btn-filters" onclick="document.getElementById('filterOptions').style.display = document.getElementById('filterOptions').style.display === 'none' ? 'flex' : 'none'">
+                            <i data-lucide="sliders-horizontal" style="width: 1rem; height: 1rem;"></i>
+                            Filters
+                        </button>
+                        <button class="btn-search">
+                            Search
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Expanded Filters -->
+                <div id="filterOptions" style="display: none; gap: 1rem; margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border-radius: 1rem;">
+                    <select class="form-select" style="flex: 1; height: 2.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid rgba(0,0,0,0.1);">
+                        <option>All Status</option>
+                        <option>Active</option>
+                        <option>Rented</option>
+                        <option>Pending</option>
+                    </select>
+                    <select class="form-select" style="flex: 1; height: 2.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid rgba(0,0,0,0.1);">
+                        <option>Sort By</option>
+                        <option>Newest</option>
+                        <option>Price: Low to High</option>
+                        <option>Price: High to Low</option>
+                    </select>
+                </div>
             </div>
 
             <!-- Listings Grid -->

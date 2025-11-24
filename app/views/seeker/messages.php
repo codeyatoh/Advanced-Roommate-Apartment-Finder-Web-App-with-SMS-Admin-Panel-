@@ -1,3 +1,56 @@
+<?php
+// Start session and load models
+session_start();
+require_once __DIR__ . '/../../models/Message.php';
+require_once __DIR__ . '/../../models/User.php';
+require_once __DIR__ . '/../../models/Match.php';
+
+// Get current user
+$userId = $_SESSION['user_id'] ?? 1;
+
+$messageModel = new Message();
+$userModel = new User();
+$matchModel = new MatchModel();
+
+// Get all conversations (grouped by other user)
+$conversations = $messageModel->getConversations($userId);
+
+// Get selected conversation ID from URL
+$selectedConversationId = $_GET['user_id'] ?? null;
+
+// If no conversation selected, select the first one
+if (!$selectedConversationId && !empty($conversations)) {
+    $selectedConversationId = $conversations[0]['other_user_id'];
+}
+
+// Get messages for selected conversation
+$messages = [];
+$selectedUser = null;
+if ($selectedConversationId) {
+    $messages = $messageModel->getConversation($userId, $selectedConversationId);
+    $selectedUser = $userModel->getById($selectedConversationId);
+    
+    // Mark messages as read
+    $messageModel->markAsRead($userId, $selectedConversationId);
+    
+    // Check relationship type (landlord or matched roommate)
+    $relationshipType = 'user';
+    
+    // Check if mutual match
+    $mutualMatches = $matchModel->getMutualMatches($userId);
+    foreach ($mutualMatches as $match) {
+        if ($match['match_user_id'] == $selectedConversationId) {
+            $relationshipType = 'roommate';
+            break;
+        }
+    }
+    
+    // Check if landlord (if user is landlord role)
+    if ($selectedUser && $selectedUser['role'] === 'landlord') {
+        $relationshipType = 'landlord';
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,124 +77,211 @@
                     <p style="color: rgba(0, 0, 0, 0.6);">Chat with landlords and potential roommates</p>
                 </div>
 
+                <?php if (empty($conversations)): ?>
+                <!-- Empty State -->
+                <div class="card card-glass" style="padding: 3rem; text-align: center;">
+                    <i data-lucide="message-square-x" style="width: 4rem; height: 4rem; color: rgba(0,0,0,0.3); margin: 0 auto 1rem;"></i>
+                    <h3 style="font-size: 1.25rem; font-weight: 700; color: #000000; margin-bottom: 0.5rem;">No Messages Yet</h3>
+                    <p style="color: rgba(0,0,0,0.6); margin-bottom: 1.5rem;">Start matching with roommates or contact landlords to begin conversations!</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center;">
+                        <a href="roommate_finder.php" class="btn btn-primary">Find Roommates</a>
+                        <a href="browse_rooms.php" class="btn btn-glass">Browse Rooms</a>
+                    </div>
+                </div>
+                <?php else: ?>
                 <div class="card card-glass messages-container" style="padding: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
                     <div class="messages-grid">
                         <!-- Conversations Panel -->
                         <div class="conversations-panel">
                             <div class="conversations-search">
                                 <div class="form-input-wrapper">
-                                    <i data-lucide="search" class="form-input-icon"></i>
-                                    <input type="text" class="form-input" placeholder="Search messages..." style="font-size: 0.875rem;">
+                                    <i data-lucide="search" class="form-input-icon" style="width: 1.25rem; height: 1.25rem; color: rgba(0,0,0,0.4); z-index: 10;"></i>
+                                    <input type="text" class="form-input" placeholder="Search messages..." style="font-size: 0.875rem;" id="searchMessages">
                                 </div>
                             </div>
                             <div class="conversations-list">
-                                <?php 
-                                $conversations = [
-                                    ['id' => 1, 'name' => 'David Martinez', 'lastMessage' => 'The apartment is still available. Would you like to schedule a viewing?', 'time' => '2m ago', 'unread' => 2, 'avatar' => 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400', 'online' => true],
-                                    ['id' => 2, 'name' => 'Sarah Johnson', 'lastMessage' => 'Thanks for your interest! When can you move in?', 'time' => '1h ago', 'unread' => 0, 'avatar' => 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400', 'online' => true],
-                                    ['id' => 3, 'name' => 'Lisa Wong', 'lastMessage' => 'The viewing is confirmed for tomorrow at 10 AM', 'time' => '3h ago', 'unread' => 0, 'avatar' => 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400', 'online' => false]
-                                ];
-                                foreach ($conversations as $conv): ?>
-                                <div class="conversation-item <?php echo $conv['id'] == 1 ? 'active' : ''; ?>">
+                                <?php foreach ($conversations as $conv): 
+                                    $isActive = $conv['other_user_id'] == $selectedConversationId;
+                                    $userName = htmlspecialchars($conv['first_name'] . ' ' . $conv['last_name']);
+                                    $avatar = !empty($conv['profile_photo']) 
+                                        ? htmlspecialchars($conv['profile_photo'])
+                                        : 'https://ui-avatars.com/api/?name=' . urlencode($userName) . '&background=10b981&color=fff';
+                                    
+                                    // Calculate time ago
+                                    $timestamp = strtotime($conv['last_message_time']);
+                                    $diff = time() - $timestamp;
+                                    if ($diff < 60) {
+                                        $timeAgo = 'Just now';
+                                    } elseif ($diff < 3600) {
+                                        $timeAgo = floor($diff / 60) . 'm ago';
+                                    } elseif ($diff < 86400) {
+                                        $timeAgo = floor($diff / 3600) . 'h ago';
+                                    } else {
+                                        $timeAgo = floor($diff / 86400) . 'd ago';
+                                    }
+                                ?>
+                                <a href="?user_id=<?php echo $conv['other_user_id']; ?>" class="conversation-item <?php echo $isActive ? 'active' : ''; ?>" style="text-decoration: none; color: inherit;">
                                     <div class="conversation-content">
                                         <div class="conversation-avatar">
-                                            <img src="<?php echo $conv['avatar']; ?>" alt="<?php echo $conv['name']; ?>">
-                                            <?php if ($conv['online']): ?>
-                                            <div class="conversation-online"></div>
-                                            <?php endif; ?>
+                                            <img src="<?php echo $avatar; ?>" alt="<?php echo $userName; ?>">
                                         </div>
                                         <div class="conversation-details">
                                             <div class="conversation-header">
-                                                <h3 class="conversation-name"><?php echo $conv['name']; ?></h3>
-                                                <span class="conversation-time"><?php echo $conv['time']; ?></span>
+                                                <h3 class="conversation-name"><?php echo $userName; ?></h3>
+                                                <span class="conversation-time"><?php echo $timeAgo; ?></span>
                                             </div>
-                                            <p class="conversation-message"><?php echo $conv['lastMessage']; ?></p>
+                                            <p class="conversation-message"><?php echo htmlspecialchars($conv['last_message']); ?></p>
                                         </div>
-                                        <?php if ($conv['unread'] > 0): ?>
-                                        <div class="conversation-unread"><?php echo $conv['unread']; ?></div>
+                                        <?php if ($conv['unread_count'] > 0): ?>
+                                        <div class="conversation-unread"><?php echo $conv['unread_count']; ?></div>
                                         <?php endif; ?>
                                     </div>
-                                </div>
+                                </a>
                                 <?php endforeach; ?>
                             </div>
                         </div>
 
                         <!-- Chat Panel -->
+                        <?php if ($selectedUser): 
+                            $selectedUserName = htmlspecialchars($selectedUser['first_name'] . ' ' . $selectedUser['last_name']);
+                            $selectedAvatar = !empty($selectedUser['profile_photo'])
+                                ? htmlspecialchars($selectedUser['profile_photo'])
+                                : 'https://ui-avatars.com/api/?name=' . urlencode($selectedUserName) . '&background=10b981&color=fff';
+                        ?>
                         <div class="chat-panel">
                             <div class="chat-header">
                                 <div class="chat-header-info">
                                     <div class="chat-header-avatar">
-                                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400" alt="David Martinez">
+                                        <img src="<?php echo $selectedAvatar; ?>" alt="<?php echo $selectedUserName; ?>">
                                     </div>
                                     <div style="flex: 1;">
                                         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                                            <h3 class="chat-header-name" style="margin: 0;">David Martinez</h3>
+                                            <h3 class="chat-header-name" style="margin: 0;"><?php echo $selectedUserName; ?></h3>
+                                            <?php if ($relationshipType === 'roommate'): ?>
                                             <span style="padding: 0.125rem 0.5rem; background: rgba(16, 185, 129, 0.15); color: var(--green); border-radius: 9999px; font-size: 0.625rem; font-weight: 600; line-height: 1;">
                                                 Matched Roommate
                                             </span>
+                                            <?php elseif ($relationshipType === 'landlord'): ?>
+                                            <span style="padding: 0.125rem 0.5rem; background: rgba(59, 130, 246, 0.15); color: var(--blue); border-radius: 9999px; font-size: 0.625rem; font-weight: 600; line-height: 1;">
+                                                Landlord
+                                            </span>
+                                            <?php endif; ?>
                                         </div>
-                                        <!-- For Landlord, show: Owner • Property Name -->
-                                        <!-- For Matched Roommate, show: Property Name -->
-                                        <p style="color: rgba(0,0,0,0.6); font-size: 0.875rem; margin: 0 0 0.25rem 0;">Modern Studio Downtown</p>
                                         <div style="display: flex; align-items: center; gap: 1rem; font-size: 0.75rem; color: rgba(0,0,0,0.5);">
                                             <div style="display: flex; align-items: center; gap: 0.25rem;">
                                                 <i data-lucide="mail" style="width: 0.875rem; height: 0.875rem;"></i>
-                                                <span>david.m@email.com</span>
+                                                <span><?php echo htmlspecialchars($selectedUser['email']); ?></span>
                                             </div>
+                                            <?php if (!empty($selectedUser['phone'])): ?>
                                             <div style="display: flex; align-items: center; gap: 0.25rem;">
                                                 <i data-lucide="phone" style="width: 0.875rem; height: 0.875rem;"></i>
-                                                <span>+1 (555) 123-4567</span>
+                                                <span><?php echo htmlspecialchars($selectedUser['phone']); ?></span>
                                             </div>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="chat-messages">
-                                <?php 
-                                $messages = [
-                                    ['id' => 1, 'sender' => 'other', 'text' => 'Hi! I saw your inquiry about the studio apartment.', 'time' => '10:30 AM'],
-                                    ['id' => 2, 'sender' => 'user', 'text' => 'Yes, I am very interested! Is it still available?', 'time' => '10:32 AM'],
-                                    ['id' => 3, 'sender' => 'other', 'text' => 'The apartment is still available. Would you like to schedule a viewing?', 'time' => '10:35 AM'],
-                                    ['id' => 4, 'sender' => 'user', 'text' => 'That would be great! When are you available?', 'time' => '10:36 AM']
-                                ];
-                                foreach ($messages as $msg): ?>
-                                <div class="message-wrapper <?php echo $msg['sender']; ?>">
-                                    <div class="message-bubble <?php echo $msg['sender']; ?>">
-                                        <p class="message-text"><?php echo $msg['text']; ?></p>
-                                        <p class="message-time"><?php echo $msg['time']; ?></p>
+                            <div class="chat-messages" id="chatMessages">
+                                <?php foreach ($messages as $msg): 
+                                    $isSent = $msg['sender_id'] == $userId;
+                                    $timestamp = new DateTime($msg['created_at']);
+                                    $timeDisplay = $timestamp->format('g:i A');
+                                ?>
+                                <div class="message-wrapper <?php echo $isSent ? 'sent' : 'received'; ?>">
+                                    <div class="message-bubble">
+                                        <p class="message-text"><?php echo nl2br(htmlspecialchars($msg['message_content'])); ?></p>
+                                        <span class="message-time"><?php echo $timeDisplay; ?></span>
                                     </div>
                                 </div>
                                 <?php endforeach; ?>
                             </div>
 
-                            <div class="chat-input">
-                                <div class="chat-input-form">
-                                    <button type="button" title="Attach file" style="background: none; border: none; padding: 0.5rem; cursor: pointer; color: rgba(0,0,0,0.6); transition: color 0.2s;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='rgba(0,0,0,0.6)'">
-                                        <i data-lucide="paperclip" style="width: 1.25rem; height: 1.25rem;"></i>
+                            <div class="chat-input-container">
+                                <form id="messageForm" style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <input type="hidden" name="receiver_id" value="<?php echo $selectedConversationId; ?>">
+                                    <button type="button" class="chat-input-icon-btn">
+                                        <i data-lucide="paperclip"></i>
                                     </button>
-                                    <button type="button" title="Attach image" style="background: none; border: none; padding: 0.5rem; cursor: pointer; color: rgba(0,0,0,0.6); transition: color 0.2s;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='rgba(0,0,0,0.6)'">
-                                        <i data-lucide="image" style="width: 1.25rem; height: 1.25rem;"></i>
+                                    <button type="button" class="chat-input-icon-btn">
+                                        <i data-lucide="image"></i>
                                     </button>
-                                    <div class="form-input-wrapper" style="flex: 1; position: relative;">
-                                        <button type="button" title="Emoji" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 0; cursor: pointer; color: rgba(0,0,0,0.6); transition: color 0.2s; z-index: 1;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='rgba(0,0,0,0.6)'">
-                                            <i data-lucide="smile" style="width: 1.25rem; height: 1.25rem;"></i>
-                                        </button>
-                                        <input type="text" class="form-input" placeholder="Type a message..." style="padding-left: 2.75rem; font-size: 0.875rem;">
-                                    </div>
-                                    <button class="btn btn-primary btn-sm">
-                                        <i data-lucide="send" class="btn-icon"></i>
+                                    <button type="button" class="chat-input-icon-btn">
+                                        <i data-lucide="smile"></i>
+                                    </button>
+                                    <input type="text" name="message" class="chat-input" placeholder="Type a message..." id="messageInput" autocomplete="off">
+                                    <button type="submit" class="btn btn-primary" style="padding: 0.625rem 1.25rem;">
+                                        <i data-lucide="send" style="width: 1.125rem; height: 1.125rem;"></i>
                                         Send
                                     </button>
-                                </div>
+                                </form>
                             </div>
                         </div>
+                        <?php else: ?>
+                        <div class="chat-panel" style="display: flex; align-items: center; justify-content: center;">
+                            <div style="text-align: center; color: rgba(0,0,0,0.5);">
+                                <i data-lucide="message-square" style="width: 3rem; height: 3rem; margin: 0 auto 1rem;"></i>
+                                <p>Select a conversation to view messages</p>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
+    
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>lucide.createIcons();</script>
+    
+    <script>
+        // Auto-scroll to bottom on load
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Handle message form submission
+        const messageForm = document.getElementById('messageForm');
+        if (messageForm) {
+            messageForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const messageInput = document.getElementById('messageInput');
+                const message = messageInput.value.trim();
+                const receiverId = messageForm.querySelector('[name="receiver_id"]').value;
+                
+                if (!message) return;
+                
+                // TODO: Send message via AJAX to MessageController
+                console.log('Sending message:', message, 'to user:', receiverId);
+                
+                // For now, just reload the page
+                window.location.reload();
+            });
+        }
+
+        // Search messages
+        const searchInput = document.getElementById('searchMessages');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                const conversations = document.querySelectorAll('.conversation-item');
+                
+                conversations.forEach(conv => {
+                    const name = conv.querySelector('.conversation-name').textContent.toLowerCase();
+                    const message = conv.querySelector('.conversation-message').textContent.toLowerCase();
+                    
+                    if (name.includes(query) || message.includes(query)) {
+                        conv.style.display = '';
+                    } else {
+                        conv.style.display = 'none';
+                    }
+                });
+            });
+        }
+    </script>
 </body>
 </html>

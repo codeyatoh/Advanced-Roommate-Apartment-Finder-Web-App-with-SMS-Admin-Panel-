@@ -13,6 +13,28 @@
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/landlord.module.css">
 </head>
 <body>
+    <?php
+    // Start session and check authentication
+    session_start();
+    
+    // For now, using hardcoded landlord ID - should come from session in production
+    $landlordId = $_SESSION['user_id'] ?? 2;
+    
+    // Load models
+    require_once __DIR__ . '/../../models/Listing.php';
+    require_once __DIR__ . '/../../models/Message.php';
+    require_once __DIR__ . '/../../models/Appointment.php';
+    
+    $listingModel = new Listing();
+    $messageModel = new Message();
+    $appointmentModel = new Appointment();
+    
+    // Fetch landlord stats
+    $landlordStats = $listingModel->getLandlordStats($landlordId);
+    $pendingAppointments = $appointmentModel->getPendingCount($landlordId);
+    $recentInquiriesData = $messageModel->getLandlordInquiries($landlordId);
+    $recentInquiriesData = array_slice($recentInquiriesData, 0, 3); // Show only 3
+    ?>
     <div class="landlord-page">
         <?php include __DIR__ . '/../includes/navbar.php'; ?>
 
@@ -37,7 +59,7 @@
                             <i data-lucide="home" class="stat-icon"></i>
                         </div>
                     </div>
-                    <p class="stat-value">8</p>
+                    <p class="stat-value"><?php echo intval($landlordStats['active_listings'] ?? 0); ?></p>
                     <p class="stat-label">Active Listings</p>
                 </div>
 
@@ -47,7 +69,7 @@
                             <i data-lucide="message-square" class="stat-icon"></i>
                         </div>
                     </div>
-                    <p class="stat-value">12</p>
+                    <p class="stat-value"><?php echo count($recentInquiriesData); ?></p>
                     <p class="stat-label">New Inquiries</p>
                 </div>
 
@@ -57,7 +79,7 @@
                             <i data-lucide="calendar" class="stat-icon"></i>
                         </div>
                     </div>
-                    <p class="stat-value">5</p>
+                    <p class="stat-value"><?php echo intval($pendingAppointments); ?></p>
                     <p class="stat-label">Pending Viewings</p>
                 </div>
 
@@ -67,8 +89,8 @@
                             <i data-lucide="eye" class="stat-icon"></i>
                         </div>
                     </div>
-                    <p class="stat-value">234</p>
-                    <p class="stat-label">Total Views</p>
+                    <p class="stat-value"><?php echo intval($landlordStats['total_listings'] ?? 0); ?></p>
+                    <p class="stat-label">Total Listings</p>
                 </div>
             </div>
 
@@ -82,62 +104,6 @@
                             <div>
                                 <h2 style="font-size: 1.25rem; font-weight: 700; color: #000; margin-bottom: 0.125rem;">Recent Inquiries</h2>
                                 <p style="font-size: 0.75rem; color: rgba(0,0,0,0.6);">New messages from potential tenants</p>
-                            </div>
-                            <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/landlord/inquiries.php" class="btn btn-ghost btn-sm" style="font-size: 0.75rem;">View All</a>
-                        </div>
-
-                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                            <?php
-                            $recentInquiries = [
-                                [
-                                    'id' => 1,
-                                    'tenant' => 'Sarah Johnson',
-                                    'property' => 'Modern Studio Downtown',
-                                    'message' => 'Hi, I am interested in viewing this property...',
-                                    'time' => '2 hours ago',
-                                    'avatar' => 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
-                                    'unread' => true,
-                                ],
-                                [
-                                    'id' => 2,
-                                    'tenant' => 'Mike Chen',
-                                    'property' => 'Cozy Apartment',
-                                    'message' => 'Is this still available for February?',
-                                    'time' => '5 hours ago',
-                                    'avatar' => 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-                                    'unread' => true,
-                                ],
-                                [
-                                    'id' => 3,
-                                    'tenant' => 'Emily Rodriguez',
-                                    'property' => 'Spacious Loft',
-                                    'message' => 'Thank you for the quick response!',
-                                    'time' => '1 day ago',
-                                    'avatar' => 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
-                                    'unread' => false,
-                                ],
-                            ];
-
-                            foreach ($recentInquiries as $inquiry): ?>
-                            <div class="inquiry-item">
-                                <img src="<?php echo $inquiry['avatar']; ?>" alt="<?php echo $inquiry['tenant']; ?>" class="inquiry-avatar">
-                                <div class="inquiry-content">
-                                    <div class="inquiry-header">
-                                        <p class="inquiry-name"><?php echo $inquiry['tenant']; ?></p>
-                                        <span class="inquiry-time"><?php echo $inquiry['time']; ?></span>
-                                    </div>
-                                    <p class="inquiry-property"><?php echo $inquiry['property']; ?></p>
-                                    <p class="inquiry-message"><?php echo $inquiry['message']; ?></p>
-                                </div>
-                                <?php if ($inquiry['unread']): ?>
-                                <div class="unread-indicator"></div>
-                                <?php endif; ?>
-                            </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-
-                    <!-- Performance Overview -->
                     <div class="glass-card" style="padding: 1.25rem;">
                         <h2 style="font-size: 1.25rem; font-weight: 700; color: #000; margin-bottom: 1rem;">Performance Overview</h2>
                         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">

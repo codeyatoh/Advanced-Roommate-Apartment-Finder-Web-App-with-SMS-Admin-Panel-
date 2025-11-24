@@ -7,6 +7,14 @@ if (session_status() === PHP_SESSION_NONE) {
 $current_page = basename($_SERVER['PHP_SELF']);
 $role = $_SESSION['role'] ?? 'guest';
 
+// Get notification count for seekers
+$notificationCount = 0;
+if ($role === 'room_seeker' && isset($_SESSION['user_id'])) {
+    require_once __DIR__ . '/../../models/Match.php';
+    $matchModel = new MatchModel();
+    $notificationCount = $matchModel->getUnreadMatchCount($_SESSION['user_id']);
+}
+
 // Determine profile link based on role
 $profile_link = '#';
 if ($role === 'room_seeker') {
@@ -44,6 +52,9 @@ if ($role === 'room_seeker') {
                 <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/seeker/roommate_finder.php" class="navbar-link <?php echo $current_page === 'roommate_finder.php' ? 'active' : ''; ?>">
                     <i data-lucide="users" class="nav-icon"></i>
                     <span>Roommates</span>
+                    <?php if ($notificationCount > 0): ?>
+                    <span class="notification-badge"><?php echo $notificationCount; ?></span>
+                    <?php endif; ?>
                 </a>
                 <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/seeker/appointments.php" class="navbar-link <?php echo $current_page === 'appointments.php' ? 'active' : ''; ?>">
                     <i data-lucide="calendar" class="nav-icon"></i>
@@ -207,6 +218,22 @@ if ($role === 'room_seeker') {
 .btn-outline-profile:hover {
     background: #f9fafb;
     border-color: #d1d5db;
+}
+
+/* Notification Badge */
+.notification-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 0.375rem;
+    background: #ef4444;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 9999px;
+    margin-left: 0.25rem;
 }
 
 </style>

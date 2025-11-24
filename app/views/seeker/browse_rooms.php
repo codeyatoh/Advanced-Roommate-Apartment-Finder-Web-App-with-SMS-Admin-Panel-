@@ -20,6 +20,32 @@
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/room-card.module.css">
 </head>
 <body>
+    <?php
+    // Load Listing model
+    require_once __DIR__ . '/../../models/Listing.php';
+    
+    $listingModel = new Listing();
+    
+    // Get filter parameters
+    $location = $_GET['location'] ?? '';
+    $minPrice = $_GET['min_price'] ?? null;
+    $maxPrice = $_GET['max_price'] ?? null;
+    $bedrooms = $_GET['bedrooms'] ?? null;
+    
+    // Fetch rooms from database
+    if (!empty($location) || !empty($minPrice) || !empty($maxPrice) || !empty($bedrooms)) {
+        // Use search if filters are applied
+        $rooms = $listingModel->search([
+            'location' => $location,
+            'min_price' => $minPrice,
+            'max_price' => $maxPrice,
+            'bedrooms' => $bedrooms
+        ]);
+    } else {
+        // Get all available listings
+        $rooms = $listingModel->getAvailable();
+    }
+    ?>
     <div style="min-height: 100vh; background: linear-gradient(to bottom right, var(--softBlue-20), var(--neutral), var(--deepBlue-10));">
         <!-- Navbar -->
         <?php include __DIR__ . '/../includes/navbar.php'; ?>
@@ -32,7 +58,7 @@
                         Browse Rooms
                     </h1>
                     <p style="color: rgba(0, 0, 0, 0.6);">
-                        Find your perfect room from <span style="font-weight: 600; color: #000000;">6 available listings</span>
+                        Find your perfect room from <span style="font-weight: 600; color: #000000;"><?php echo count($rooms); ?> available listings</span>
                     </p>
                 </div>
 
@@ -129,112 +155,76 @@
 
                 <!-- Results Grid -->
                 <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
-                    <?php 
-                    $rooms = [
-                        [
-                            'image' => 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
-                            'title' => 'Modern Studio in Downtown',
-                            'location' => 'San Francisco, CA',
-                            'price' => 1200,
-                            'bedrooms' => 1,
-                            'bathrooms' => 1,
-                            'roommates' => 0,
-                            'available' => 'Now'
-                        ],
-                        [
-                            'image' => 'https://images.unsplash.com/photo-1502672260066-6bc2c9f0e6c7?w=800',
-                            'title' => 'Cozy Room with Garden View',
-                            'location' => 'Portland, OR',
-                            'price' => 850,
-                            'bedrooms' => 1,
-                            'bathrooms' => 1,
-                            'roommates' => 2,
-                            'available' => 'Feb 1'
-                        ],
-                        [
-                            'image' => 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800',
-                            'title' => 'Spacious Loft Near Campus',
-                            'location' => 'Austin, TX',
-                            'price' => 950,
-                            'bedrooms' => 2,
-                            'bathrooms' => 1,
-                            'roommates' => 1,
-                            'available' => 'Jan 15'
-                        ],
-                        [
-                            'image' => 'https://images.unsplash.com/photo-1502672023488-70e25813eb80?w=800',
-                            'title' => 'Bright Room in Shared House',
-                            'location' => 'Seattle, WA',
-                            'price' => 780,
-                            'bedrooms' => 1,
-                            'bathrooms' => 1,
-                            'roommates' => 3,
-                            'available' => 'Feb 15'
-                        ],
-                        [
-                            'image' => 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800',
-                            'title' => 'Luxury Apartment Downtown',
-                            'location' => 'New York, NY',
-                            'price' => 1800,
-                            'bedrooms' => 2,
-                            'bathrooms' => 2,
-                            'roommates' => 0,
-                            'available' => 'Now'
-                        ],
-                        [
-                            'image' => 'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800',
-                            'title' => 'Cozy Studio Near Beach',
-                            'location' => 'Los Angeles, CA',
-                            'price' => 1100,
-                            'bedrooms' => 1,
-                            'bathrooms' => 1,
-                            'roommates' => 0,
-                            'available' => 'Mar 1'
-                        ]
-                    ];
+                <?php 
+                    // Fetch listings from database
+                    require_once __DIR__ . '/../../models/Listing.php';
+                    $listingModel = new Listing();
+                    
+                    // Get filter parameters if any
+                    $filters = [];
+                    if (!empty($_GET['min_price'])) $filters['min_price'] = $_GET['min_price'];
+                    if (!empty($_GET['max_price'])) $filters['max_price'] = $_GET['max_price'];
+                    if (!empty($_GET['location'])) $filters['location'] = $_GET['location'];
+                    if (!empty($_GET['bedrooms'])) $filters['bedrooms'] = $_GET['bedrooms'];
+                    
+                    // Search listings or get all available
+                    $rooms = !empty($filters) ? $listingModel->search($filters) : $listingModel->getAvailable();
+                    
+                    // Handle empty results
+                    if (empty($rooms)) {
+                        echo '<div style="text-align: center; padding: 3rem;">';
+                        echo '<i data-lucide="search" style="width: 3rem; height: 3rem; color: rgba(0,0,0,0.3); margin: 0 auto 1rem;"></i>';
+                        echo '<p style="color: rgba(0,0,0,0.5);">No listings found matching your criteria.</p>';
+                        echo '</div>';
+                    }
+                    
                     
                     foreach ($rooms as $index => $room): 
+                        // Handle image from database or fallback
+                        $image = $room['primary_image'] ?? 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800';
+                        $listingId = $room['listing_id'] ?? '';
+                        $availableText = !empty($room['available_from']) ? date('M j', strtotime($room['available_from'])) : 'Now';
                     ?>
                     <div style="animation: slideUp 0.3s ease-out; animation-delay: <?php echo $index * 0.05; ?>s; animation-fill-mode: both;">
-                        <a href="room_details.php" style="text-decoration: none; color: inherit; display: block;">
+                        <a href="room_details.php?id=<?php echo $listingId; ?>" style="text-decoration: none; color: inherit; display: block;">
                             <div class="room-card">
                                 <!-- Image -->
                                 <div class="room-card-image-wrapper">
-                                    <img src="<?php echo $room['image']; ?>" alt="<?php echo $room['title']; ?>" class="room-card-image">
+                                    <img src="<?php echo htmlspecialchars($image); ?>" alt="<?php echo htmlspecialchars($room['title']); ?>" class="room-card-image">
                                     <button class="room-card-favorite" onclick="event.preventDefault();">
                                         <i data-lucide="heart"></i>
                                     </button>
-                                    <div class="room-card-badge">Available <?php echo $room['available']; ?></div>
+                                    <div class="room-card-badge">Available <?php echo htmlspecialchars($availableText); ?></div>
                                 </div>
 
                                 <!-- Content -->
                                 <div class="room-card-content">
-                                    <h3 class="room-card-title"><?php echo $room['title']; ?></h3>
+                                    <h3 class="room-card-title"><?php echo htmlspecialchars($room['title']); ?></h3>
                                     <div class="room-card-location">
                                         <i data-lucide="map-pin"></i>
-                                        <?php echo $room['location']; ?>
+                                        <?php echo htmlspecialchars($room['location']); ?>
                                     </div>
 
                                     <!-- Details -->
                                     <div class="room-card-details">
                                         <div class="room-card-detail">
                                             <i data-lucide="bed"></i>
-                                            <?php echo $room['bedrooms']; ?> bed
+                                            <?php echo intval($room['bedrooms'] ?? 1); ?> bed
                                         </div>
                                         <div class="room-card-detail">
                                             <i data-lucide="bath"></i>
-                                            <?php echo $room['bathrooms']; ?> bath
+                                            <?php echo intval($room['bathrooms'] ?? 1); ?> bath
                                         </div>
                                         <div class="room-card-detail">
                                             <i data-lucide="users"></i>
-                                            <?php echo $room['roommates']; ?> roommates
+                                            <?php echo intval($room['current_roommates'] ?? 0); ?> roommates
                                         </div>
                                     </div>
 
                                     <!-- Price -->
                                     <div style="padding-top: 0.75rem; border-top: 1px solid rgba(0, 0, 0, 0.1);">
                                         <div class="room-card-price">
-                                            <span>$<?php echo $room['price']; ?></span>
+                                            <span>$<?php echo number_format($room['price'], 0); ?></span>
                                             <span class="room-card-price-period">/month</span>
                                         </div>
                                     </div>

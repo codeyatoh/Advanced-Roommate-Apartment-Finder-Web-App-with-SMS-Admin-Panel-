@@ -1,3 +1,29 @@
+<?php
+// Start session and load models
+session_start();
+require_once __DIR__ . '/../../models/User.php';
+require_once __DIR__ . '/../../models/Match.php';
+
+// Get current user
+$userId = $_SESSION['user_id'] ?? 1; // Fallback for development
+$userName = $_SESSION['first_name'] ?? 'User';
+
+$userModel = new User();
+$matchModel = new MatchModel();
+
+// Get profile completion
+$completion = $userModel->getProfileCompletion($userId);
+
+// Get unseenprofiles for swiping
+$unseenProfiles = $matchModel->getUnseenProfiles($userId, 1);
+$currentProfile = !empty($unseenProfiles) ? $unseenProfiles[0] : null;
+
+// Get pending matches (who liked you)
+$pendingMatches = $matchModel->getPendingMatches($userId);
+
+// Get mutual matches
+$mutualMatches = $matchModel->getMutualMatches($userId);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,6 +41,8 @@
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/profile-card.module.css">
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/profile-completion-banner.module.css">
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/match-modal.module.css">
+    <!-- Toastify CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 </head>
 <body>
     <div style="min-height: 100vh; background: linear-gradient(to bottom right, var(--softBlue-20), var(--neutral), var(--deepBlue-10));">
@@ -29,47 +57,62 @@
                 <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
                     <!-- Profile Card -->
                     <div style="grid-column: 1/-1;">
+                        <?php if ($currentProfile): 
+                            $fullName = htmlspecialchars($currentProfile['first_name'] . ' ' . $currentProfile['last_name']);
+                            $occupation = htmlspecialchars($currentProfile['occupation'] ?? 'Room Seeker');
+                            $bio = htmlspecialchars($currentProfile['bio'] ?? 'No bio available yet.');
+                            $photo = !empty($currentProfile['profile_photo']) 
+                                ? htmlspecialchars($currentProfile['profile_photo']) 
+                                : 'https://ui-avatars.com/api/?name=' . urlencode($fullName) . '&background=10b981&color=fff&size=800';
+                            
+                            // Parse preferences if available
+                            $preferences = [];
+                            if (!empty($currentProfile['preferences'])) {
+                                $prefsData = json_decode($currentProfile['preferences'], true);
+                                if (is_array($prefsData)) {
+                                    $preferences = $prefsData;
+                                }
+                            }
+                        ?>
                         <div class="card card-glass" style="overflow: hidden; height: 100%;">
                             <div class="profile-card-content" style="display: flex; flex-direction: column; gap: 1.5rem; padding: 1.5rem; height: 100%;">
                                 <!-- Photo -->
                                 <div class="profile-image-container" style="width: 100%; flex-shrink: 0;">
                                     <div style="position: relative; border-radius: 1rem; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15); height: 100%;">
-                                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800" alt="Sarah Johnson" class="profile-image" style="width: 100%; height: 400px; object-fit: cover;">
+                                        <img src="<?php echo $photo; ?>" alt="<?php echo $fullName; ?>" class="profile-image" style="width: 100%; height: 400px; object-fit: cover;">
                                     </div>
                                 </div>
                                 <!-- Details -->
                                 <div style="flex: 1; display: flex; flex-direction: column; gap: 1rem; justify-content: center;">
                                     <div style="display: flex; align-items: flex-start; justify-content: space-between;">
                                         <div>
-                                            <h2 style="font-size: 1.5rem; font-weight: 700; color: #000000; margin: 0 0 0.25rem 0;">Sarah Johnson, 25</h2>
+                                            <h2 style="font-size: 1.5rem; font-weight: 700; color: #000000; margin: 0 0 0.25rem 0;"><?php echo $fullName; ?></h2>
                                             <div style="display: flex; align-items: center; gap: 0.5rem; color: rgba(0, 0, 0, 0.7);">
                                                 <i data-lucide="briefcase" style="width: 1rem; height: 1rem;"></i>
-                                                <span style="font-size: 0.875rem;">Software Engineer</span>
+                                                <span style="font-size: 0.875rem;"><?php echo $occupation; ?></span>
                                             </div>
-                                        </div>
-                                        <div style="padding: 0.5rem 1rem; background: rgba(16,185,129,0.2); border-radius: 9999px; display: flex; align-items: center; gap: 0.5rem;">
-                                            <i data-lucide="trending-up" style="width: 1.25rem; height: 1.25rem; color: #10b981;"></i>
-                                            <span style="font-weight: 700; color: #10b981; font-size: 1.125rem;">92%</span>
                                         </div>
                                     </div>
                                     <div>
                                         <h3 style="font-size: 0.75rem; font-weight: 700; color: rgba(0, 0, 0, 0.6); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.5rem 0;">About</h3>
-                                        <p style="color: rgba(0, 0, 0, 0.8); line-height: 1.5; margin: 0; font-size: 0.95rem;">Love hiking, cooking, and good coffee. Looking for a clean and respectful roommate who enjoys a balanced lifestyle.</p>
+                                        <p style="color: rgba(0, 0, 0, 0.8); line-height: 1.5; margin: 0; font-size: 0.95rem;"><?php echo $bio; ?></p>
                                     </div>
+                                    <?php if (!empty($preferences)): ?>
                                     <div style="flex: 1;">
-                                        <h3 style="font-size: 0.75rem; font-weight: 700; color: rgba(0, 0, 0, 0.6); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.5rem 0;">Interests</h3>
+                                        <h3 style="font-size: 0.75rem; font-weight: 700; color: rgba(0, 0, 0, 0.6); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.5rem 0;">Preferences</h3>
                                         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                                            <?php foreach (['Hiking', 'Cooking', 'Coffee', 'Yoga', 'Reading'] as $interest): ?>
-                                            <span style="padding: 0.375rem 0.75rem; background: var(--glass-bg-subtle); backdrop-filter: blur(8px); border-radius: 9999px; font-size: 0.8rem; color: #000000; font-weight: 500;"><?php echo $interest; ?></span>
+                                            <?php foreach ($preferences as $pref): ?>
+                                            <span style="padding: 0.375rem 0.75rem; background: var(--glass-bg-subtle); backdrop-filter: blur(8px); border-radius: 9999px; font-size: 0.8rem; color: #000000; font-weight: 500;"><?php echo htmlspecialchars($pref); ?></span>
                                             <?php endforeach; ?>
                                         </div>
                                     </div>
+                                    <?php endif; ?>
                                     <div style="display: flex; gap: 0.75rem; padding-top: 0.5rem;">
-                                        <button class="btn btn-glass btn-lg" style="flex: 1;">
+                                        <button class="btn btn-glass btn-lg" style="flex: 1;" onclick="handleAction('pass', <?php echo $currentProfile['user_id']; ?>)">
                                             <i data-lucide="x" class="btn-icon"></i>
                                             Pass
                                         </button>
-                                        <button class="btn btn-primary btn-lg" style="flex: 1;">
+                                        <button class="btn btn-primary btn-lg" style="flex: 1;" onclick="handleAction('match', <?php echo $currentProfile['user_id']; ?>)">
                                             <i data-lucide="heart" class="btn-icon"></i>
                                             Match
                                         </button>
@@ -77,22 +120,29 @@
                                 </div>
                             </div>
                         </div>
+                        <?php else: ?>
+                        <div class="card card-glass" style="padding: 3rem; text-align: center;">
+                            <i data-lucide="users" style="width: 4rem; height: 4rem; color: rgba(0,0,0,0.3); margin: 0 auto 1rem;"></i>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; color: #000000; margin-bottom: 0.5rem;">No More Profiles</h3>
+                            <p style="color: rgba(0,0,0,0.6);">You've reviewed all available profiles. Check back later for new seekers!</p>
+                        </div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Sidebar -->
                     <div style="display: flex; flex-direction: column; gap: 1rem;">
                         <!-- Profile Completion -->
-                        <div class="profile-completion-banner incomplete" style="padding: 1rem; border-radius: 1rem; background: rgba(234,179,8,0.1); border: 2px solid rgba(234,179,8,0.3);">
+                        <div class="profile-completion-banner <?php echo $completion['percentage'] < 100 ? 'incomplete' : 'complete'; ?>" style="padding: 1rem; border-radius: 1rem; background: <?php echo $completion['percentage'] < 100 ? 'rgba(234,179,8,0.1)' : 'rgba(16,185,129,0.1)'; ?>; border: 2px solid <?php echo $completion['percentage'] < 100 ? 'rgba(234,179,8,0.3)' : 'rgba(16,185,129,0.3)'; ?>;">
                             <div class="profile-completion-content">
-                                <div class="profile-completion-icon incomplete">
-                                    <i data-lucide="alert-circle"></i>
+                                <div class="profile-completion-icon <?php echo $completion['percentage'] < 100 ? 'incomplete' : 'complete'; ?>">
+                                    <i data-lucide="<?php echo $completion['percentage'] < 100 ? 'alert-circle' : 'check-circle'; ?>"></i>
                                 </div>
                                 <div class="profile-completion-text">
                                     <div class="profile-completion-header">
-                                        <h3 class="profile-completion-title">Complete Your Profile</h3>
-                                        <span class="profile-completion-percentage incomplete">75%</span>
+                                        <h3 class="profile-completion-title"><?php echo $completion['percentage'] < 100 ? 'Complete Your Profile' : 'Profile Complete!'; ?></h3>
+                                        <span class="profile-completion-percentage <?php echo $completion['percentage'] < 100 ? 'incomplete' : 'complete'; ?>"><?php echo $completion['percentage']; ?>%</span>
                                     </div>
-                                    <div class="profile-completion-progress"><div class="profile-completion-progress-bar" style="width: 75%;"></div></div>
+                                    <div class="profile-completion-progress"><div class="profile-completion-progress-bar" style="width: <?php echo $completion['percentage']; ?>%;"></div></div>
                                 </div>
                             </div>
                         </div>
@@ -105,25 +155,28 @@
                                 </div>
                                 <div>
                                     <h3 style="font-size: 0.875rem; font-weight: 700; color: #000000; margin: 0;">Pending Matches</h3>
-                                    <p style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.6); margin: 0;">2 people liked you</p>
+                                    <p style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.6); margin: 0;"><?php echo count($pendingMatches); ?> people liked you</p>
                                 </div>
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                <?php 
-                                $pending = [
-                                    ['name' => 'Alex Kim', 'age' => 27, 'occupation' => 'Teacher', 'compatibility' => 90, 'image' => 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400'],
-                                    ['name' => 'Jessica Lee', 'age' => 24, 'occupation' => 'Nurse', 'compatibility' => 87, 'image' => 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=400']
-                                ];
-                                foreach ($pending as $person): ?>
-                                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; background: var(--glass-bg-subtle); border-radius: 0.5rem; cursor: pointer;">
-                                    <img src="<?php echo $person['image']; ?>" alt="<?php echo $person['name']; ?>" style="width: 3rem; height: 3rem; border-radius: 9999px; object-fit: cover;">
-                                    <div style="flex: 1; min-width: 0;">
-                                        <p style="font-size: 0.875rem; font-weight: 600; color: #000000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;"><?php echo $person['name']; ?>, <?php echo $person['age']; ?></p>
-                                        <p style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;"><?php echo $person['occupation']; ?></p>
+                                <?php if (empty($pendingMatches)): ?>
+                                    <p style="color: rgba(0,0,0,0.5); text-align: center; padding: 1rem; font-size: 0.875rem;">No pending matches yet</p>
+                                <?php else: ?>
+                                    <?php foreach ($pendingMatches as $person): 
+                                        $pName = htmlspecialchars($person['first_name'] . ' ' . $person['last_name']);
+                                        $pPhoto = !empty($person['profile_photo']) 
+                                            ? htmlspecialchars($person['profile_photo']) 
+                                            : 'https://ui-avatars.com/api/?name=' . urlencode($pName) . '&background=10b981&color=fff';
+                                    ?>
+                                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; background: var(--glass-bg-subtle); border-radius: 0.5rem; cursor: pointer;">
+                                        <img src="<?php echo $pPhoto; ?>" alt="<?php echo $pName; ?>" style="width: 3rem; height: 3rem; border-radius: 9999px; object-fit: cover;">
+                                        <div style="flex: 1; min-width: 0;">
+                                            <p style="font-size: 0.875rem; font-weight: 600; color: #000000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;"><?php echo $pName; ?></p>
+                                            <p style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;"><?php echo htmlspecialchars($person['occupation'] ?? 'Room Seeker'); ?></p>
+                                        </div>
                                     </div>
-                                    <div style="font-size: 0.75rem; font-weight: 700; color: #10b981;"><?php echo $person['compatibility']; ?>%</div>
-                                </div>
-                                <?php endforeach; ?>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </div>
                         </div>
 
@@ -135,37 +188,42 @@
                                 </div>
                                 <div>
                                     <h3 style="font-size: 0.875rem; font-weight: 700; color: #000000; margin: 0;">Matched</h3>
-                                    <p style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.6); margin: 0;">2 mutual matches</p>
+                                    <p style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.6); margin: 0;"><?php echo count($mutualMatches); ?> mutual matches</p>
                                 </div>
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                <?php 
-                                $matched = [
-                                    ['name' => 'David Martinez', 'age' => 29, 'lastMessage' => 'Hey! Want to grab coffee this week?', 'time' => '2h ago', 'image' => 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400'],
-                                    ['name' => 'Lisa Wong', 'age' => 26, 'lastMessage' => 'That sounds great! See you then', 'time' => '1d ago', 'image' => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400']
-                                ];
-                                foreach ($matched as $person): ?>
-                                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; background: var(--glass-bg-subtle); border-radius: 0.5rem;">
-                                    <a href="match_profile.php" style="display: flex; align-items: center; gap: 0.75rem; flex: 1; min-width: 0; text-decoration: none; color: inherit;">
-                                        <div style="position: relative;">
-                                            <img src="<?php echo $person['image']; ?>" alt="<?php echo $person['name']; ?>" style="width: 3rem; height: 3rem; border-radius: 9999px; object-fit: cover;">
-                                            <div style="position: absolute; bottom: -0.25rem; right: -0.25rem; width: 1rem; height: 1rem; background: #10b981; border-radius: 9999px; border: 2px solid white;"></div>
-                                        </div>
-                                        <div style="flex: 1; min-width: 0;">
-                                            <p style="font-size: 0.875rem; font-weight: 600; color: #000000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;"><?php echo $person['name']; ?>, <?php echo $person['age']; ?></p>
-                                            <p style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;"><?php echo $person['lastMessage']; ?></p>
-                                        </div>
-                                    </a>
-                                    <div style="display: flex; flex-direction: column; align-items: flex-end;">
-                                        <a href="messages.php" style="text-decoration: none; display: flex; align-items: center; justify-content: center; padding: 0.25rem; border-radius: 0.25rem; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='rgba(16, 185, 129, 0.1)'" onmouseout="this.style.backgroundColor='transparent'">
-                                            <i data-lucide="message-square" style="width: 1rem; height: 1rem; color: #10b981;"></i>
+                                <?php if (empty($mutualMatches)): ?>
+                                    <p style="color: rgba(0,0,0,0.5); text-align: center; padding: 1rem; font-size: 0.875rem;">No matches yet</p>
+                                <?php else: ?>
+                                    <?php foreach ($mutualMatches as $person): 
+                                        $mName = htmlspecialchars($person['first_name'] . ' ' . $person['last_name']);
+                                        $mPhoto = !empty($person['profile_photo']) 
+                                            ? htmlspecialchars($person['profile_photo']) 
+                                            : 'https://ui-avatars.com/api/?name=' . urlencode($mName) . '&background=10b981&color=fff';
+                                    ?>
+                                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; background: var(--glass-bg-subtle); border-radius: 0.5rem;">
+                                        <a href="messages.php" style="display: flex; align-items: center; gap: 0.75rem; flex: 1; min-width: 0; text-decoration: none; color: inherit;">
+                                            <div style="position: relative;">
+                                                <img src="<?php echo $mPhoto; ?>" alt="<?php echo $mName; ?>" style="width: 3rem; height: 3rem; border-radius: 9999px; object-fit: cover;">
+                                                <div style="position: absolute; bottom: -0.25rem; right: -0.25rem; width: 1rem; height: 1rem; background: #10b981; border-radius: 9999px; border: 2px solid white;"></div>
+                                            </div>
+                                            <div style="flex: 1; min-width: 0;">
+                                                <p style="font-size: 0.875rem; font-weight: 600; color: #000000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;"><?php echo $mName; ?></p>
+                                                <p style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;"><?php echo htmlspecialchars($person['occupation'] ?? 'Room Seeker'); ?></p>
+                                            </div>
                                         </a>
-                                        <span style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.5); margin-top: 0.125rem;"><?php echo $person['time']; ?></span>
+                                        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                                            <a href="messages.php" style="text-decoration: none; display: flex; align-items: center; justify-content: center; padding: 0.25rem; border-radius: 0.25rem; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='rgba(16, 185, 129, 0.1)'" onmouseout="this.style.backgroundColor='transparent'">
+                                                <i data-lucide="message-square" style="width: 1rem; height: 1rem; color: #10b981;"></i>
+                                            </a>
+                                        </div>
                                     </div>
-                                </div>
-                                <?php endforeach; ?>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </div>
-                            <button class="btn btn-ghost btn-sm" style="width: 100%; margin-top: 0.75rem;">View All Messages</button>
+                            <?php if (!empty($mutualMatches)): ?>
+                            <button class="btn btn-ghost btn-sm" style="width: 100%; margin-top: 0.75rem;" onclick="window.location.href='messages.php'">View All Messages</button>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -200,7 +258,42 @@
             </div>
         </div>
     </div>
+    
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>lucide.createIcons();</script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/js/toast-helper.js"></script>
+    
+    <script>
+        function handleAction(action, targetId) {
+            const formData = new FormData();
+            formData.append('endpoint', 'record_action');
+            formData.append('action', action);
+            formData.append('target_id', targetId);
+
+            fetch('/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/controllers/MatchController.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    if (data.is_mutual) {
+                        showToast(data.message, 'success');
+                    }
+                    // Reload page to show next profile
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, data.is_mutual ? 1500 : 500);
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred. Please try again.', 'error');
+            });
+        }
+    </script>
 </body>
 </html>
