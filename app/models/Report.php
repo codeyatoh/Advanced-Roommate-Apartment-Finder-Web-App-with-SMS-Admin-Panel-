@@ -97,4 +97,17 @@ class Report extends BaseModel {
     public function getByType($type) {
         return $this->getAll(['report_type' => $type]);
     }
+
+    /**
+     * Get pending reports
+     * @param int $limit
+     * @return array
+     */
+    public function getPending($limit = 5) {
+        $sql = "SELECT * FROM {$this->table} WHERE status = 'pending' ORDER BY created_at DESC LIMIT :limit";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
 }

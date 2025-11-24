@@ -191,4 +191,30 @@ class Listing extends BaseModel {
         $stmt->execute();
         return $stmt->fetch();
     }
+
+    /**
+     * Get recent listings
+     * @param int $limit
+     * @return array
+     */
+    public function getRecent($limit = 5) {
+        $sql = "SELECT * FROM {$this->table} ORDER BY created_at DESC LIMIT :limit";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Get pending listings
+     * @param int $limit
+     * @return array
+     */
+    public function getPending($limit = 5) {
+        $sql = "SELECT * FROM {$this->table} WHERE availability_status = 'pending' ORDER BY created_at DESC LIMIT :limit";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
 }

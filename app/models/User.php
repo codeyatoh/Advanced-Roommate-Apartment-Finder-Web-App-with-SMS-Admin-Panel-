@@ -258,4 +258,30 @@ class User extends BaseModel {
             'total_count' => $totalFields
         ];
     }
+
+    /**
+     * Get recent users
+     * @param int $limit
+     * @return array
+     */
+    public function getRecent($limit = 5) {
+        $sql = "SELECT * FROM {$this->table} ORDER BY created_at DESC LIMIT :limit";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Get unverified landlords
+     * @param int $limit
+     * @return array
+     */
+    public function getUnverifiedLandlords($limit = 5) {
+        $sql = "SELECT * FROM {$this->table} WHERE is_verified = 0 AND role = 'landlord' ORDER BY created_at DESC LIMIT :limit";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
 }

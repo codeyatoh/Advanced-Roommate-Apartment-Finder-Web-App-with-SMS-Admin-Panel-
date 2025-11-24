@@ -39,11 +39,8 @@
     $recentActivities = [];
     
     try {
-        // Get recent users (last 3) - using direct SQL
-        $sql = "SELECT * FROM users ORDER BY created_at DESC LIMIT 3";
-        $stmt = $userModel->conn->prepare($sql);
-        $stmt->execute();
-        $recentUsers = $stmt->fetchAll();
+        // Get recent users (last 3)
+        $recentUsers = $userModel->getRecent(3);
         
         if ($recentUsers && is_array($recentUsers)) {
             foreach ($recentUsers as $ru) {
@@ -57,10 +54,7 @@
         }
         
         // Get recent listings (last 2)
-        $sql = "SELECT * FROM listings ORDER BY created_at DESC LIMIT 2";
-        $stmt = $listingModel->conn->prepare($sql);
-        $stmt->execute();
-        $recentListings = $stmt->fetchAll();
+        $recentListings = $listingModel->getRecent(2);
         
         if ($recentListings && is_array($recentListings)) {
             foreach ($recentListings as $rl) {
@@ -87,10 +81,7 @@
     
     try {
         // Get pending listings (status = pending)
-        $sql = "SELECT * FROM listings WHERE availability_status = 'pending' LIMIT 1";
-        $stmt = $listingModel->conn->prepare($sql);
-        $stmt->execute();
-        $pendingListings = $stmt->fetchAll();
+        $pendingListings = $listingModel->getPending(1);
         
         if ($pendingListings && is_array($pendingListings)) {
             foreach ($pendingListings as $pl) {
@@ -106,10 +97,7 @@
         }
         
         // Get unverified users (is_verified = 0)
-        $sql = "SELECT * FROM users WHERE is_verified = 0 AND role = 'landlord' LIMIT 1";
-        $stmt = $userModel->conn->prepare($sql);
-        $stmt->execute();
-        $unverifiedUsers = $stmt->fetchAll();
+        $unverifiedUsers = $userModel->getUnverifiedLandlords(1);
         
         if ($unverifiedUsers && is_array($unverifiedUsers)) {
             foreach ($unverifiedUsers as $uu) {
@@ -123,10 +111,7 @@
         }
         
         // Get pending reports
-        $sql = "SELECT * FROM reports WHERE status = 'pending' LIMIT 1";
-        $stmt = $reportModel->conn->prepare($sql);
-        $stmt->execute();
-        $pendingReports = $stmt->fetchAll();
+        $pendingReports = $reportModel->getPending(1);
         
         if ($pendingReports && is_array($pendingReports)) {
             foreach ($pendingReports as $pr) {
