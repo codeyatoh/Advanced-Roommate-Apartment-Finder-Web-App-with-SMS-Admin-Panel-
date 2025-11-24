@@ -13,6 +13,92 @@
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/admin.module.css">
 </head>
 <body>
+    <?php
+    // Start session and load models
+    session_start();
+    require_once __DIR__ . '/../../models/Report.php';
+    require_once __DIR__ . '/../../models/User.php';
+    require_once __DIR__ . '/../../models/Listing.php';
+    
+    $reportModel = new Report();
+    $userModel = new User();
+    $listingModel = new Listing();
+    
+    // Get report statistics
+    $reportStats = $reportModel->getStats();
+    
+    // Get all reports from database
+    $sql = "SELECT r.*, 
+                reporter.first_name as reporter_first, reporter.last_name as reporter_last, reporter.profile_photo as reporter_photo,
+                reported_user.first_name as reported_first, reported_user.last_name as reported_last,
+                l.title as listing_title
+            FROM reports r
+            LEFT JOIN users reporter ON r.reporter_id = reporter.user_id
+            LEFT JOIN users reported_user ON r.reported_user_id = reported_user.user_id
+            LEFT JOIN listings l ON r.reported_listing_id = l.listing_id
+            ORDER BY r.created_at DESC";
+    $stmt = $reportModel->getConnection()->prepare($sql);
+    $stmt->execute();
+    $reportsData = $stmt->fetchAll();
+    
+    // Helper function for time ago
+    function report_time_ago($datetime) {
+        $time = strtotime($datetime);
+        $now = time();
+        $diff = $now - $time;
+        
+        if ($diff < 60) return 'just now';
+        if ($diff < 3600) {
+            $mins = floor($diff/60);
+            return $mins . ' ' . ($mins == 1 ? 'hour' : 'hours') . ' ago';
+        }
+        if ($diff < 86400) {
+            $hours = floor($diff/3600);
+            return $hours . ' ' . ($hours == 1 ? 'hour' : 'hours') . ' ago';
+        }
+        $days = floor($diff/86400);
+        return $days . ' ' . ($days == 1 ? 'day' : 'days') . ' ago';
+    }
+    
+    // Format report data  
+    $reports = [];
+    foreach ($reportsData as $reportData) {
+        $reporterName = ($reportData['reporter_first'] ?? 'Unknown') . ' ' . ($reportData['reporter_last'] ?? 'User');
+        $reportedUserName = ($reportData['reported_first'] ?? 'Unknown') . ' ' . ($reportData['reported_last'] ?? 'User');
+        
+        // Determine what was reported
+        $reported = '';
+        if ($reportData['report_type'] === 'listing' && $reportData['listing_title']) {
+            $reported = $reportData['listing_title'];
+        } elseif ($reportData['report_type'] === 'user') {
+            $reported = $reportedUserName;
+        } else {
+            $reported = 'Message/Content';
+        }
+        
+        $reports[] = [
+            'id' => $reportData['report_id'],
+            'type' => $reportData['report_type'],
+            'category' => $reportData['reason'] ?? 'General Report',
+            'reporter' => $reporterName,
+            'reporterAvatar' => $reportData['reporter_photo'] ?? 'https://ui-avatars.com/api/?name=' . urlencode($reporterName) . '&background=3b82f6&color=fff',
+            'reported' => $reported,
+            'reportedUser' => $reportedUserName,
+            'description' => $reportData['description'] ?? 'No description provided.',
+            'status' => $reportData['status'],
+            'priority' => 'medium', // Default priority as it's not in schema
+            'submittedDate' => report_time_ago($reportData['created_at']),
+        ];
+    }
+    
+    // Count high priority (pending) reports
+    $highPriorityCount = 0;
+    foreach ($reports as $report) {
+        if ($report['status'] === 'pending') {
+            $highPriorityCount++;
+        }
+    }
+    ?>
     <div class="admin-page">
         <?php include __DIR__ . '/../includes/navbar.php'; ?>
 
@@ -31,7 +117,7 @@
                             <i data-lucide="clock" class="stat-icon"></i>
                         </div>
                     </div>
-                    <p class="stat-value">12</p>
+                    <p class="stat-value"><?php echo intval($reportStats['pending_reports'] ?? 0); ?></p>
                     <p class="stat-label">Pending</p>
                 </div>
 
@@ -41,7 +127,7 @@
                             <i data-lucide="alert-triangle" class="stat-icon"></i>
                         </div>
                     </div>
-                    <p class="stat-value">5</p>
+                    <p class="stat-value">0</p>
                     <p class="stat-label">Investigating</p>
                 </div>
 
@@ -51,7 +137,7 @@
                             <i data-lucide="check-circle" class="stat-icon"></i>
                         </div>
                     </div>
-                    <p class="stat-value">45</p>
+                    <p class="stat-value"><?php echo intval($reportStats['resolved_reports'] ?? 0); ?></p>
                     <p class="stat-label">Resolved</p>
                 </div>
 
@@ -61,7 +147,7 @@
                             <i data-lucide="x-circle" class="stat-icon"></i>
                         </div>
                     </div>
-                    <p class="stat-value">8</p>
+                    <p class="stat-value"><?php echo $highPriorityCount; ?></p>
                     <p class="stat-label">High Priority</p>
                 </div>
             </div>
@@ -104,61 +190,7 @@
             <!-- Reports List -->
             <div style="display: flex; flex-direction: column; gap: 1rem;">
                 <?php
-                $reports = [
-                    [
-                        'id' => 1234,
-                        'type' => 'listing',
-                        'category' => 'Inappropriate Content',
-                        'reporter' => 'Sarah Johnson',
-                        'reporterAvatar' => 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
-                        'reported' => 'Modern Studio Downtown',
-                        'reportedUser' => 'David Martinez',
-                        'description' => 'The listing contains misleading information about the property size and amenities.',
-                        'status' => 'pending',
-                        'priority' => 'high',
-                        'submittedDate' => '2 hours ago',
-                    ],
-                    [
-                        'id' => 1235,
-                        'type' => 'user',
-                        'category' => 'Harassment',
-                        'reporter' => 'Mike Chen',
-                        'reporterAvatar' => 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-                        'reported' => 'John Smith',
-                        'reportedUser' => 'John Smith',
-                        'description' => 'User sent inappropriate messages and refused to stop after being asked.',
-                        'status' => 'investigating',
-                        'priority' => 'high',
-                        'submittedDate' => '5 hours ago',
-                    ],
-                    [
-                        'id' => 1236,
-                        'type' => 'listing',
-                        'category' => 'Scam/Fraud',
-                        'reporter' => 'Emily Rodriguez',
-                        'reporterAvatar' => 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
-                        'reported' => 'Luxury Apartment',
-                        'reportedUser' => 'Lisa Wong',
-                        'description' => 'Listing appears to be a scam. Property does not exist at the listed address.',
-                        'status' => 'resolved',
-                        'priority' => 'high',
-                        'submittedDate' => '1 day ago',
-                    ],
-                    [
-                        'id' => 1237,
-                        'type' => 'message',
-                        'category' => 'Spam',
-                        'reporter' => 'Alex Thompson',
-                        'reporterAvatar' => 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
-                        'reported' => 'Spam Messages',
-                        'reportedUser' => 'Maria Garcia',
-                        'description' => 'User is sending spam messages to multiple people.',
-                        'status' => 'pending',
-                        'priority' => 'medium',
-                        'submittedDate' => '3 hours ago',
-                    ],
-                ];
-
+                // Reports already loaded from database above
                 foreach ($reports as $index => $report): 
                     $typeIcon = '';
                     switch ($report['type']) {
