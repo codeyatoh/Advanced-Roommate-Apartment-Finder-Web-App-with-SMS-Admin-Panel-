@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Create your RoomFinder account. Choose between Room Seeker or Landlord account to get started.">
+    <meta name="description" content="Create your RoomFinder account - Find your perfect room and roommate">
     <title>Register - RoomFinder</title>
 
     <!-- Google Fonts -->
@@ -17,201 +17,177 @@
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/globals.css">
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/modules/cards.module.css">
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/modules/forms.module.css">
-    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/modules/register.module.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/css/modules/login.module.css">
 </head>
 
 <body>
-    <div id="register-page" class="register-page">
-        <div class="register-container animate-slide-up">
+    <div class="auth-page">
+        <div class="auth-container auth-container-wide">
             <!-- Header -->
-            <div class="register-header">
-                <h1 class="register-title">Join RoomFinder</h1>
-                <p class="register-subtitle">Create your account to get started</p>
+            <div class="auth-header">
+                <h1 class="auth-title">Join RoomFinder</h1>
+                <p class="auth-subtitle">Create your account to get started</p>
             </div>
 
-            <!-- Role Selection -->
-            <div id="role-selection" style="display: grid;">
-                <div class="role-selection-grid">
-                    <!-- Room Seeker Card -->
-                    <div id="role-seeker" class="card card-glass-strong role-card card-hover">
-                        <div class="role-icon-wrapper">
-                            <i data-lucide="users" class="role-icon"></i>
-                        </div>
-                        <div>
-                            <h2 class="role-title">Room Seeker</h2>
-                            <p class="role-description">
-                                Looking for a room or roommate? Browse listings and connect with landlords.
-                            </p>
-                        </div>
-                        <ul class="role-features">
-                            <li class="role-feature">
-                                <div class="role-feature-dot"></div>
-                                Browse verified listings
-                            </li>
-                            <li class="role-feature">
-                                <div class="role-feature-dot"></div>
-                                Find compatible roommates
-                            </li>
-                            <li class="role-feature">
-                                <div class="role-feature-dot"></div>
-                                Schedule viewings
-                            </li>
-                            <li class="role-feature">
-                                <div class="role-feature-dot"></div>
-                                Chat with landlords
-                            </li>
-                        </ul>
-                        <button class="btn btn-primary btn-lg" style="width: 100%;">
-                            Continue as Seeker
-                        </button>
+            <!-- Step 1: Role Selection -->
+            <div id="role-selection" class="role-grid">
+                <!-- Room Seeker Card -->
+                <div class="role-card" onclick="selectRole('seeker')">
+                    <div class="role-icon">
+                        <i data-lucide="users"></i>
                     </div>
+                    <div>
+                        <h2 class="role-title">Room Seeker</h2>
+                        <p class="role-description">
+                            Looking for a room or roommate? Browse listings and connect with landlords.
+                        </p>
+                    </div>
+                    <ul class="role-features">
+                        <li>Browse verified listings</li>
+                        <li>Find compatible roommates</li>
+                        <li>Schedule viewings</li>
+                        <li>Chat with landlords</li>
+                    </ul>
+                    <button type="button" class="btn btn-primary btn-lg" style="width: 100%;">
+                        Continue as Seeker
+                    </button>
+                </div>
 
-                    <!-- Landlord Card -->
-                    <div id="role-landlord" class="card card-glass-strong role-card card-hover">
-                        <div class="role-icon-wrapper">
-                            <i data-lucide="home" class="role-icon"></i>
-                        </div>
-                        <div>
-                            <h2 class="role-title">Landlord</h2>
-                            <p class="role-description">
-                                Have a room to rent? List your property and connect with verified tenants.
-                            </p>
-                        </div>
-                        <ul class="role-features">
-                            <li class="role-feature">
-                                <div class="role-feature-dot"></div>
-                                List unlimited properties
-                            </li>
-                            <li class="role-feature">
-                                <div class="role-feature-dot"></div>
-                                Manage inquiries easily
-                            </li>
-                            <li class="role-feature">
-                                <div class="role-feature-dot"></div>
-                                Schedule viewings
-                            </li>
-                            <li class="role-feature">
-                                <div class="role-feature-dot"></div>
-                                Verified tenant profiles
-                            </li>
-                        </ul>
-                        <button class="btn btn-primary btn-lg" style="width: 100%;">
-                            Continue as Landlord
-                        </button>
+                <!-- Landlord Card -->
+                <div class="role-card" onclick="selectRole('landlord')">
+                    <div class="role-icon">
+                        <i data-lucide="home"></i>
                     </div>
+                    <div>
+                        <h2 class="role-title">Landlord</h2>
+                        <p class="role-description">
+                            Have a room to rent? List your property and connect with verified tenants.
+                        </p>
+                    </div>
+                    <ul class="role-features">
+                        <li>List unlimited properties</li>
+                        <li>Manage inquiries easily</li>
+                        <li>Schedule viewings</li>
+                        <li>Verified tenant profiles</li>
+                    </ul>
+                    <button type="button" class="btn btn-primary btn-lg" style="width: 100%;">
+                        Continue as Landlord
+                    </button>
                 </div>
             </div>
 
-            <!-- Registration Form -->
-            <div id="registration-form" style="display: none;">
-                <div class="card card-glass-strong register-form-card">
-                    <button id="back-to-role" class="register-back-button">
+            <!-- Step 2: Registration Form -->
+            <div id="registration-form" class="auth-card" style="display: none;">
+                <div class="registration-header">
+                    <button type="button" class="back-button" onclick="backToRoleSelection()">
                         ← Back to role selection
                     </button>
-
-                    <div class="register-form-header">
-                        <div class="register-form-icon-wrapper">
-                            <i id="form-role-icon" data-lucide="users" class="register-form-icon"></i>
+                    <div class="registration-role-info">
+                        <div class="registration-role-icon" id="role-icon-display">
+                            <i data-lucide="users" id="role-icon"></i>
                         </div>
-                        <div>
-                            <h2 id="form-role-title" class="register-form-title">Room Seeker Account</h2>
-                            <p class="register-form-subtitle">Complete your registration</p>
+                        <div class="registration-role-text">
+                            <h2 id="role-title-display">Room Seeker Account</h2>
+                            <p>Complete your registration</p>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="POST" action="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/app/controllers/AuthController.php" class="auth-form" style="margin-top: 1.5rem;">
+                    <input type="hidden" name="action" value="register">
+                    <input type="hidden" name="role" id="selected-role" value="">
+
+                    <!-- Full Name Input -->
+                    <div class="form-group">
+                        <label for="name" class="form-label">Full Name</label>
+                        <div class="form-input-wrapper">
+                            <input 
+                                type="text" 
+                                id="name" 
+                                name="name" 
+                                class="form-input" 
+                                placeholder="John Doe"
+                                required
+                            >
+                            <i data-lucide="user" class="form-input-icon"></i>
                         </div>
                     </div>
 
-                    <form id="register-form" class="register-form">
-                        <!-- Full Name -->
-                        <div class="form-group">
-                            <label for="name" class="form-label">Full Name</label>
-                            <div class="form-input-wrapper">
-                                <i data-lucide="user" class="form-input-icon"></i>
-                                <input
-                                    type="text"
-                                    id="name"
-                                    name="name"
-                                    class="form-input"
-                                    placeholder="John Doe"
-                                    required />
-                            </div>
+                    <!-- Email Input -->
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email Address</label>
+                        <div class="form-input-wrapper">
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                class="form-input" 
+                                placeholder="your@email.com"
+                                required
+                            >
+                            <i data-lucide="mail" class="form-input-icon"></i>
                         </div>
+                    </div>
 
-                        <!-- Email -->
-                        <div class="form-group">
-                            <label for="email" class="form-label">Email Address</label>
-                            <div class="form-input-wrapper">
-                                <i data-lucide="mail" class="form-input-icon"></i>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    name="email"
-                                    class="form-input"
-                                    placeholder="your@email.com"
-                                    required />
-                            </div>
+                    <!-- Password Input -->
+                    <div class="form-group">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="form-input-wrapper">
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                class="form-input" 
+                                placeholder="Create a strong password"
+                                required
+                            >
+                            <i data-lucide="lock" class="form-input-icon"></i>
+                            <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                                <i data-lucide="eye" id="password-icon"></i>
+                            </button>
                         </div>
+                    </div>
 
-                        <!-- Password -->
-                        <div class="form-group">
-                            <label for="password" class="form-label">Password</label>
-                            <div class="form-input-wrapper">
-                                <i data-lucide="lock" class="form-input-icon"></i>
-                                <input
-                                    type="password"
-                                    id="password"
-                                    name="password"
-                                    class="form-input"
-                                    placeholder="Create a strong password"
-                                    required />
-                                <button type="button" class="password-toggle">
-                                    <i data-lucide="eye" class="eye-icon"></i>
-                                    <i data-lucide="eye-off" class="eye-off-icon" style="display: none;"></i>
-                                </button>
-                            </div>
+                    <!-- Confirm Password Input -->
+                    <div class="form-group">
+                        <label for="confirm-password" class="form-label">Confirm Password</label>
+                        <div class="form-input-wrapper">
+                            <input 
+                                type="password" 
+                                id="confirm-password" 
+                                name="confirm_password" 
+                                class="form-input" 
+                                placeholder="Re-enter your password"
+                                required
+                            >
+                            <i data-lucide="lock" class="form-input-icon"></i>
                         </div>
+                    </div>
 
-                        <!-- Confirm Password -->
-                        <div class="form-group">
-                            <label for="confirmPassword" class="form-label">Confirm Password</label>
-                            <div class="form-input-wrapper">
-                                <i data-lucide="lock" class="form-input-icon"></i>
-                                <input
-                                    type="password"
-                                    id="confirmPassword"
-                                    name="confirmPassword"
-                                    class="form-input"
-                                    placeholder="Re-enter your password"
-                                    required />
-                            </div>
-                        </div>
+                    <!-- Terms Checkbox -->
+                    <label class="terms-checkbox">
+                        <input type="checkbox" name="terms" required>
+                        <span>
+                            I agree to the
+                            <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/app/views/public/terms.php">Terms of Service</a>
+                            and
+                            <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/app/views/public/privacy.php">Privacy Policy</a>
+                        </span>
+                    </label>
 
-                        <!-- Terms & Conditions -->
-                        <div class="form-group">
-                            <label class="form-checkbox-wrapper">
-                                <input
-                                    type="checkbox"
-                                    name="terms"
-                                    class="form-checkbox"
-                                    required />
-                                <span class="form-checkbox-label">
-                                    I agree to the
-                                    <a href="/terms" style="color: var(--green); text-decoration: none;">Terms of Service</a>
-                                    and
-                                    <a href="/privacy" style="color: var(--green); text-decoration: none;">Privacy Policy</a>
-                                </span>
-                            </label>
-                        </div>
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
+                        Create Account
+                    </button>
+                </form>
 
-                        <!-- Submit Button -->
-                        <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
-                            Create Account
-                        </button>
-                    </form>
-
-                    <p class="register-footer">
-                        Already have an account?
-                        <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/app/views/public/login.php" class="register-footer-link">Sign in</a>
-                    </p>
-                </div>
+                <!-- Sign In Link -->
+                <p class="auth-footer" style="margin-top: 1.5rem; font-size: 0.875rem;">
+                    Already have an account?
+                    <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/app/views/public/login.php">
+                        Sign in
+                    </a>
+                </p>
             </div>
         </div>
     </div>
@@ -222,9 +198,52 @@
         lucide.createIcons();
     </script>
 
-    <!-- JavaScript Files -->
-    <script src="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/js/forms.js"></script>
-    <script src="/Advanced-Roommate-Apartment-Finder-Web-App-with-SMS-Admin-Panel-/public/assets/js/register.js"></script>
+    <!-- Registration Scripts -->
+    <script>
+        // Select Role Function
+        function selectRole(role) {
+            document.getElementById('selected-role').value = role;
+            document.getElementById('role-selection').style.display = 'none';
+            document.getElementById('registration-form').style.display = 'block';
+            
+            // Update role display
+            const roleIcon = document.getElementById('role-icon');
+            const roleTitle = document.getElementById('role-title-display');
+            
+            if (role === 'seeker') {
+                roleIcon.setAttribute('data-lucide', 'users');
+                roleTitle.textContent = 'Room Seeker Account';
+            } else {
+                roleIcon.setAttribute('data-lucide', 'home');
+                roleTitle.textContent = 'Landlord Account';
+            }
+            
+            lucide.createIcons();
+        }
+
+        // Back to Role Selection
+        function backToRoleSelection() {
+            document.getElementById('role-selection').style.display = 'grid';
+            document.getElementById('registration-form').style.display = 'none';
+            document.getElementById('selected-role').value = '';
+        }
+
+        // Password Toggle Function
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(inputId + '-icon');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            
+            lucide.createIcons();
+        }
+    </script>
 </body>
 
 </html>

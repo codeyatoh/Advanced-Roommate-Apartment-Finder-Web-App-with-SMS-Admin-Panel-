@@ -119,14 +119,14 @@
 
 /* Button Variants */
 .btn-primary {
-    background: linear-gradient(135deg, var(--green) 0%, #059669 100%);
+    background: #5c7cfa;
     color: white;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 2px 8px rgba(92, 124, 250, 0.3);
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
-    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+    background: #4263eb;
+    box-shadow: 0 4px 12px rgba(92, 124, 250, 0.4);
     transform: translateY(-2px);
 }
 
