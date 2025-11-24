@@ -20,13 +20,15 @@ class Message extends BaseModel {
                     u.profile_photo as sender_photo
                 FROM {$this->table} m
                 LEFT JOIN users u ON m.sender_id = u.user_id
-                WHERE (m.sender_id = :user1 AND m.receiver_id = :user2)
-                   OR (m.sender_id = :user2 AND m.receiver_id = :user1)
+                WHERE (m.sender_id = :user1 AND m.receiver_id = :user2_a)
+                   OR (m.sender_id = :user2_b AND m.receiver_id = :user1_a)
                 ORDER BY m.created_at ASC";
         
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue(':user1', $user1, PDO::PARAM_INT);
-        $stmt->bindValue(':user2', $user2, PDO::PARAM_INT);
+        $stmt->bindValue(':user2_a', $user2, PDO::PARAM_INT);
+        $stmt->bindValue(':user2_b', $user2, PDO::PARAM_INT);
+        $stmt->bindValue(':user1_a', $user1, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
     }
