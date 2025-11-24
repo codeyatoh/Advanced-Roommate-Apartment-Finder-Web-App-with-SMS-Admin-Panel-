@@ -7,12 +7,18 @@ if (session_status() === PHP_SESSION_NONE) {
 $current_page = basename($_SERVER['PHP_SELF']);
 $role = $_SESSION['role'] ?? 'guest';
 
-// Get notification count for seekers
+// Get notification and message counts for seekers
 $notificationCount = 0;
+$unreadMessageCount = 0;
 if ($role === 'room_seeker' && isset($_SESSION['user_id'])) {
-    require_once __DIR__ . '/../../models/Match.php';
-    $matchModel = new MatchModel();
-    $notificationCount = $matchModel->getUnreadMatchCount($_SESSION['user_id']);
+    require_once __DIR__ . '/../../models/Notification.php';
+    require_once __DIR__ . '/../../models/Message.php';
+    
+    $notificationModel = new Notification();
+    $messageModel = new Message();
+    
+    $notificationCount = $notificationModel->getUnreadCount($_SESSION['user_id']);
+    $unreadMessageCount = $messageModel->getTotalUnreadCount($_SESSION['user_id']);
 }
 
 // Determine profile link based on role
@@ -63,6 +69,9 @@ if ($role === 'room_seeker') {
                 <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/seeker/messages.php" class="navbar-link <?php echo $current_page === 'messages.php' ? 'active' : ''; ?>">
                     <i data-lucide="message-square" class="nav-icon"></i>
                     <span>Messages</span>
+                    <?php if ($unreadMessageCount > 0): ?>
+                    <span class="notification-badge"><?php echo $unreadMessageCount; ?></span>
+                    <?php endif; ?>
                 </a>
             <?php elseif ($role === 'landlord'): ?>
                 <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/landlord/dashboard.php" class="navbar-link <?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>">

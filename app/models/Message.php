@@ -188,4 +188,22 @@ class Message extends BaseModel {
         $result = $stmt->fetch();
         return $result['count'] ?? 0;
     }
+
+    /**
+     * Get total unread message count for user (all conversations)
+     * @param int $userId
+     * @return int
+     */
+    public function getTotalUnreadCount($userId) {
+        $sql = "SELECT COUNT(*) as count 
+                FROM {$this->table}
+                WHERE receiver_id = :user_id 
+                AND is_read = 0";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->execute();
+        $result = $stmt->fetch();
+        return $result['count'] ?? 0;
+    }
 }
