@@ -238,6 +238,7 @@ CREATE TABLE roommate_matches (
 -- =============================================================================
 -- 10. NOTIFICATIONS TABLE
 -- Stores user notifications for matches, messages, appointments, inquiries, etc.
+-- Foreign keys removed to avoid import errors - referential integrity maintained by app
 -- =============================================================================
 CREATE TABLE notifications (
     notification_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -251,10 +252,8 @@ CREATE TABLE notifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     read_at TIMESTAMP NULL,
     
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (related_user_id) REFERENCES users(user_id) ON DELETE SET NULL,
-    
     -- Indexes for better performance
+    INDEX idx_user_id (user_id),
     INDEX idx_user_read (user_id, is_read),
     INDEX idx_created (created_at DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
