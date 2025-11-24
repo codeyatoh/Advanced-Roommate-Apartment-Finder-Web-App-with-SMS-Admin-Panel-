@@ -13,6 +13,89 @@
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/landlord.module.css">
 </head>
 <body>
+<?php
+// Start session and load models
+session_start();
+require_once __DIR__ . '/../../models/Appointment.php';
+require_once __DIR__ . '/../../models/User.php';
+require_once __DIR__ . '/../../models/Listing.php';
+
+// Check if user is logged in as landlord
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'landlord') {
+    header('Location: /Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/public/login.php');
+    exit;
+}
+
+$landlordId = $_SESSION['user_id'];
+$appointmentModel = new Appointment();
+$userModel = new User();
+$listingModel = new Listing();
+
+// Get all appointments for this landlord's listings
+$appointments = $appointmentModel->getLandlordAppointments($landlordId);
+
+// Format appointment data
+foreach ($appointments as &$appt) {
+    // Get tenant details
+    $tenant = $userModel->getById($appt['seeker_id']);
+    if ($tenant && is_array($tenant)) {
+        $appt['tenant'] = $tenant['first_name'] . ' ' . $tenant['last_name'];
+        $appt['email'] = $tenant['email'] ?? '';
+        $appt['phone'] = $tenant['phone'] ?? '';
+        $appt['tenantAvatar'] = $tenant['profile_photo'] ?? 'https://ui-avatars.com/api/?name=' . urlencode($appt['tenant']) . '&background=3b82f6&color=fff';
+    } else {
+        $appt['tenant'] = 'Deleted User';
+        $appt['email'] = '';
+        $appt['phone'] = '';
+        $appt['tenantAvatar'] = 'https://ui-avatars.com/api/?name=DeletedUser&background=ef4444&color=fff';
+    }
+    
+    // Get listing details
+    $listing = $listingModel->getById($appt['listing_id']);
+    if ($listing && is_array($listing)) {
+        $appt['property'] = $listing['title'];
+        $appt['location'] = $listing['address'] . ', ' . $listing['city'];
+        // Get first image
+        if (!empty($listing['images'])) {
+            $images = is_array($listing['images']) ? $listing['images'] : json_decode($listing['images'], true);
+            $appt['propertyImage'] = $images[0] ?? 'https://via.placeholder.com/400x300?text=No+Image';
+        } else {
+            $appt['propertyImage'] = 'https://via.placeholder.com/400x300?text=No+Image';
+        }
+    } else {
+        $appt['property'] = 'Deleted Listing';
+        $appt['location'] = 'N/A';
+        $appt['propertyImage'] = 'https://via.placeholder.com/400x300?text=Deleted';
+    }
+    
+    // Format date
+    $apptDate = new DateTime($appt['appointment_date'] . ' ' . $appt['appointment_time']);
+    $now = new DateTime();
+    $tomorrow = new DateTime('tomorrow');
+    
+    if ($apptDate->format('Y-m-d') === $now->format('Y-m-d')) {
+        $appt['date'] = 'Today';
+    } elseif ($apptDate->format('Y-m-d') === $tomorrow->format('Y-m-d')) {
+        $appt['date'] = 'Tomorrow';
+    } else {
+        $appt['date'] = $apptDate->format('M j, Y');
+    }
+    
+    // Format time
+    $appt['time'] = $apptDate->format('g:i A');
+    
+    // Format requested date
+    $created = new DateTime($appt['created_at']);
+    $diff = $now->diff($created);
+    if ($diff->days > 0) {
+        $appt['requestedDate'] = $diff->days . ' day' . ($diff->days > 1 ? 's' : '') . ' ago';
+    } elseif ($diff->h > 0) {
+        $appt['requestedDate'] = $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' ago';
+    } else {
+        $appt['requestedDate'] = max(1, $diff->i) . ' minute' . ($diff->i > 1 ? 's' : '') . ' ago';
+    }
+}
+?>
     <div class="landlord-page">
         <?php include __DIR__ . '/../includes/navbar.php'; ?>
 
@@ -28,50 +111,16 @@
             <!-- Appointments List -->
             <div style="display: flex; flex-direction: column; gap: 1rem;">
                 <?php
-                $appointments = [
-                    [
-                        'id' => 1,
-                        'tenant' => 'Sarah Johnson',
-                        'tenantAvatar' => 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
-                        'email' => 'sarah.j@email.com',
-                        'phone' => '+1 (555) 123-4567',
-                        'property' => 'Modern Studio Downtown',
-                        'propertyImage' => 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400',
-                        'date' => 'Tomorrow',
-                        'time' => '2:00 PM',
-                        'location' => '123 Market St, San Francisco',
-                        'status' => 'pending',
-                        'requestedDate' => '2 hours ago',
-                    ],
-                    [
-                        'id' => 2,
-                        'tenant' => 'Mike Chen',
-                        'tenantAvatar' => 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-                        'email' => 'mike.chen@email.com',
-                        'phone' => '+1 (555) 234-5678',
-                        'property' => 'Cozy Apartment',
-                        'propertyImage' => 'https://images.unsplash.com/photo-1502672260066-6bc2c9f0e6c7?w=400',
-                        'date' => 'Feb 2, 2024',
-                        'time' => '10:00 AM',
-                        'location' => '456 Oak Ave, Oakland',
-                        'status' => 'confirmed',
-                        'requestedDate' => '1 day ago',
-                    ],
-                    [
-                        'id' => 3,
-                        'tenant' => 'Emily Rodriguez',
-                        'tenantAvatar' => 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
-                        'email' => 'emily.r@email.com',
-                        'phone' => '+1 (555) 345-6789',
-                        'property' => 'Spacious Loft',
-                        'propertyImage' => 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400',
-                        'date' => 'Feb 5, 2024',
-                        'time' => '3:00 PM',
-                        'location' => '789 Pine St, Berkeley',
-                        'status' => 'pending',
-                        'requestedDate' => '3 hours ago',
-                    ],
-                ];
+                // Appointments already loaded from database at top of file
+                if (empty($appointments)):
+                ?>
+                <div class="glass-card" style="padding: 4rem 2rem; text-align: center;">
+                    <i data-lucide="calendar-x" style="width: 4rem; height: 4rem; color: rgba(0,0,0,0.2); margin: 0 auto 1rem;"></i>
+                    <h3 style="color: rgba(0,0,0,0.6); margin: 0 0 0.5rem 0;">No appointments yet</h3>
+                    <p style="color: rgba(0,0,0,0.5); margin: 0;">Appointment requests will appear here</p>
+                </div>
+                <?php
+                endif;
 
                 foreach ($appointments as $index => $appointment): 
                     $statusColor = '';
