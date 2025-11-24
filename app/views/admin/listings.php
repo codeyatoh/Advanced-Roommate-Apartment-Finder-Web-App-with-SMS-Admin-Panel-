@@ -25,8 +25,7 @@
     // Get all listings from database with landlord info
     $sql = "SELECT l.*, 
                 u.first_name, u.last_name, u.profile_photo,
-                (SELECT image_url FROM listing_images WHERE listing_id = l.listing_id AND is_primary = 1 LIMIT 1) as primary_image,
-                (SELECT COUNT(*) FROM listing_views WHERE listing_id = l.listing_id) as view_count
+                (SELECT image_url FROM listing_images WHERE listing_id = l.listing_id AND is_primary = 1 LIMIT 1) as primary_image
             FROM listings l
             LEFT JOIN users u ON l.landlord_id = u.user_id
             ORDER BY l.created_at DESC";
@@ -66,7 +65,7 @@
             'price' => $listingData['price'],
             'status' => $listingData['availability_status'], // pending, available (approved), occupied (rejected for this view)
             'submittedDate' => time_elapsed($listingData['created_at']),
-            'views' => $listingData['view_count'] ?? 0,
+            'views' => 0, // listing_views table doesn't exist yet
         ];
     }
     ?>
