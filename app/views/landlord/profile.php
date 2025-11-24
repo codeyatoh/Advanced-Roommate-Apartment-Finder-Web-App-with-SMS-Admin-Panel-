@@ -200,15 +200,19 @@ function getValue($array, $key, $default = '') {
                 </div>
             </div>
 
-            <!-- Save Button -->
-            <div class="profile-actions">
-                <button type="submit" class="btn-primary-custom">
-                    <i data-lucide="save" style="width: 18px; height: 18px;"></i>
-                    Save Changes
-                </button>
-                <button type="button" class="btn-cancel" onclick="window.location.href='/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/landlord/dashboard.php'">
-                    Cancel
-                </button>
+                    <!-- Save Button -->
+                    <div class="profile-card" style="background: linear-gradient(135deg, var(--blue), var(--deepBlue)); padding: 1.5rem;">
+                        <div style="text-align: center;">
+                            <button type="submit" class="btn btn-light" style="min-width: 200px; font-weight: 600;">
+                                <i data-lucide="save" style="width: 1.125rem; height: 1.125rem;"></i>
+                                Save Changes
+                            </button>
+                            <p style="color: rgba(255,255,255,0.8); font-size: 0.75rem; margin: 0.75rem 0 0 0;">
+                                Keep your business information up to date
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </form>
     </div>
