@@ -160,13 +160,12 @@
                     </div>
                 </div>
 
-
                 <!-- Right Column - Sidebar -->
                 <div style="display: flex; flex-direction: column; gap: 1.25rem;">
                     <!-- Pending Viewings -->
                     <div class="glass-card" style="padding: 1.25rem;">
                         <h3 style="font-size: 1rem; font-weight: 700; color: #000; margin-bottom: 1rem;">Pending Viewings</h3>
-                        <div style="display: flex; flex-direction: column; gap: 0.625rem;">
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                             <?php
                             if (empty($pendingViewings)):
                             ?>
@@ -175,7 +174,6 @@
                             else:
                                 foreach ($pendingViewings as $viewing):
                                     $tenant = $userModel->getById($viewing['seeker_id']);
-                                    $listing = $listingModel->getById($viewing['listing_id']);
                                     $appointmentDate = new DateTime($viewing['appointment_date'] . ' ' . $viewing['appointment_time']);
                                     $dateFormatted = $appointmentDate->format('M j, Y');
                                     $timeFormatted = $appointmentDate->format('g:i A');
@@ -187,7 +185,7 @@
                                     </div>
                                     <div style="flex: 1; min-width: 0;">
                                         <p style="font-weight: 600; font-size: 0.875rem; color: #000; margin-bottom: 0.25rem;"><?php echo htmlspecialchars($tenant['first_name'] . ' ' . $tenant['last_name']); ?></p>
-                                        <p style="font-size: 0.75rem; color: rgba(0,0,0,0.6); margin-bottom: 0.25rem;"><?php echo htmlspecialchars($listing['title']); ?></p>
+                                        <p style="font-size: 0.75rem; color: rgba(0,0,0,0.6); margin-bottom: 0.25rem;"><?php echo htmlspecialchars($viewing['listing_title']); ?></p>
                                         <p style="font-size: 0.75rem; color: rgba(0,0,0,0.5);"><?php echo $dateFormatted; ?>, <?php echo $timeFormatted; ?></p>
                                     </div>
                                 </div>
@@ -203,6 +201,7 @@
                         </div>
                     </div>
                 </div>
+            </div>
             </div>
         </div>
         <?php include __DIR__ . '/../includes/report_widget.php'; ?>
