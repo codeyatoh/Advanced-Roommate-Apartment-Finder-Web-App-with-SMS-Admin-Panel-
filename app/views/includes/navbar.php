@@ -135,21 +135,41 @@ if ($role === 'room_seeker') {
                             </div>
                             <?php else: ?>
                                 <?php foreach ($notifications as $notif): 
-                                    $icon = match($notif['type']) {
-                                        'match' => 'heart',
-                                        'message' => 'message-circle',
-                                        'appointment' => 'calendar',
-                                        'inquiry' => 'mail',
-                                        default => 'bell'
-                                    };
+                                    // Icon based on type (PHP 7.x compatible)
+                                    switch($notif['type']) {
+                                        case 'match':
+                                            $icon = 'heart';
+                                            break;
+                                        case 'message':
+                                            $icon = 'message-circle';
+                                            break;
+                                        case 'appointment':
+                                            $icon = 'calendar';
+                                            break;
+                                        case 'inquiry':
+                                            $icon = 'mail';
+                                            break;
+                                        default:
+                                            $icon = 'bell';
+                                    }
                                     
-                                    $iconColor = match($notif['type']) {
-                                        'match' => '#10b981',
-                                        'message' => '#3b82f6',
-                                        'appointment' => '#f59e0b',
-                                        'inquiry' => '#8b5cf6',
-                                        default => '#6b7280'
-                                    };
+                                    // Icon color based on type (PHP 7.x compatible)
+                                    switch($notif['type']) {
+                                        case 'match':
+                                            $iconColor = '#10b981';
+                                            break;
+                                        case 'message':
+                                            $iconColor = '#3b82f6';
+                                            break;
+                                        case 'appointment':
+                                            $iconColor = '#f59e0b';
+                                            break;
+                                        case 'inquiry':
+                                            $iconColor = '#8b5cf6';
+                                            break;
+                                        default:
+                                            $iconColor = '#6b7280';
+                                    }
                                     
                                     // Format time
                                     $time = new DateTime($notif['created_at']);
@@ -487,7 +507,7 @@ if ($role === 'room_seeker') {
 // Notification Dropdown Toggle
 document.addEventListener('DOMContentLoaded', function() {
     const notificationBtn = document.getElementById('notificationBtn');
-    const notificationDropdown = document.getElementById('not ificationDropdown');
+    const notificationDropdown = document.getElementById('notificationDropdown');
     const markAllReadBtn = document.getElementById('markAllReadBtn');
     
     if (notificationBtn && notificationDropdown) {
