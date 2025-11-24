@@ -13,6 +13,41 @@
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/landlord.module.css?v=<?php echo time(); ?>">
 </head>
 <body>
+<?php
+// Start session and load models
+session_start();
+require_once __DIR__ . '/../../models/Listing.php';
+require_once __DIR__ . '/../../models/Message.php';
+
+// Check if user is logged in as landlord
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'landlord') {
+    header('Location: /Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/public/login.php');
+    exit;
+}
+
+$landlordId = $_SESSION['user_id'];
+$listingModel = new Listing();
+$messageModel = new Message();
+
+// Get all listings for this landlord
+$listings = $listingModel->getByLandlord($landlordId);
+
+// Get inquiry count for each listing
+foreach ($listings as &$listing) {
+    $inquiryCount = $messageModel->getInquiryCountForListing($listing['listing_id']);
+    $listing['inquiries'] = $inquiryCount;
+    
+    // Get first image
+    if (!empty($listing['images'])) {
+        $listing['image'] = is_array($listing['images']) ? $listing['images'][0] : json_decode($listing['images'], true)[0] ?? 'https://via.placeholder.com/800x600?text=No+Image';
+    } else {
+        $listing['image'] = 'https://via.placeholder.com/800x600?text=No+Image';
+    }
+    
+    // Format location
+    $listing['location'] = $listing['city'] . ', ' . $listing['state'];
+}
+?>
     <div class="landlord-page">
         <?php include __DIR__ . '/../includes/navbar.php'; ?>
 
@@ -67,48 +102,20 @@
             <!-- Listings Grid -->
             <div class="listings-grid">
                 <?php
-                $listings = [
-                    [
-                        'id' => 1,
-                        'image' => 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
-                        'title' => 'Modern Studio Downtown',
-                        'location' => 'San Francisco, CA',
-                        'price' => 1200,
-                        'status' => 'active',
-                        'views' => 45,
-                        'inquiries' => 8,
-                    ],
-                    [
-                        'id' => 2,
-                        'image' => 'https://images.unsplash.com/photo-1502672260066-6bc2c9f0e6c7?w=800',
-                        'title' => 'Cozy Apartment',
-                        'location' => 'Oakland, CA',
-                        'price' => 950,
-                        'status' => 'active',
-                        'views' => 32,
-                        'inquiries' => 5,
-                    ],
-                    [
-                        'id' => 3,
-                        'image' => 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800',
-                        'title' => 'Spacious Loft',
-                        'location' => 'Berkeley, CA',
-                        'price' => 1400,
-                        'status' => 'rented',
-                        'views' => 67,
-                        'inquiries' => 12,
-                    ],
-                    [
-                        'id' => 4,
-                        'image' => 'https://images.unsplash.com/photo-1502672023488-70e25813eb80?w=800',
-                        'title' => 'Bright Room in House',
-                        'location' => 'San Jose, CA',
-                        'price' => 850,
-                        'status' => 'active',
-                        'views' => 28,
-                        'inquiries' => 4,
-                    ],
-                ];
+                // Listings already loaded from database at top of file
+                if (empty($listings)):
+                ?>
+                <div style="grid-column: 1/-1; text-align: center; padding: 4rem 1rem;">
+                    <i data-lucide="home" style="width: 4rem; height: 4rem; color: rgba(0,0,0,0.2); margin: 0 auto 1rem;"></i>
+                    <h3 style="color: rgba(0,0,0,0.6); margin: 0;">No listings yet</h3>
+                    <p style="color: rgba(0,0,0,0.5); margin: 0.5rem 0 1.5rem 0;">Create your first listing to get started</p>
+                    <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/landlord/add_listing.php" class="btn btn-primary">
+                        <i data-lucide="plus" style="width: 1rem; height: 1rem;"></i>
+                        Add New Listing
+                    </a>
+                </div>
+                <?php
+                endif;
 
                 foreach ($listings as $index => $listing): 
                     $statusClass = 'status-' . $listing['status'];
