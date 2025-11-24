@@ -198,12 +198,14 @@ if ($role === 'room_seeker') {
                     </div>
                 </div>
                 
+                <?php if ($role !== 'admin'): ?>
                 <div class="navbar-user">
                     <a href="<?php echo $profile_link; ?>" class="btn btn-outline-profile">
                         <i data-lucide="settings" style="width: 1.125rem; height: 1.125rem;"></i>
                         <span>Profile</span>
                     </a>
                 </div>
+                <?php endif; ?>
                 <!-- Removed Logout Icon Button as Profile usually contains logout or it's separate -->
                 <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/controllers/AuthController.php?action=logout" class="btn btn-ghost btn-sm" title="Logout" style="color: #ef4444;">
                     <i data-lucide="log-out" style="width: 1.25rem; height: 1.25rem;"></i>
