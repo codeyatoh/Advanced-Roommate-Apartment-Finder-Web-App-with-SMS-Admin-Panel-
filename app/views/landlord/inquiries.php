@@ -138,6 +138,7 @@ foreach ($inquiries as &$inquiry) {
 
                 <!-- Inquiry Details -->
                 <div class="inquiries-main">
+                    <?php if (!empty($inquiries)): ?>
                     <!-- Header -->
                     <div style="padding: 1rem; border-bottom: 1px solid rgba(0,0,0,0.1);">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
@@ -197,6 +198,14 @@ foreach ($inquiries as &$inquiry) {
                             </button>
                         </div>
                     </div>
+                    <?php else: ?>
+                    <!-- Empty State -->
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 4rem 2rem; text-align: center;">
+                        <i data-lucide="message-square" style="width: 4rem; height: 4rem; color: rgba(0,0,0,0.2); margin-bottom: 1rem;"></i>
+                        <h3 style="color: rgba(0,0,0,0.6); margin: 0 0 0.5rem 0; font-size: 1.125rem;">No inquiry selected</h3>
+                        <p style="color: rgba(0,0,0,0.5); margin: 0; font-size: 0.875rem;">Select an inquiry from the list to view details</p>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
