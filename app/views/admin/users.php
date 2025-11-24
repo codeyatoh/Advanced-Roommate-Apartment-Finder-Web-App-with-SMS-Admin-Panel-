@@ -12,7 +12,61 @@
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/navbar.module.css">
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/admin.module.css">
 </head>
-<body>
+<\u003cbody>
+    <?php
+    // Start session and load models
+    session_start();
+    require_once __DIR__ . '/../../models/User.php';
+    require_once __DIR__ . '/../../models/Listing.php';
+    require_once __DIR__ . '/../../models/Report.php';
+    
+    $userModel = new User();
+    $listingModel = new Listing();
+    $reportModel = new Report();
+    
+    // Get all users from database
+    $sql = "SELECT * FROM users ORDER BY created_at DESC";
+    $stmt = $userModel->getConnection()->prepare($sql);
+    $stmt->execute();
+    $usersData = $stmt->fetchAll();
+    
+    // Format user data with additional stats
+    $users = [];
+    foreach ($usersData as $userData) {
+        // Get listing count if landlord
+        $listingCount = 0;
+        if ($userData['role'] === 'landlord') {
+            $sql = "SELECT COUNT(*) as count FROM listings WHERE landlord_id = :user_id";
+            $stmt = $listingModel->getConnection()->prepare($sql);
+            $stmt->bindValue(':user_id', $userData['user_id'], PDO::PARAM_INT);
+            $stmt->execute();
+            $result = $stmt->fetch();
+            $listingCount = $result['count'] ?? 0;
+        }
+        
+        // Get report count (reported by others)
+        $sql = "SELECT COUNT(*) as count FROM reports WHERE reported_user_id = :user_id";
+        $stmt = $reportModel->getConnection()->prepare($sql);
+        $stmt->bindValue(':user_id', $userData['user_id'], PDO::PARAM_INT);
+        $stmt->execute();
+        $result = $stmt->fetch();
+        $reportCount = $result['count'] ?? 0;
+        
+        // Format data
+        $users[] = [
+            'id' => $userData['user_id'],
+            'name' => $userData['first_name'] . ' ' . $userData['last_name'],
+            'email' => $userData['email'],
+            'phone' => $userData['phone'] ?? 'N/A',
+            'role' => $userData['role'],
+            'status' => $userData['is_verified'] ? 'verified' : ($userData['is_active'] ? 'pending' : 'banned'),
+            'joinDate' => date('M j, Y', strtotime($userData['created_at'])),
+            'avatar' => $userData['profile_photo'] ?? 'https://ui-avatars.com/api/?name=' . urlencode($userData['first_name'] . ' ' . $userData['last_name']) . '&background=10b981&color=fff',
+            'listings' => $listingCount,
+            'reports' => $reportCount,
+        ];
+    }
+    ?>
     <div class="admin-page">
         <?php include __DIR__ . '/../includes/navbar.php'; ?>
 
@@ -74,57 +128,7 @@
                         </thead>
                         <tbody>
                             <?php
-                            $users = [
-                                [
-                                    'id' => 1,
-                                    'name' => 'Sarah Johnson',
-                                    'email' => 'sarah.j@email.com',
-                                    'phone' => '+1 (555) 123-4567',
-                                    'role' => 'seeker',
-                                    'status' => 'verified',
-                                    'joinDate' => 'Jan 15, 2024',
-                                    'avatar' => 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
-                                    'listings' => 0,
-                                    'reports' => 0,
-                                ],
-                                [
-                                    'id' => 2,
-                                    'name' => 'David Martinez',
-                                    'email' => 'david.m@email.com',
-                                    'phone' => '+1 (555) 234-5678',
-                                    'role' => 'landlord',
-                                    'status' => 'verified',
-                                    'joinDate' => 'Dec 10, 2023',
-                                    'avatar' => 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
-                                    'listings' => 5,
-                                    'reports' => 0,
-                                ],
-                                [
-                                    'id' => 3,
-                                    'name' => 'Mike Chen',
-                                    'email' => 'mike.c@email.com',
-                                    'phone' => '+1 (555) 345-6789',
-                                    'role' => 'seeker',
-                                    'status' => 'pending',
-                                    'joinDate' => 'Jan 20, 2024',
-                                    'avatar' => 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-                                    'listings' => 0,
-                                    'reports' => 0,
-                                ],
-                                [
-                                    'id' => 4,
-                                    'name' => 'Emily Rodriguez',
-                                    'email' => 'emily.r@email.com',
-                                    'phone' => '+1 (555) 456-7890',
-                                    'role' => 'landlord',
-                                    'status' => 'banned',
-                                    'joinDate' => 'Nov 5, 2023',
-                                    'avatar' => 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
-                                    'listings' => 2,
-                                    'reports' => 3,
-                                ],
-                            ];
-
+                            // Users already loaded from database above
                             foreach ($users as $user): 
                                 $statusClass = '';
                                 switch ($user['status']) {

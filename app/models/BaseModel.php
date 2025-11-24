@@ -134,4 +134,12 @@ abstract class BaseModel {
         $stmt->execute();
         return $stmt;
     }
+
+    /**
+     * Get database connection
+     * @return PDO
+     */
+    public function getConnection() {
+        return $this->conn;
+    }
 }
