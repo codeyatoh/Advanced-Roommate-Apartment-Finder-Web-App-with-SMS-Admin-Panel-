@@ -104,6 +104,11 @@
 
             <!-- Main Content Grid -->
             <div class="content-grid">
+                <!-- Left Column -->
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <!-- Pending Actions -->
+                    <div class="glass-card" style="padding: 1.25rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
                             <h2 style="font-size: 1.25rem; font-weight: 700; color: #000;">Pending Actions</h2>
                             <span style="padding: 0.25rem 0.75rem; background-color: #fee2e2; color: #b91c1c; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">3 items</span>
                         </div>
@@ -131,18 +136,47 @@
                             <?php endforeach; ?>
                         </div>
                     </div>
+
+                    <!-- Recent Activity -->
+                    <div class="glass-card" style="padding: 1.25rem;">
+                        <h3 style="font-size: 1.125rem; font-weight: 700; color: #000; margin-bottom: 1rem;">Recent Activity</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <?php
+                            $recentActivities = [
+                                ['user' => 'John Doe', 'action' => 'created a new listing', 'time' => '5 minutes ago', 'icon' => 'home'],
+                                ['user' => 'Jane Smith', 'action' => 'verified their account', 'time' => '15 minutes ago', 'icon' => 'user-check'],
+                                ['user' => 'Mike Johnson', 'action' => 'sent an inquiry', 'time' => '1 hour ago', 'icon' => 'message-square'],
+                                ['user' => 'Sarah Williams', 'action' => 'booked an appointment', 'time' => '2 hours ago', 'icon' => 'calendar'],
+                                ['user' => 'Tom Brown', 'action' => 'updated their profile', 'time' => '3 hours ago', 'icon' => 'user'],
+                            ];
+
+                            foreach ($recentActivities as $activity): 
+                            ?>
+                            <div class="glass-subtle" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-radius: 0.75rem;">
+                                <div style="width: 2rem; height: 2rem; background-color: rgba(59, 130, 246, 0.1); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <i data-lucide="<?php echo $activity['icon']; ?>" style="width: 1rem; height: 1rem; color: var(--blue);"></i>
+                                </div>
+                                <div style="flex: 1; min-width: 0;">
+                                    <p style="font-size: 0.875rem; color: #000; margin-bottom: 0.125rem;">
+                                        <span style="font-weight: 600;"><?php echo $activity['user']; ?></span> <?php echo $activity['action']; ?>
+                                    </p>
+                                    <p style="font-size: 0.75rem; color: rgba(0,0,0,0.5);"><?php echo $activity['time']; ?></p>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Right Column -->
                 <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                    <!-- Notification Status -->
+                    <!-- Notification Status (Email Only) -->
                     <div class="glass-card" style="padding: 1.25rem;">
                         <h3 style="font-size: 1.125rem; font-weight: 700; color: #000; margin-bottom: 1rem;">Notification Status</h3>
                         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                             <?php
                             $notificationStats = [
                                 ['label' => 'Emails Sent Today', 'value' => '234', 'status' => 'success', 'icon' => 'check-circle'],
-                                ['label' => 'SMS Sent Today', 'value' => '156', 'status' => 'success', 'icon' => 'check-circle'],
                                 ['label' => 'Failed Deliveries', 'value' => '3', 'status' => 'error', 'icon' => 'x-circle'],
                                 ['label' => 'Pending Queue', 'value' => '12', 'status' => 'warning', 'icon' => 'clock'],
                             ];
