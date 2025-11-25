@@ -63,7 +63,8 @@
             'landlordAvatar' => $listingData['profile_photo'] ?? 'https://ui-avatars.com/api/?name=' . urlencode($listingData['first_name'] . ' ' . $listingData['last_name']) . '&background=3b82f6&color=fff',
             'location' => $listingData['location'],
             'price' => $listingData['price'],
-            'status' => $listingData['availability_status'], // pending, available (approved), occupied (rejected for this view)
+            'status' => $listingData['approval_status'],
+            'admin_note' => $listingData['admin_note'],
             'submittedDate' => time_elapsed($listingData['created_at']),
             'views' => 0, // listing_views table doesn't exist yet
         ];
@@ -117,7 +118,7 @@
                     // Map database status to display status
                     $displayStatus = $listing['status'];
                     switch ($listing['status']) {
-                        case 'available': 
+                        case 'approved': 
                             $statusClass = 'status-success'; 
                             $displayStatus = 'approved';
                             break;
@@ -125,91 +126,112 @@
                             $statusClass = 'status-warning';
                             $displayStatus = 'pending';
                             break;
-                        case 'occupied': 
+                        case 'rejected': 
                             $statusClass = 'status-error';
                             $displayStatus = 'rejected';
                             break;
                         default: $statusClass = 'status-neutral';
                     }
                 ?>
-                <div class="glass-card animate-slide-up" style="padding: 1.25rem; animation-delay: <?php echo $index * 0.1; ?>s;">
-                    <div class="listing-card-content">
-                        <!-- Image -->
-                        <div style="flex-shrink: 0;">
-                            <img src="<?php echo $listing['image']; ?>" alt="<?php echo $listing['title']; ?>" class="listing-image">
-                        </div>
-                            <!-- Landlord Info -->
-                            <div class="glass-subtle" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding: 0.75rem;">
-                                <img src="<?php echo $listing['landlordAvatar']; ?>" alt="<?php echo $listing['landlord']; ?>" style="width: 2.5rem; height: 2.5rem; border-radius: 9999px; object-fit: cover;">
-                                <div style="flex: 1; min-width: 0;">
-                                    <p style="font-weight: 600; font-size: 0.875rem; color: #000;"><?php echo $listing['landlord']; ?></p>
-                                    <p style="font-size: 0.75rem; color: rgba(0,0,0,0.6);">Landlord</p>
-                                </div>
-                                <p style="font-size: 0.75rem; color: rgba(0,0,0,0.5); flex-shrink: 0;">Submitted <?php echo $listing['submittedDate']; ?></p>
-                            </div>
+                <div class="glass-card animate-slide-up listing-card-row" style="animation-delay: <?php echo $index * 0.1; ?>s;">
+                    <!-- Image Section -->
+                    <div class="listing-image-wrapper">
+                        <img src="<?php echo $listing['image']; ?>" alt="<?php echo $listing['title']; ?>" class="listing-image-sm">
+                        <span class="status-badge-overlay <?php echo $statusClass; ?>"><?php echo ucfirst($displayStatus); ?></span>
+                    </div>
 
-                            <!-- Details -->
-                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1rem;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <div style="width: 2rem; height: 2rem; background-color: rgba(30, 58, 138, 0.2); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;">
-                                        <i data-lucide="coins" style="width: 1rem; height: 1rem; color: var(--deep-blue);"></i>
-                                    </div>
-                                    <div>
-                                        <p style="font-size: 0.75rem; color: rgba(0,0,0,0.5);">Price</p>
-                                        <p style="font-size: 0.875rem; font-weight: 600; color: #000;">₱<?php echo $listing['price']; ?>/mo</p>
-                                    </div>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <div style="width: 2rem; height: 2rem; background-color: rgba(30, 58, 138, 0.2); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;">
-                                        <i data-lucide="eye" style="width: 1rem; height: 1rem; color: var(--deep-blue);"></i>
-                                    </div>
-                                    <div>
-                                        <p style="font-size: 0.75rem; color: rgba(0,0,0,0.5);">Views</p>
-                                        <p style="font-size: 0.875rem; font-weight: 600; color: #000;"><?php echo $listing['views']; ?></p>
-                                    </div>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <div style="width: 2rem; height: 2rem; background-color: rgba(30, 58, 138, 0.2); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;">
-                                        <i data-lucide="calendar" style="width: 1rem; height: 1rem; color: var(--deep-blue);"></i>
-                                    </div>
-                                    <div>
-                                        <p style="font-size: 0.75rem; color: rgba(0,0,0,0.5);">Submitted</p>
-                                        <p style="font-size: 0.875rem; font-weight: 600; color: #000;"><?php echo $listing['submittedDate']; ?></p>
-                                    </div>
-                                </div>
+                    <!-- Main Content -->
+                    <div class="listing-content-wrapper">
+                        <div class="listing-header">
+                            <h3 class="listing-title"><?php echo $listing['title']; ?></h3>
+                            <div class="listing-price">
+                                ₱<?php echo number_format($listing['price']); ?>
+                                <span style="font-size: 0.8rem; font-weight: 500; color: #6b7280;">/month</span>
                             </div>
-
-                            <!-- Actions -->
-                            <?php if ($listing['status'] === 'pending'): ?>
-                            <div style="display: flex; gap: 0.75rem;">
-                                <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="handleApprove(<?php echo $listing['id']; ?>)">
-                                    <i data-lucide="check" style="width: 1rem; height: 1rem;"></i>
-                                    Approve Listing
-                                </button>
-                                <button class="btn btn-ghost btn-sm" style="flex: 1; color: #dc2626;" onclick="handleReject(<?php echo $listing['id']; ?>)">
-                                    <i data-lucide="x" style="width: 1rem; height: 1rem;"></i>
-                                    Reject
-                                </button>
-                                <button class="btn btn-glass btn-sm" style="flex: 1;">
-                                    <i data-lucide="eye" style="width: 1rem; height: 1rem;"></i>
-                                    View Details
-                                </button>
-                            </div>
-                            <?php elseif ($listing['status'] === 'approved'): ?>
-                            <div style="display: flex; gap: 0.75rem;">
-                                <button class="btn btn-glass btn-sm" style="flex: 1;">View Details</button>
-                                <button class="btn btn-ghost btn-sm" style="color: #dc2626;">Unpublish</button>
-                            </div>
-                            <?php elseif ($listing['status'] === 'rejected'): ?>
-                            <div style="display: flex; gap: 0.75rem;">
-                                <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="handleApprove(<?php echo $listing['id']; ?>)">Approve Now</button>
-                                <button class="btn btn-glass btn-sm">View Details</button>
-                            </div>
-                            <?php endif; ?>
                         </div>
+                        
+                        <div class="listing-meta-row">
+                            <span class="meta-item"><i data-lucide="map-pin"></i> <?php echo $listing['location']; ?></span>
+                            <span class="meta-item"><i data-lucide="eye"></i> <?php echo $listing['views']; ?> views</span>
+                            <span class="meta-item"><i data-lucide="clock"></i> <?php echo $listing['submittedDate']; ?></span>
+                        </div>
+
+                        <!-- Landlord Info (Small Details) -->
+                        <div class="landlord-profile-row">
+                            <img src="<?php echo $listing['landlordAvatar']; ?>" alt="Landlord" class="landlord-avatar-xs">
+                            <div class="landlord-info-text">
+                                <span class="landlord-name"><?php echo $listing['landlord']; ?></span>
+                                <span class="landlord-role-badge">Property Owner</span>
+                            </div>
+                        </div>
+                        
+                        <?php if (!empty($listing['admin_note'])): ?>
+                            <div class="admin-note-sm">
+                                <i data-lucide="alert-circle" style="width: 1rem; height: 1rem; flex-shrink: 0;"></i>
+                                <span>Note: <?php echo htmlspecialchars($listing['admin_note']); ?></span>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="listing-actions-col">
+                        <?php if ($listing['status'] === 'pending'): ?>
+                            <button class="icon-btn icon-btn-primary" title="Approve" onclick="handleApprove(<?php echo $listing['id']; ?>)">
+                                <i data-lucide="check" style="width: 1.25rem; height: 1.25rem;"></i>
+                            </button>
+                            <button class="icon-btn icon-btn-danger" title="Reject" onclick="handleReject(<?php echo $listing['id']; ?>)">
+                                <i data-lucide="x" style="width: 1.25rem; height: 1.25rem;"></i>
+                            </button>
+                        <?php elseif ($listing['status'] === 'approved'): ?>
+                            <button class="icon-btn icon-btn-danger" title="Unpublish" onclick="handleReject(<?php echo $listing['id']; ?>)">
+                                <i data-lucide="ban" style="width: 1.25rem; height: 1.25rem;"></i>
+                            </button>
+                        <?php elseif ($listing['status'] === 'rejected'): ?>
+                            <button class="icon-btn icon-btn-primary" title="Re-Approve" onclick="handleApprove(<?php echo $listing['id']; ?>)">
+                                <i data-lucide="rotate-ccw" style="width: 1.25rem; height: 1.25rem;"></i>
+                            </button>
+                        <?php endif; ?>
+                        <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/admin/view_listing.php?id=<?php echo $listing['id']; ?>" class="icon-btn icon-btn-neutral" title="View Details">
+                            <i data-lucide="eye" style="width: 1.25rem; height: 1.25rem;"></i>
+                        </a>
                     </div>
                 </div>
                 <?php endforeach; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approve Confirmation Modal -->
+    <div id="approveModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Approve Listing</h3>
+                <button class="close-modal" onclick="closeModal('approveModal')" style="color: #6b7280; padding: 0.25rem; background: transparent; border: none; cursor: pointer;"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to approve this listing? It will become immediately visible to all room seekers.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('approveModal')">Cancel</button>
+                <button id="confirmApproveBtn" class="btn btn-primary" style="background: #10b981; border-color: #10b981; color: white;">Approve Listing</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Confirmation Modal -->
+    <div id="rejectModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Reject Listing</h3>
+                <button class="close-modal" onclick="closeModal('rejectModal')" style="color: #6b7280; padding: 0.25rem; background: transparent; border: none; cursor: pointer;"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 1rem;">Please provide a reason for rejecting this listing. This note will be sent to the landlord.</p>
+                <textarea id="rejectReason" class="form-input" rows="4" placeholder="e.g., Photos are unclear, Description contains prohibited content..." style="width: 100%; resize: vertical;"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('rejectModal')">Cancel</button>
+                <button id="confirmRejectBtn" class="btn btn-primary" style="background: #dc2626; border-color: #dc2626; color: white;">Reject Listing</button>
             </div>
         </div>
     </div>
@@ -218,14 +240,106 @@
     <script>
         lucide.createIcons();
 
+        const ADMIN_STATUS_ENDPOINT = '/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/controllers/ListingController.php?action=updateStatus';
+        let currentListingId = null;
+
+        // Modal Functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('show');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+            if (modalId === 'rejectModal') {
+                document.getElementById('rejectReason').value = '';
+            }
+            currentListingId = null;
+        }
+
+        // Close modals on outside click
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.classList.remove('show');
+                currentListingId = null;
+            }
+        }
+
         function handleApprove(id) {
-            console.log('Approve listing:', id);
-            // Add approval logic here
+            currentListingId = id;
+            openModal('approveModal');
         }
 
         function handleReject(id) {
-            console.log('Reject listing:', id);
-            // Add rejection logic here
+            currentListingId = id;
+            document.getElementById('rejectReason').value = ''; // Clear previous reason
+            openModal('rejectModal');
+        }
+
+        // Confirm Approve
+        document.getElementById('confirmApproveBtn').addEventListener('click', async function() {
+            if (!currentListingId) return;
+            
+            this.disabled = true;
+            this.innerHTML = '<i data-lucide="loader-2" class="animate-spin"></i> Approving...';
+            lucide.createIcons();
+            
+            await updateListingStatus(currentListingId, 'approved');
+        });
+
+        // Confirm Reject
+        document.getElementById('confirmRejectBtn').addEventListener('click', async function() {
+            if (!currentListingId) return;
+
+            const reason = document.getElementById('rejectReason').value.trim();
+            if (!reason) {
+                alert('Please provide a rejection reason.');
+                return;
+            }
+
+            this.disabled = true;
+            this.innerHTML = '<i data-lucide="loader-2" class="animate-spin"></i> Rejecting...';
+            lucide.createIcons();
+            
+            await updateListingStatus(currentListingId, 'rejected', reason);
+        });
+
+        async function updateListingStatus(id, status, note = '') {
+            try {
+                const params = new URLSearchParams();
+                params.append('listing_id', id);
+                params.append('status', status);
+                if (note) {
+                    params.append('note', note);
+                }
+
+                const response = await fetch(ADMIN_STATUS_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: params
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Unable to update listing.');
+                    // Reset buttons if failed
+                    if (status === 'approved') {
+                        const btn = document.getElementById('confirmApproveBtn');
+                        btn.disabled = false;
+                        btn.innerHTML = 'Approve Listing';
+                    } else {
+                        const btn = document.getElementById('confirmRejectBtn');
+                        btn.disabled = false;
+                        btn.innerHTML = 'Reject Listing';
+                    }
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Something went wrong while updating the listing.');
+            }
         }
     </script>
 </body>

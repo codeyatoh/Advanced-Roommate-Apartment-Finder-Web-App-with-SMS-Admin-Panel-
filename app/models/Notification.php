@@ -24,7 +24,8 @@ class Notification extends BaseModel {
      */
     public function getUnread($userId, $limit = 10) {
         $sql = "SELECT n.*, 
-                       u.first_name, u.last_name, u.profile_photo
+                       u.first_name, u.last_name, u.profile_photo,
+                       TIMESTAMPDIFF(SECOND, n.created_at, NOW()) as seconds_ago
                 FROM {$this->table} n
                 LEFT JOIN users u ON n.related_user_id = u.user_id
                 WHERE n.user_id = :user_id 
@@ -48,7 +49,8 @@ class Notification extends BaseModel {
      */
     public function getUserNotifications($userId, $limit = 20) {
         $sql = "SELECT n.*, 
-                       u.first_name, u.last_name, u.profile_photo
+                       u.first_name, u.last_name, u.profile_photo,
+                       TIMESTAMPDIFF(SECOND, n.created_at, NOW()) as seconds_ago
                 FROM {$this->table} n
                 LEFT JOIN users u ON n.related_user_id = u.user_id
                 WHERE n.user_id = :user_id

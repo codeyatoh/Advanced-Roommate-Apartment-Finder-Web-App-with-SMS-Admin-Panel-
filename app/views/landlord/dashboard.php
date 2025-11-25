@@ -43,22 +43,22 @@
     
     // Calculate performance metrics
     // Monthly Revenue: Sum of prices from all active listings
+    // Calculate performance metrics
+    // Monthly Revenue: Sum of prices from all rented/occupied listings
     $monthlyRevenue = 0;
     $activeListings = $listingModel->getByLandlord($landlordId);
-    foreach ($activeListings as $listing) {
-        if ($listing['status'] === 'available') {
-            $monthlyRevenue += floatval($listing['price']);
-        }
-    }
-    
-    // Occupancy Rate: (Active listings / Total listings) * 100
     $totalListings = count($activeListings);
     $occupiedListings = 0;
+
     foreach ($activeListings as $listing) {
-        if ($listing['status'] === 'rented') {
+        $status = $listing['availability_status'] ?? 'available';
+        if ($status === 'occupied' || $status === 'rented') {
+            $monthlyRevenue += floatval($listing['price']);
             $occupiedListings++;
         }
     }
+    
+    // Occupancy Rate: (Occupied listings / Total listings) * 100
     $occupancyRate = $totalListings > 0 ? round(($occupiedListings / $totalListings) * 100) : 0;
     ?>
     <div class="landlord-page">

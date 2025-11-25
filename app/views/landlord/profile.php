@@ -95,6 +95,23 @@ function getValue($array, $key, $default = '') {
                     </div>
 
                     <!-- 3. Personal Information -->
+                    <?php
+                        // Decode JSON operating_hours for display if needed
+                        $operatingRaw = getValue($profile, 'operating_hours');
+                        $operatingDisplay = '';
+                        if (!empty($operatingRaw)) {
+                            $decoded = json_decode($operatingRaw, true);
+                            if (json_last_error() === JSON_ERROR_NONE) {
+                                if (is_array($decoded)) {
+                                    $operatingDisplay = implode("\n", $decoded);
+                                } else {
+                                    $operatingDisplay = (string)$decoded;
+                                }
+                            } else {
+                                $operatingDisplay = $operatingRaw;
+                            }
+                        }
+                    ?>
                     <div class="profile-card">
                         <h3 class="card-title">Personal Information</h3>
                         <div class="form-group-stack">
@@ -140,7 +157,7 @@ function getValue($array, $key, $default = '') {
                                         <option value="female" <?php echo getValue($user, 'gender') === 'female' ? 'selected' : ''; ?>>Female</option>
                                         <option value="other" <?php echo getValue($user, 'gender') === 'other' ? 'selected' : ''; ?>>Other</option>
                                     </select>
-                                    <i data-lucide="chevron-down" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: rgba(0,0,0,0.4); pointer-events: none; width: 1.25rem; height: 1.25rem;"></i>
+                                    <i data-lucide="chevron-down" class="select-caret"></i>
                                 </div>
                             </div>
                         </div>
@@ -151,8 +168,8 @@ function getValue($array, $key, $default = '') {
                 <div class="column">
                     <!-- Business Information -->
                     <div class="profile-card">
-                        <h3 class="card-title">
-                            <i data-lucide="briefcase" style="width: 18px; height: 18px;"></i>
+                        <h3 class="card-title card-title-with-icon">
+                            <i data-lucide="briefcase" class="card-title-icon"></i>
                             Business Information
                         </h3>
                         <div class="form-group-stack">
@@ -198,11 +215,11 @@ function getValue($array, $key, $default = '') {
 
                     <!-- Operating Hours -->
                     <div class="profile-card">
-                        <h3 class="card-title">
-                            <i data-lucide="clock" style="width: 18px; height: 18px;"></i>
+                        <h3 class="card-title card-title-with-icon">
+                            <i data-lucide="clock" class="card-title-icon"></i>
                             Operating Hours
                         </h3>
-                        <textarea name="operating_hours" class="form-textarea" rows="4" placeholder="Mon-Fri: 9:00 AM - 5:00 PM&#10;Sat: 10:00 AM - 2:00 PM&#10;Sun: Closed"><?php echo htmlspecialchars(getValue($profile, 'operating_hours')); ?></textarea>
+                        <textarea name="operating_hours" class="form-textarea" rows="4" placeholder="Mon-Fri: 9:00 AM - 5:00 PM&#10;Sat: 10:00 AM - 2:00 PM&#10;Sun: Closed"><?php echo htmlspecialchars($operatingDisplay); ?></textarea>
                         <p class="field-hint">Enter your business operating hours</p>
                     </div>
                 </div>

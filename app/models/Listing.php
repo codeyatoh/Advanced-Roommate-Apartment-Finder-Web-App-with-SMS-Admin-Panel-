@@ -7,13 +7,23 @@ require_once __DIR__ . '/BaseModel.php';
  */
 class Listing extends BaseModel {
     protected $table = 'listings';
+    protected $primaryKey = 'listing_id';
 
     /**
      * Get all available listings
      * @return array
      */
     public function getAvailable() {
-        return $this->getAll(['availability_status' => 'available'], 'created_at DESC');
+        $sql = "SELECT l.*, 
+                       (SELECT image_url FROM listing_images WHERE listing_id = l.listing_id AND is_primary = 1 LIMIT 1) as primary_image
+                FROM {$this->table} l
+                WHERE l.approval_status = 'approved'
+                  AND l.availability_status = 'available'
+                ORDER BY l.created_at DESC";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
     }
 
     /**
@@ -22,7 +32,16 @@ class Listing extends BaseModel {
      * @return array
      */
     public function getByLandlord($landlordId) {
-        return $this->getAll(['landlord_id' => $landlordId], 'created_at DESC');
+        $sql = "SELECT l.*, 
+                       (SELECT image_url FROM listing_images WHERE listing_id = l.listing_id AND is_primary = 1 LIMIT 1) as primary_image
+                FROM {$this->table} l
+                WHERE l.landlord_id = :landlord_id
+                ORDER BY l.created_at DESC";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':landlord_id', $landlordId, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
     }
 
     /**
@@ -116,7 +135,8 @@ class Listing extends BaseModel {
                     CONCAT(u.first_name, ' ', u.last_name) as landlord_name
                 FROM {$this->table} l
                 LEFT JOIN users u ON l.landlord_id = u.user_id
-                WHERE l.availability_status = 'available'";
+                WHERE l.approval_status = 'approved'
+                  AND l.availability_status = 'available'";
         
         $params = [];
 
@@ -163,9 +183,9 @@ class Listing extends BaseModel {
     public function getStats() {
         $sql = "SELECT 
                     COUNT(*) as total_listings,
-                    SUM(CASE WHEN availability_status = 'available' THEN 1 ELSE 0 END) as available_listings,
+                    SUM(CASE WHEN approval_status = 'approved' AND availability_status = 'available' THEN 1 ELSE 0 END) as available_listings,
                     SUM(CASE WHEN availability_status = 'occupied' THEN 1 ELSE 0 END) as occupied_listings,
-                    SUM(CASE WHEN availability_status = 'pending' THEN 1 ELSE 0 END) as pending_listings,
+                    SUM(CASE WHEN approval_status = 'pending' THEN 1 ELSE 0 END) as pending_listings,
                     AVG(price) as average_price
                 FROM {$this->table}";
         
@@ -181,8 +201,9 @@ class Listing extends BaseModel {
     public function getLandlordStats($landlordId) {
         $sql = "SELECT 
                     COUNT(*) as total_listings,
-                    SUM(CASE WHEN availability_status = 'available' THEN 1 ELSE 0 END) as active_listings,
-                    SUM(CASE WHEN availability_status = 'occupied' THEN 1 ELSE 0 END) as occupied_listings
+                    SUM(CASE WHEN approval_status = 'approved' AND availability_status = 'available' THEN 1 ELSE 0 END) as active_listings,
+                    SUM(CASE WHEN approval_status = 'pending' THEN 1 ELSE 0 END) as pending_listings,
+                    SUM(CASE WHEN approval_status = 'rejected' THEN 1 ELSE 0 END) as rejected_listings
                 FROM {$this->table}
                 WHERE landlord_id = :landlord_id";
         
@@ -190,6 +211,64 @@ class Listing extends BaseModel {
         $stmt->bindValue(':landlord_id', $landlordId, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetch();
+    }
+
+    /**
+     * Get landlord listings with filters
+     * @param int $landlordId
+     * @param array $filters
+     * @return array
+     */
+    public function getLandlordListings($landlordId, $filters = []) {
+        $sql = "SELECT l.*, 
+                       (SELECT image_url FROM listing_images WHERE listing_id = l.listing_id AND is_primary = 1 LIMIT 1) as primary_image
+                FROM {$this->table} l
+                WHERE l.landlord_id = :landlord_id";
+        
+        $params = [':landlord_id' => $landlordId];
+
+        if (!empty($filters['search'])) {
+            $sql .= " AND (l.title LIKE :search_title OR l.location LIKE :search_location)";
+            $params[':search_title'] = '%' . $filters['search'] . '%';
+            $params[':search_location'] = '%' . $filters['search'] . '%';
+        }
+
+        if (!empty($filters['status'])) {
+            if ($filters['status'] === 'Active') {
+                $sql .= " AND l.approval_status = 'approved' AND l.availability_status = 'available'";
+            } elseif ($filters['status'] === 'Rented') {
+                $sql .= " AND l.availability_status IN ('occupied', 'rented')";
+            } elseif ($filters['status'] === 'Pending') {
+                $sql .= " AND l.approval_status = 'pending'";
+            } elseif ($filters['status'] === 'Rejected') {
+                $sql .= " AND l.approval_status = 'rejected'";
+            }
+        }
+
+        // Sort
+        if (!empty($filters['sort'])) {
+            switch ($filters['sort']) {
+                case 'Price: Low to High':
+                    $sql .= " ORDER BY l.price ASC";
+                    break;
+                case 'Price: High to Low':
+                    $sql .= " ORDER BY l.price DESC";
+                    break;
+                case 'Newest':
+                default:
+                    $sql .= " ORDER BY l.created_at DESC";
+                    break;
+            }
+        } else {
+            $sql .= " ORDER BY l.created_at DESC";
+        }
+
+        $stmt = $this->conn->prepare($sql);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->execute();
+        return $stmt->fetchAll();
     }
 
     /**
@@ -211,10 +290,201 @@ class Listing extends BaseModel {
      * @return array
      */
     public function getPending($limit = 5) {
-        $sql = "SELECT * FROM {$this->table} WHERE availability_status = 'pending' ORDER BY created_at DESC LIMIT :limit";
+        $sql = "SELECT * FROM {$this->table} 
+                WHERE approval_status = 'pending' 
+                ORDER BY created_at DESC 
+                LIMIT :limit";
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
+    }
+
+    public function getPendingApprovals() {
+        $sql = "SELECT l.*, 
+                       u.first_name, u.last_name, u.profile_photo,
+                       (SELECT image_url FROM listing_images WHERE listing_id = l.listing_id AND is_primary = 1 LIMIT 1) as primary_image
+                FROM {$this->table} l
+                LEFT JOIN users u ON l.landlord_id = u.user_id
+                WHERE l.approval_status = 'pending'
+                ORDER BY l.created_at DESC";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function updateApprovalStatus($listingId, $status, $adminId = null, $note = null) {
+        // Calculate fields in PHP to avoid repeated parameter usage in SQL
+        $availabilityStatus = null;
+        $shouldUpdateApprovedAt = false;
+
+        if ($status === 'approved') {
+            $availabilityStatus = 'available';
+            $shouldUpdateApprovedAt = true;
+        } elseif ($status === 'rejected') {
+            $availabilityStatus = 'pending';
+        }
+
+        $sql = "UPDATE {$this->table}
+                SET approval_status = :status,
+                    approved_by = :approved_by,
+                    admin_note = :admin_note,
+                    updated_at = NOW()";
+        
+        if ($availabilityStatus) {
+            $sql .= ", availability_status = :availability_status";
+        }
+        
+        if ($shouldUpdateApprovedAt) {
+            $sql .= ", approved_at = NOW()";
+        }
+
+        $sql .= " WHERE listing_id = :listing_id";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':status', $status);
+        $stmt->bindValue(':approved_by', $adminId, PDO::PARAM_INT);
+        $stmt->bindValue(':admin_note', $note);
+        $stmt->bindValue(':listing_id', $listingId, PDO::PARAM_INT);
+        
+        if ($availabilityStatus) {
+            $stmt->bindValue(':availability_status', $availabilityStatus);
+        }
+
+        return $stmt->execute();
+    }
+    /**
+     * Update listing with images
+     * @param int $listingId
+     * @param array $listingData
+     * @param array $newImageUrls
+     * @param array $existingImageIds
+     * @return bool
+     */
+    public function updateWithImages($listingId, $listingData, $newImageUrls = [], $existingImageIds = []) {
+        // Handle JSON fields
+        if (isset($listingData['amenities']) && is_array($listingData['amenities'])) {
+            $listingData['amenities'] = json_encode($listingData['amenities']);
+        }
+        if (isset($listingData['house_rules_data']) && is_array($listingData['house_rules_data'])) {
+            $listingData['house_rules_data'] = json_encode($listingData['house_rules_data']);
+        }
+
+        // Update listing details
+        $sql = "UPDATE {$this->table} SET 
+                title = :title,
+                description = :description,
+                price = :price,
+                security_deposit = :security_deposit,
+                location = :location,
+                available_from = :available_from,
+                utilities_included = :utilities_included,
+                room_type = :room_type,
+                bedrooms = :bedrooms,
+                bathrooms = :bathrooms,
+                current_roommates = :current_roommates,
+                amenities = :amenities,
+                house_rules_data = :house_rules_data,
+                approval_status = 'pending',
+                availability_status = 'pending',
+                updated_at = NOW()
+                WHERE listing_id = :listing_id AND landlord_id = :landlord_id";
+
+        $stmt = $this->conn->prepare($sql);
+        
+        $stmt->bindValue(':title', $listingData['title']);
+        $stmt->bindValue(':description', $listingData['description']);
+        $stmt->bindValue(':price', $listingData['price']);
+        $stmt->bindValue(':security_deposit', $listingData['security_deposit']);
+        $stmt->bindValue(':location', $listingData['location']);
+        $stmt->bindValue(':available_from', $listingData['available_from']);
+        $stmt->bindValue(':utilities_included', $listingData['utilities_included']);
+        $stmt->bindValue(':room_type', $listingData['room_type']);
+        $stmt->bindValue(':bedrooms', $listingData['bedrooms']);
+        $stmt->bindValue(':bathrooms', $listingData['bathrooms']);
+        $stmt->bindValue(':current_roommates', $listingData['current_roommates']);
+        $stmt->bindValue(':amenities', $listingData['amenities']);
+        $stmt->bindValue(':house_rules_data', $listingData['house_rules_data']);
+        $stmt->bindValue(':landlord_id', $listingData['landlord_id']);
+        $stmt->bindValue(':listing_id', $listingId, PDO::PARAM_INT);
+        
+        if (!$stmt->execute()) {
+            return false;
+        }
+
+        // Handle images
+        // 1. Remove images not in $existingImageIds
+        if (!empty($existingImageIds)) {
+            $placeholders = implode(',', array_fill(0, count($existingImageIds), '?'));
+            $sql = "DELETE FROM listing_images WHERE listing_id = ? AND image_id NOT IN ($placeholders)";
+            $params = array_merge([$listingId], $existingImageIds);
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute($params);
+        } else {
+            // If no existing images kept, delete all for this listing
+            $sql = "DELETE FROM listing_images WHERE listing_id = :listing_id";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindValue(':listing_id', $listingId, PDO::PARAM_INT);
+            $stmt->execute();
+        }
+
+        // 2. Add new images
+        if (!empty($newImageUrls)) {
+            foreach ($newImageUrls as $url) {
+                $this->addImage($listingId, $url, false); // New images are not primary by default unless logic changes
+            }
+        }
+
+        // 3. Ensure at least one image is primary
+        $sql = "UPDATE listing_images SET is_primary = 1 
+                WHERE listing_id = :listing_id1 
+                AND image_id = (SELECT min_id FROM (SELECT MIN(image_id) as min_id FROM listing_images WHERE listing_id = :listing_id2) as t)
+                AND (SELECT count_primary FROM (SELECT COUNT(*) as count_primary FROM listing_images WHERE listing_id = :listing_id3 AND is_primary = 1) as t2) = 0";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':listing_id1', $listingId, PDO::PARAM_INT);
+        $stmt->bindValue(':listing_id2', $listingId, PDO::PARAM_INT);
+        $stmt->bindValue(':listing_id3', $listingId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return true;
+    }
+    /**
+     * Delete listing and its images
+     * @param int $listingId
+     * @return bool
+     */
+    public function deleteWithImages($listingId) {
+        // Get images first
+        $sql = "SELECT image_url FROM listing_images WHERE listing_id = :listing_id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':listing_id', $listingId, PDO::PARAM_INT);
+        $stmt->execute();
+        $images = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        // Delete files
+        foreach ($images as $imageUrl) {
+            // Convert URL to file path
+            // URL: /Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/uploads/listings/filename.jpg
+            // Path: __DIR__ . '/../../public/uploads/listings/filename.jpg'
+            
+            $filename = basename($imageUrl);
+            $filePath = __DIR__ . '/../../public/uploads/listings/' . $filename;
+            
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+        }
+
+        // Delete database records (listing_images should cascade if set up, but we can be explicit if needed)
+        // For now, we rely on parent::delete to remove the listing. 
+        // If foreign keys are CASCADE, images go too. If not, we might need to delete them manually.
+        // Let's delete images manually from DB just in case to be safe.
+        $sql = "DELETE FROM listing_images WHERE listing_id = :listing_id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':listing_id', $listingId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $this->delete($listingId);
     }
 }

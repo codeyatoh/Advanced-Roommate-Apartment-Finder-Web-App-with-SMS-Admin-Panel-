@@ -26,6 +26,11 @@
 <body>
     <div class="auth-page">
         <div class="auth-container auth-container-wide">
+            <div class="auth-back-link">
+                <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/public/login.php" class="auth-back-link-btn">
+                    ← Back to Login
+                </a>
+            </div>
             <!-- Header -->
             <div class="auth-header">
                 <h1 class="auth-title">Join RoomFinder</h1>

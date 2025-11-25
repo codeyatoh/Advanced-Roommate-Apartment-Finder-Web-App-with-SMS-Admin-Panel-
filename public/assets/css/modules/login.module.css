@@ -19,6 +19,34 @@
     max-width: 42rem;
 }
 
+.auth-back-link {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.auth-back-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #111827;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(148, 163, 184, 0.55);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.15);
+    text-decoration: none;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-back-link-btn:hover {
+    background: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.2);
+}
+
 .auth-header {
     text-align: center;
     margin-bottom: 2rem;

@@ -32,6 +32,22 @@ class LandlordProfile extends BaseModel {
                  :website_url, :description, :operating_hours, :verification_documents, 
                  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
         
+        // Normalize JSON fields
+        $operatingHours = $data['operating_hours'] ?? null;
+        if ($operatingHours !== null) {
+            // Always store as valid JSON
+            if (is_array($operatingHours) || is_object($operatingHours)) {
+                $operatingHours = json_encode($operatingHours);
+            } else {
+                $operatingHours = json_encode((string)$operatingHours);
+            }
+        }
+
+        $verificationDocs = $data['verification_documents'] ?? null;
+        if ($verificationDocs !== null && (is_array($verificationDocs) || is_object($verificationDocs))) {
+            $verificationDocs = json_encode($verificationDocs);
+        }
+
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue(':user_id', $data['user_id'], PDO::PARAM_INT);
         $stmt->bindValue(':company_name', $data['company_name'] ?? null);
@@ -39,8 +55,8 @@ class LandlordProfile extends BaseModel {
         $stmt->bindValue(':office_address', $data['office_address'] ?? null);
         $stmt->bindValue(':website_url', $data['website_url'] ?? null);
         $stmt->bindValue(':description', $data['description'] ?? null);
-        $stmt->bindValue(':operating_hours', $data['operating_hours'] ?? null);
-        $stmt->bindValue(':verification_documents', $data['verification_documents'] ?? null);
+        $stmt->bindValue(':operating_hours', $operatingHours);
+        $stmt->bindValue(':verification_documents', $verificationDocs);
         
         if ($stmt->execute()) {
             return $this->conn->lastInsertId();
@@ -66,6 +82,21 @@ class LandlordProfile extends BaseModel {
                     updated_at = CURRENT_TIMESTAMP
                 WHERE user_id = :user_id";
         
+        // Normalize JSON fields
+        $operatingHours = $data['operating_hours'] ?? null;
+        if ($operatingHours !== null) {
+            if (is_array($operatingHours) || is_object($operatingHours)) {
+                $operatingHours = json_encode($operatingHours);
+            } else {
+                $operatingHours = json_encode((string)$operatingHours);
+            }
+        }
+
+        $verificationDocs = $data['verification_documents'] ?? null;
+        if ($verificationDocs !== null && (is_array($verificationDocs) || is_object($verificationDocs))) {
+            $verificationDocs = json_encode($verificationDocs);
+        }
+
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
         $stmt->bindValue(':company_name', $data['company_name'] ?? null);
@@ -73,8 +104,8 @@ class LandlordProfile extends BaseModel {
         $stmt->bindValue(':office_address', $data['office_address'] ?? null);
         $stmt->bindValue(':website_url', $data['website_url'] ?? null);
         $stmt->bindValue(':description', $data['description'] ?? null);
-        $stmt->bindValue(':operating_hours', $data['operating_hours'] ?? null);
-        $stmt->bindValue(':verification_documents', $data['verification_documents'] ?? null);
+        $stmt->bindValue(':operating_hours', $operatingHours);
+        $stmt->bindValue(':verification_documents', $verificationDocs);
         
         return $stmt->execute();
     }

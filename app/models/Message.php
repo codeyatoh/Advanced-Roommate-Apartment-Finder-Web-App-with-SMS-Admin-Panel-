@@ -191,4 +191,21 @@ class Message extends BaseModel {
         $result = $stmt->fetch();
         return $result['count'] ?? 0;
     }
+
+    /**
+     * Get inquiry count for a specific listing
+     * @param int $listingId
+     * @return int
+     */
+    public function getInquiryCountForListing($listingId) {
+        $sql = "SELECT COUNT(DISTINCT sender_id) as count 
+                FROM {$this->table} 
+                WHERE listing_id = :listing_id";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':listing_id', $listingId, PDO::PARAM_INT);
+        $stmt->execute();
+        $result = $stmt->fetch();
+        return $result['count'] ?? 0;
+    }
 }

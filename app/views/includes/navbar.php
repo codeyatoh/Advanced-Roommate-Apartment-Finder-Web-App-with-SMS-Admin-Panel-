@@ -110,6 +110,7 @@ if ($role === 'room_seeker') {
                 $notifications = $notificationModel->getUnread($_SESSION['user_id'], 5);
             ?>
                 <!-- Notification Dropdown -->
+                <?php if ($role !== 'admin'): ?>
                 <div class="notification-dropdown-container">
                     <button type="button" class="btn-notification" id="notificationBtn">
                         <i data-lucide="bell" style="width: 1.25rem; height: 1.25rem;"></i>
@@ -134,6 +135,7 @@ if ($role === 'room_seeker') {
                             <?php else: ?>
                                 <?php foreach ($notifications as $notif): 
                                     // Icon based on type (PHP 7.x compatible)
+                                    // Icon based on type (PHP 7.x compatible)
                                     switch($notif['type']) {
                                         case 'match':
                                             $icon = 'heart';
@@ -146,6 +148,15 @@ if ($role === 'room_seeker') {
                                             break;
                                         case 'inquiry':
                                             $icon = 'mail';
+                                            break;
+                                        case 'system':
+                                            $icon = 'info';
+                                            break;
+                                        case 'listing_approved':
+                                            $icon = 'check-circle';
+                                            break;
+                                        case 'listing_rejected':
+                                            $icon = 'x-circle';
                                             break;
                                         default:
                                             $icon = 'bell';
@@ -165,20 +176,30 @@ if ($role === 'room_seeker') {
                                         case 'inquiry':
                                             $iconColor = '#8b5cf6';
                                             break;
+                                        case 'system':
+                                            $iconColor = '#3b82f6';
+                                            break;
+                                        case 'listing_approved':
+                                            $iconColor = '#10b981'; // Green
+                                            break;
+                                        case 'listing_rejected':
+                                            $iconColor = '#ef4444'; // Red
+                                            break;
                                         default:
                                             $iconColor = '#6b7280';
                                     }
                                     
-                                    // Format time
-                                    $time = new DateTime($notif['created_at']);
-                                    $now = new DateTime();
-                                    $diff = $now->diff($time);
-                                    if ($diff->days > 0) {
-                                        $timeAgo = $diff->days . 'd ago';
-                                    } elseif ($diff->h > 0) {
-                                        $timeAgo = $diff->h . 'h ago';
+                                    // Format time using DB calculated difference
+                                    $seconds = isset($notif['seconds_ago']) ? (int)$notif['seconds_ago'] : 0;
+                                    
+                                    if ($seconds < 60) {
+                                        $timeAgo = 'Just now';
+                                    } elseif ($seconds < 3600) {
+                                        $timeAgo = floor($seconds / 60) . 'm ago';
+                                    } elseif ($seconds < 86400) {
+                                        $timeAgo = floor($seconds / 3600) . 'h ago';
                                     } else {
-                                        $timeAgo = max(1, $diff->i) . 'm ago';
+                                        $timeAgo = floor($seconds / 86400) . 'd ago';
                                     }
                                 ?>
                                 <div class="notification-item" data-id="<?php echo $notif['notification_id']; ?>">
@@ -197,6 +218,7 @@ if ($role === 'room_seeker') {
                         </div>
                     </div>
                 </div>
+                <?php endif; ?>
                 
                 <?php if ($role !== 'admin'): ?>
                 <div class="navbar-user">

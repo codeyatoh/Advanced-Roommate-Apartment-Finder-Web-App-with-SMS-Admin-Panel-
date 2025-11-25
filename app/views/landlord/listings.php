@@ -29,23 +29,36 @@ $landlordId = $_SESSION['user_id'];
 $listingModel = new Listing();
 $messageModel = new Message();
 
-// Get all listings for this landlord
-$listings = $listingModel->getByLandlord($landlordId);
+// Get filters
+$search = $_GET['search'] ?? '';
+$status = $_GET['status'] ?? 'All Status';
+$sort = $_GET['sort'] ?? 'Newest';
+
+// Get filtered listings
+$listings = $listingModel->getLandlordListings($landlordId, [
+    'search' => $search,
+    'status' => $status === 'All Status' ? '' : $status,
+    'sort' => $sort
+]);
 
 // Get inquiry count for each listing
 foreach ($listings as &$listing) {
-    $inquiryCount = $messageModel->getInquiryCountForListing($listing['listing_id']);
-    $listing['inquiries'] = $inquiryCount;
+    $listing['inquiries'] = $messageModel->getInquiryCountForListing($listing['listing_id']);
+    $listing['image'] = $listing['primary_image'] ?? 'https://via.placeholder.com/800x600?text=No+Image';
+    $listing['display_location'] = $listing['location'] ?? 'Unknown location';
     
-    // Get first image
-    if (!empty($listing['images'])) {
-        $listing['image'] = is_array($listing['images']) ? $listing['images'][0] : json_decode($listing['images'], true)[0] ?? 'https://via.placeholder.com/800x600?text=No+Image';
+    // Determine display status
+    if ($listing['availability_status'] === 'occupied' || $listing['availability_status'] === 'rented') {
+        $listing['status'] = 'rented';
+    } elseif ($listing['approval_status'] === 'pending') {
+        $listing['status'] = 'pending';
+    } elseif ($listing['approval_status'] === 'rejected') {
+        $listing['status'] = 'rejected';
     } else {
-        $listing['image'] = 'https://via.placeholder.com/800x600?text=No+Image';
+        $listing['status'] = 'active';
     }
     
-    // Format location
-    $listing['location'] = $listing['city'] . ', ' . $listing['state'];
+    $listing['views'] = $listing['views'] ?? 0;
 }
 ?>
     <div class="landlord-page">
@@ -65,39 +78,39 @@ foreach ($listings as &$listing) {
             </div>
 
             <!-- Search & Filters -->
-            <div style="margin-bottom: 2rem;">
+            <form method="GET" action="" style="margin-bottom: 2rem;">
                 <div class="search-bar-container">
                     <div class="search-input-wrapper">
                         <i data-lucide="search" class="search-icon"></i>
-                        <input type="text" class="search-input-clean" placeholder="Search my listings...">
+                        <input type="text" name="search" class="search-input-clean" placeholder="Search my listings..." value="<?php echo htmlspecialchars($search); ?>">
                     </div>
                     <div class="search-actions">
-                        <button class="btn-filters" onclick="document.getElementById('filterOptions').style.display = document.getElementById('filterOptions').style.display === 'none' ? 'flex' : 'none'">
+                        <button type="button" class="btn-filters" onclick="document.getElementById('filterOptions').style.display = document.getElementById('filterOptions').style.display === 'none' ? 'flex' : 'none'">
                             <i data-lucide="sliders-horizontal" style="width: 1rem; height: 1rem;"></i>
                             Filters
                         </button>
-                        <button class="btn-search">
+                        <button type="submit" class="btn-search">
                             Search
                         </button>
                     </div>
                 </div>
                 
                 <!-- Expanded Filters -->
-                <div id="filterOptions" style="display: none; gap: 1rem; margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border-radius: 1rem;">
-                    <select class="form-select" style="flex: 1; height: 2.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid rgba(0,0,0,0.1);">
-                        <option>All Status</option>
-                        <option>Active</option>
-                        <option>Rented</option>
-                        <option>Pending</option>
+                <div id="filterOptions" style="display: <?php echo ($status !== 'All Status' || $sort !== 'Newest') ? 'flex' : 'none'; ?>; gap: 1rem; margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border-radius: 1rem;">
+                    <select name="status" class="form-select" style="flex: 1; height: 2.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid rgba(0,0,0,0.1);">
+                        <option <?php echo $status === 'All Status' ? 'selected' : ''; ?>>All Status</option>
+                        <option <?php echo $status === 'Active' ? 'selected' : ''; ?>>Active</option>
+                        <option <?php echo $status === 'Rented' ? 'selected' : ''; ?>>Rented</option>
+                        <option <?php echo $status === 'Pending' ? 'selected' : ''; ?>>Pending</option>
+                        <option <?php echo $status === 'Rejected' ? 'selected' : ''; ?>>Rejected</option>
                     </select>
-                    <select class="form-select" style="flex: 1; height: 2.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid rgba(0,0,0,0.1);">
-                        <option>Sort By</option>
-                        <option>Newest</option>
-                        <option>Price: Low to High</option>
-                        <option>Price: High to Low</option>
+                    <select name="sort" class="form-select" style="flex: 1; height: 2.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid rgba(0,0,0,0.1);">
+                        <option <?php echo $sort === 'Newest' ? 'selected' : ''; ?>>Newest</option>
+                        <option <?php echo $sort === 'Price: Low to High' ? 'selected' : ''; ?>>Price: Low to High</option>
+                        <option <?php echo $sort === 'Price: High to Low' ? 'selected' : ''; ?>>Price: High to Low</option>
                     </select>
                 </div>
-            </div>
+            </form>
 
             <!-- Listings Grid -->
             <div class="listings-grid">
@@ -115,30 +128,16 @@ foreach ($listings as &$listing) {
 
                 foreach ($listings as $index => $listing): 
                     $statusClass = 'status-' . $listing['status'];
+                    $statusLabel = ucfirst(str_replace('_', ' ', $listing['status']));
                 ?>
                 <div class="glass-card animate-slide-up" style="padding: 0; animation-delay: <?php echo $index * 0.1; ?>s;">
                     <!-- Image -->
                     <div class="listing-image-container">
                         <img src="<?php echo $listing['image']; ?>" alt="<?php echo $listing['title']; ?>" class="listing-image">
                         <div class="status-badge <?php echo $statusClass; ?>">
-                            <?php echo ucfirst($listing['status']); ?>
+                            <?php echo $statusLabel; ?>
                         </div>
-                        <button class="menu-btn" onclick="toggleMenu(<?php echo $listing['id']; ?>)" style="position: absolute; top: 0.75rem; right: 0.75rem; padding: 0.5rem; background: rgba(255,255,255,0.8); backdrop-filter: blur(4px); border-radius: 9999px; border: none; cursor: pointer; transition: all 0.2s;">
-                            <i data-lucide="more-vertical" style="width: 1rem; height: 1rem; color: #000;"></i>
-                        </button>
-                        
-                        <!-- Dropdown Menu -->
-                        <div id="menu-<?php echo $listing['id']; ?>" class="dropdown-menu" style="display: none; position: absolute; top: 3rem; right: 0.75rem; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); overflow: hidden; z-index: 10; min-width: 8rem;">
-                            <button style="display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0.5rem 1rem; border: none; background: transparent; cursor: pointer; font-size: 0.875rem; color: #000; text-align: left;">
-                                <i data-lucide="edit" style="width: 1rem; height: 1rem;"></i> Edit
-                            </button>
-                            <button style="display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0.5rem 1rem; border: none; background: transparent; cursor: pointer; font-size: 0.875rem; color: #000; text-align: left;">
-                                <i data-lucide="eye" style="width: 1rem; height: 1rem;"></i> View
-                            </button>
-                            <button style="display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0.5rem 1rem; border: none; background: transparent; cursor: pointer; font-size: 0.875rem; color: #dc2626; text-align: left;">
-                                <i data-lucide="trash-2" style="width: 1rem; height: 1rem;"></i> Delete
-                            </button>
-                        </div>
+
                     </div>
 
                     <!-- Content -->
@@ -147,7 +146,7 @@ foreach ($listings as &$listing) {
                             <h3 style="font-size: 1.125rem; font-weight: 600; color: #000; margin-bottom: 0.25rem;"><?php echo $listing['title']; ?></h3>
                             <div style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.875rem; color: rgba(0,0,0,0.6);">
                                 <i data-lucide="map-pin" style="width: 1rem; height: 1rem;"></i>
-                                <?php echo $listing['location']; ?>
+                                <?php echo $listing['display_location']; ?>
                             </div>
                         </div>
 
@@ -171,16 +170,23 @@ foreach ($listings as &$listing) {
                             </div>
                         </div>
 
+                        <?php if ($listing['status'] === 'pending'): ?>
+                            <div style="font-size: 0.875rem; color: #92400e; background: rgba(251, 191, 36, 0.15); border-radius: 0.5rem; padding: 0.5rem 0.75rem;">
+                                Awaiting admin approval before publishing.
+                            </div>
+                        <?php elseif ($listing['status'] === 'rejected' && !empty($listing['admin_note'])): ?>
+                            <div style="font-size: 0.875rem; color: #b91c1c; background: rgba(248, 113, 113, 0.15); border-radius: 0.5rem; padding: 0.5rem 0.75rem;">
+                                Admin note: <?php echo htmlspecialchars($listing['admin_note']); ?>
+                            </div>
+                        <?php endif; ?>
+
                         <!-- Actions -->
                         <div style="display: flex; gap: 0.5rem; padding-top: 0.5rem;">
-                            <button class="btn btn-primary btn-sm" style="flex: 1;">
-                                <i data-lucide="edit" style="width: 1rem; height: 1rem;"></i>
-                                Edit
-                            </button>
-                            <button class="btn btn-glass btn-sm" style="flex: 1;">
+
+                            <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/landlord/view_listing.php?id=<?php echo $listing['listing_id']; ?>" class="btn btn-glass btn-sm" style="flex: 1; text-decoration: none; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
                                 <i data-lucide="eye" style="width: 1rem; height: 1rem;"></i>
                                 View
-                            </button>
+                            </a>
                         </div>
                     </div>
                 </div>

@@ -10,10 +10,16 @@ abstract class BaseModel {
     protected $conn;
     protected $table;
 
+    protected $primaryKey;
+
     public function __construct() {
         $this->db = new Database();
         $this->conn = $this->db->connect();
     }
+
+    // ... (rest of the class)
+
+
 
     /**
      * Get all records from table
@@ -114,7 +120,15 @@ abstract class BaseModel {
      * Override in child classes if different
      * @return string
      */
+    /**
+     * Get primary key column name
+     * Override in child classes if different
+     * @return string
+     */
     protected function getPrimaryKey() {
+        if (isset($this->primaryKey)) {
+            return $this->primaryKey;
+        }
         return $this->table . '_id';
     }
 

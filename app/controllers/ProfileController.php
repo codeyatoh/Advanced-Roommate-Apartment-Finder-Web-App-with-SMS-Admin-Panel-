@@ -4,6 +4,7 @@ header('Content-Type: application/json');
 
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/SeekerProfile.php';
+require_once __DIR__ . '/../models/LandlordProfile.php';
 
 $userId = $_SESSION['user_id'] ?? null;
 
@@ -13,7 +14,8 @@ if (!$userId) {
 }
 
 $userModel = new User();
-$profileModel = new SeekerProfile();
+$seekerProfileModel = new SeekerProfile();
+$landlordProfileModel = new LandlordProfile();
 
 // Handle GET request for profile completion
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'get_completion') {
@@ -25,6 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
 // Handle POST request to save profile
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
+        $action = $_GET['action'] ?? null;
+
         // Handle password change if provided
         if (!empty($_POST['current_password']) && !empty($_POST['new_password']) && !empty($_POST['confirm_password'])) {
             $currentUser = $userModel->getById($userId);
@@ -91,41 +95,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Update user table
         $userModel->update($userId, $userData);
 
-        // Prepare seeker profile data
-        $profileData = [
-            'user_id' => $userId,
-            'occupation' => $_POST['occupation'] ?? '',
-            'preferred_location' => $_POST['location'] ?? '',
-            'budget' => !empty($_POST['budget']) ? (float)$_POST['budget'] : null,
-            'move_in_date' => !empty($_POST['move_in_date']) ? $_POST['move_in_date'] : null,
-            'sleep_schedule' => $_POST['sleep_schedule'] ?? null,
-            'social_level' => $_POST['social_level'] ?? null,
-            'guests_preference' => $_POST['guests'] ?? null,
-            'cleanliness' => $_POST['cleanliness'] ?? null,
-            'work_schedule' => $_POST['work_schedule'] ?? null,
-            'noise_level' => $_POST['noise_level'] ?? null,
-            'preferences' => isset($_POST['preferences']) ? json_encode($_POST['preferences']) : '[]'
-        ];
+        if ($action === 'updateLandlordProfile') {
+            // Landlord profile update
+            $landlordData = [
+                'company_name' => $_POST['company_name'] ?? null,
+                'business_license' => $_POST['business_license'] ?? null,
+                'office_address' => $_POST['office_address'] ?? null,
+                'website_url' => $_POST['website_url'] ?? null,
+                'description' => $_POST['description'] ?? null,
+                'operating_hours' => $_POST['operating_hours'] ?? null,
+                'verification_documents' => null,
+            ];
 
-        // Check if profile exists
-        $existingProfile = $profileModel->getByUserId($userId);
-        
-        if ($existingProfile) {
-            // Update existing profile
-            $profileModel->update($existingProfile['profile_id'], $profileData);
+            $landlordProfileModel->createOrUpdate($userId, $landlordData);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Landlord profile updated successfully',
+            ]);
         } else {
-            // Create new profile
-            $profileModel->create($profileData);
+            // Seeker profile update (existing behaviour)
+            $profileData = [
+                'user_id' => $userId,
+                'occupation' => $_POST['occupation'] ?? '',
+                'preferred_location' => $_POST['location'] ?? '',
+                'budget' => !empty($_POST['budget']) ? (float)$_POST['budget'] : null,
+                'move_in_date' => !empty($_POST['move_in_date']) ? $_POST['move_in_date'] : null,
+                'sleep_schedule' => $_POST['sleep_schedule'] ?? null,
+                'social_level' => $_POST['social_level'] ?? null,
+                'guests_preference' => $_POST['guests'] ?? null,
+                'cleanliness' => $_POST['cleanliness'] ?? null,
+                'work_schedule' => $_POST['work_schedule'] ?? null,
+                'noise_level' => $_POST['noise_level'] ?? null,
+                'preferences' => isset($_POST['preferences']) ? json_encode($_POST['preferences']) : '[]'
+            ];
+
+            // Check if profile exists
+            $existingProfile = $seekerProfileModel->getByUserId($userId);
+            
+            if ($existingProfile) {
+                // Update existing profile
+                $seekerProfileModel->update($existingProfile['profile_id'], $profileData);
+            } else {
+                // Create new profile
+                $seekerProfileModel->create($profileData);
+            }
+
+            // Get updated profile completion
+            $completion = $userModel->getProfileCompletion($userId);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Profile updated successfully',
+                'completion' => $completion['percentage']
+            ]);
         }
-
-        // Get updated profile completion
-        $completion = $userModel->getProfileCompletion($userId);
-
-        echo json_encode([
-            'success' => true,
-            'message' => 'Profile updated successfully',
-            'completion' => $completion['percentage']
-        ]);
 
     } catch (Exception $e) {
         echo json_encode([

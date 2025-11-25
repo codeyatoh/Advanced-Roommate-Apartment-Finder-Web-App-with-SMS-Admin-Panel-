@@ -67,7 +67,11 @@ CREATE TABLE listings (
     amenities JSON, -- Stores array of checked amenities (e.g., ["wifi", "gym"])
     house_rules_data JSON, -- Stores rules and details (e.g., {"smoking": false, "pets": {"allowed": true, "details": "cats only"}})
     
-    availability_status ENUM('available', 'occupied', 'pending') DEFAULT 'available',
+    availability_status ENUM('available', 'occupied', 'pending') DEFAULT 'pending',
+    approval_status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    approved_by INT NULL,
+    approved_at TIMESTAMP NULL,
+    admin_note TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
