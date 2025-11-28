@@ -43,6 +43,31 @@ if ($action === 'create') {
         throw new Exception('Please complete all required fields.');
     }
 
+    // Prevent duplicate submissions by checking a hash of the listing data
+    $listingHash = md5($title . $description . $price . $location . $_SESSION['user_id']);
+    $currentTime = time();
+    
+    // Initialize session variable for tracking submissions
+    if (!isset($_SESSION['recent_submissions'])) {
+        $_SESSION['recent_submissions'] = [];
+    }
+    
+    // Clean up old submissions (older than 10 seconds)
+    $_SESSION['recent_submissions'] = array_filter(
+        $_SESSION['recent_submissions'],
+        function($timestamp) use ($currentTime) {
+            return ($currentTime - $timestamp) < 10;
+        }
+    );
+    
+    // Check if this exact listing was just submitted
+    if (isset($_SESSION['recent_submissions'][$listingHash])) {
+        throw new Exception('This listing was just submitted. Please wait a moment before submitting again.');
+    }
+    
+    // Mark this submission
+    $_SESSION['recent_submissions'][$listingHash] = $currentTime;
+
     $houseRules = [];
     if (!empty($_POST['house_rules']) && is_array($_POST['house_rules'])) {
         foreach ($_POST['house_rules'] as $ruleKey => $value) {
@@ -280,6 +305,38 @@ if ($action === 'updateStatus') {
         'success' => true,
         'message' => $status === 'approved' ? 'Listing approved.' : 'Listing rejected.',
         'status' => $status
+    ]);
+    exit;
+}
+
+if ($action === 'toggle_save') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+        exit;
+    }
+
+    // Relaxed check for dev/testing to match dashboard behavior
+    $userId = $_SESSION['user_id'] ?? 1;
+
+    require_once __DIR__ . '/../models/SavedListing.php';
+    $savedListingModel = new SavedListing();
+
+    $listingId = isset($_POST['listing_id']) ? intval($_POST['listing_id']) : 0;
+    if (!$listingId) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Invalid listing ID.']);
+        exit;
+    }
+
+    $result = $savedListingModel->toggle($userId, $listingId);
+    $count = $savedListingModel->getCount($userId);
+
+    echo json_encode([
+        'success' => true,
+        'action' => $result,
+        'count' => $count,
+        'message' => $result === 'added' ? 'Listing saved to favorites.' : 'Listing removed from favorites.'
     ]);
     exit;
 }

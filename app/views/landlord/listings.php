@@ -42,23 +42,23 @@ $listings = $listingModel->getLandlordListings($landlordId, [
 ]);
 
 // Get inquiry count for each listing
-foreach ($listings as &$listing) {
-    $listing['inquiries'] = $messageModel->getInquiryCountForListing($listing['listing_id']);
-    $listing['image'] = $listing['primary_image'] ?? 'https://via.placeholder.com/800x600?text=No+Image';
-    $listing['display_location'] = $listing['location'] ?? 'Unknown location';
+foreach ($listings as $key => $listing) {
+    $listings[$key]['inquiries'] = $messageModel->getInquiryCountForListing($listing['listing_id']);
+    $listings[$key]['image'] = $listing['primary_image'] ?? 'https://via.placeholder.com/800x600?text=No+Image';
+    $listings[$key]['display_location'] = $listing['location'] ?? 'Unknown location';
     
     // Determine display status
     if ($listing['availability_status'] === 'occupied' || $listing['availability_status'] === 'rented') {
-        $listing['status'] = 'rented';
+        $listings[$key]['status'] = 'rented';
     } elseif ($listing['approval_status'] === 'pending') {
-        $listing['status'] = 'pending';
+        $listings[$key]['status'] = 'pending';
     } elseif ($listing['approval_status'] === 'rejected') {
-        $listing['status'] = 'rejected';
+        $listings[$key]['status'] = 'rejected';
     } else {
-        $listing['status'] = 'active';
+        $listings[$key]['status'] = 'active';
     }
     
-    $listing['views'] = $listing['views'] ?? 0;
+    $listings[$key]['views'] = $listing['views'] ?? 0;
 }
 ?>
     <div class="landlord-page">

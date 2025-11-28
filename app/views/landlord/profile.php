@@ -222,6 +222,38 @@ function getValue($array, $key, $default = '') {
                         <textarea name="operating_hours" class="form-textarea" rows="4" placeholder="Mon-Fri: 9:00 AM - 5:00 PM&#10;Sat: 10:00 AM - 2:00 PM&#10;Sun: Closed"><?php echo htmlspecialchars($operatingDisplay); ?></textarea>
                         <p class="field-hint">Enter your business operating hours</p>
                     </div>
+
+                    <!-- Change Password Section -->
+                    <div class="profile-card">
+                        <h3 class="card-title">Change Password</h3>
+                        <p style="color: rgba(0,0,0,0.6); font-size: 0.875rem; margin-bottom: 1rem;">Update your password to keep your account secure</p>
+                        <div class="form-group-stack">
+                            <div>
+                                <label class="form-label">Current Password</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="lock" class="input-icon"></i>
+                                    <input type="password" name="current_password" class="form-input" placeholder="Enter current password">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">New Password</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="lock" class="input-icon"></i>
+                                    <input type="password" name="new_password" class="form-input" placeholder="Enter new password">
+                                </div>
+                                <p style="color: rgba(0,0,0,0.5); font-size: 0.75rem; margin-top: 0.25rem;">Must be at least 8 characters</p>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Confirm New Password</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="lock" class="input-icon"></i>
+                                    <input type="password" name="confirm_password" class="form-input" placeholder="Re-enter new password">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

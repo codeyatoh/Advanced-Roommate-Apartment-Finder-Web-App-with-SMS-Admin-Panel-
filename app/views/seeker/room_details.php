@@ -17,39 +17,60 @@
 </head>
 <body>
     <div style="min-height: 100vh; background: linear-gradient(to bottom right, var(--softBlue-20), var(--neutral), var(--deepBlue-10));">
-        <?php include __DIR__ . '/../includes/navbar.php'; ?>
+        <?php 
+        session_start();
+        require_once __DIR__ . '/../../models/Listing.php';
+        require_once __DIR__ . '/../../models/SavedListing.php';
+        
+        // Check if user is logged in as seeker
+        // if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'seeker') {
+        //     header('Location: /Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/public/login.php');
+        //     exit;
+        // }
+        
+        // Fallback for development/demo mode to match dashboard behavior
+        $userId = $_SESSION['user_id'] ?? 1;
+
+        $listingId = $_GET['id'] ?? 0;
+        $listingModel = new Listing();
+        $savedListingModel = new SavedListing();
+        
+        $listing = $listingModel->getWithImages($listingId);
+
+        if (!$listing) {
+            echo "<div style='padding: 2rem; text-align: center;'>Listing not found.</div>";
+            exit;
+        }
+
+        $isSaved = $savedListingModel->isSaved($userId, $listingId);
+
+        include __DIR__ . '/../includes/navbar.php'; 
+        ?>
         <div style="padding-top: 6rem; padding-bottom: 5rem; padding-left: 1rem; padding-right: 1rem;">
             <div style="max-width: 1280px; margin: 0 auto;">
                 <!-- Back Button -->
-                <button class="btn btn-ghost btn-sm" style="margin-bottom: 1.5rem;">
+                <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/seeker/dashboard.php" class="btn btn-ghost btn-sm" style="margin-bottom: 1.5rem; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
                     <i data-lucide="arrow-left" class="btn-icon"></i>
-                    Back to Browse
-                </button>
+                    Back to Dashboard
+                </a>
 
                 <!-- Image Gallery -->
                 <div style="margin-bottom: 3rem; animation: slideUp 0.3s ease-out;">
                     <div class="room-gallery-main">
-                        <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1200" alt="Room">
-                        <div class="room-gallery-actions">
-                            <button class="btn btn-glass btn-md"><i data-lucide="heart" style="width: 1.25rem; height: 1.25rem;"></i></button>
-                            <button class="btn btn-glass btn-md"><i data-lucide="share-2" style="width: 1.25rem; height: 1.25rem;"></i></button>
-                        </div>
-                    </div>
-                    <div class="room-gallery-thumbnails">
                         <?php 
-                        $images = [
-                            'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1200',
-                            'https://images.unsplash.com/photo-1502672260066-6bc2c9f0e6c7?w=1200',
-                            'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200',
-                            'https://images.unsplash.com/photo-1502672023488-70e25813eb80?w=1200',
-                            'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=1200'
-                        ];
-                        foreach ($images as $index => $img): ?>
+                        $primaryImage = !empty($listing['images']) ? $listing['images'][0]['image_url'] : 'https://via.placeholder.com/1200x800?text=No+Image';
+                        ?>
+                        <img src="<?php echo $primaryImage; ?>" alt="<?php echo htmlspecialchars($listing['title']); ?>">
+                    </div>
+                    <?php if (!empty($listing['images']) && count($listing['images']) > 1): ?>
+                    <div class="room-gallery-thumbnails">
+                        <?php foreach ($listing['images'] as $index => $img): ?>
                         <div class="room-thumbnail <?php echo $index === 0 ? 'active' : ''; ?>">
-                            <img src="<?php echo $img; ?>" alt="Thumbnail <?php echo $index + 1; ?>">
+                            <img src="<?php echo $img['image_url']; ?>" alt="Thumbnail <?php echo $index + 1; ?>">
                         </div>
                         <?php endforeach; ?>
                     </div>
+                    <?php endif; ?>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
@@ -57,41 +78,36 @@
                     <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                         <!-- Title & Location -->
                         <div>
-                            <h1 style="font-size: 1.875rem; font-weight: 700; color: #000000; margin: 0 0 0.75rem 0;">Modern Studio in Downtown</h1>
+                            <h1 style="font-size: 1.875rem; font-weight: 700; color: #000000; margin: 0 0 0.75rem 0;"><?php echo htmlspecialchars($listing['title']); ?></h1>
                             <div style="display: flex; align-items: center; gap: 0.5rem; color: rgba(0,0,0,0.6); margin-bottom: 1rem;">
                                 <i data-lucide="map-pin" style="width: 1.25rem; height: 1.25rem;"></i>
-                                <span style="font-size: 1.125rem;">123 Market Street, San Francisco, CA 94103</span>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 1rem;">
-                                <div style="display: flex; align-items: center; gap: 0.25rem;">
-                                    <i data-lucide="star" style="width: 1.25rem; height: 1.25rem; color: #facc15; fill: #facc15;"></i>
-                                    <span style="font-weight: 600; color: #000;">4.8</span>
-                                    <span style="color: rgba(0,0,0,0.6);">(24 reviews)</span>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.75rem; background: rgba(16,185,129,0.1); color: #059669; border-radius: 9999px; font-size: 0.875rem; font-weight: 600;">
-                                    <i data-lucide="shield" style="width: 1rem; height: 1rem;"></i>
-                                    Verified Property
-                                </div>
+                                <span style="font-size: 1.125rem;"><?php echo htmlspecialchars($listing['location']); ?></span>
                             </div>
                         </div>
 
                         <!-- Quick Stats -->
                         <div class="card card-glass" style="padding: 1.5rem;">
                             <div class="room-stats-grid">
-                                <?php 
-                                $stats = [
-                                    ['icon' => 'bed', 'label' => 'Bedrooms', 'value' => '1'],
-                                    ['icon' => 'bath', 'label' => 'Bathrooms', 'value' => '1'],
-                                    ['icon' => 'users', 'label' => 'Roommates', 'value' => '0'],
-                                    ['icon' => 'calendar', 'label' => 'Available', 'value' => 'Now']
-                                ];
-                                foreach ($stats as $stat): ?>
                                 <div class="room-stat-item">
-                                    <div class="room-stat-icon"><i data-lucide="<?php echo $stat['icon']; ?>"></i></div>
-                                    <p class="room-stat-label"><?php echo $stat['label']; ?></p>
-                                    <p class="room-stat-value"><?php echo $stat['value']; ?></p>
+                                    <div class="room-stat-icon"><i data-lucide="bed"></i></div>
+                                    <p class="room-stat-label">Bedrooms</p>
+                                    <p class="room-stat-value"><?php echo $listing['bedrooms'] ?? 0; ?></p>
                                 </div>
-                                <?php endforeach; ?>
+                                <div class="room-stat-item">
+                                    <div class="room-stat-icon"><i data-lucide="bath"></i></div>
+                                    <p class="room-stat-label">Bathrooms</p>
+                                    <p class="room-stat-value"><?php echo $listing['bathrooms'] ?? 0; ?></p>
+                                </div>
+                                <div class="room-stat-item">
+                                    <div class="room-stat-icon"><i data-lucide="users"></i></div>
+                                    <p class="room-stat-label">Roommates</p>
+                                    <p class="room-stat-value"><?php echo $listing['current_roommates'] ?? 0; ?></p>
+                                </div>
+                                <div class="room-stat-item">
+                                    <div class="room-stat-icon"><i data-lucide="calendar"></i></div>
+                                    <p class="room-stat-label">Available</p>
+                                    <p class="room-stat-value"><?php echo $listing['available_from'] ? date('M d', strtotime($listing['available_from'])) : 'Now'; ?></p>
+                                </div>
                             </div>
                         </div>
 
@@ -99,56 +115,102 @@
                         <div class="card card-glass" style="padding: 1.5rem;">
                             <h2 style="font-size: 1.25rem; font-weight: 700; color: #000000; margin: 0 0 1rem 0;">About this room</h2>
                             <div style="display: flex; flex-direction: column; gap: 1rem; color: rgba(0,0,0,0.7); line-height: 1.6;">
-                                <p>Beautiful modern studio apartment in the heart of downtown San Francisco. This fully furnished space features high ceilings, large windows with plenty of natural light, and contemporary finishes throughout.</p>
-                                <p>The building offers excellent amenities including a fitness center, rooftop terrace, and 24/7 security. Located within walking distance to public transportation, restaurants, cafes, and shopping centers.</p>
+                                <p><?php echo nl2br(htmlspecialchars($listing['description'])); ?></p>
                             </div>
                         </div>
 
                         <!-- Amenities -->
+                        <?php if (!empty($listing['amenities'])): ?>
                         <div class="card card-glass" style="padding: 1.5rem;">
                             <h2 style="font-size: 1.25rem; font-weight: 700; color: #000000; margin: 0 0 1rem 0;">Amenities & Features</h2>
                             <div class="amenities-grid">
                                 <?php 
-                                $amenities = [
-                                    ['icon' => 'wifi', 'label' => 'High-Speed WiFi'],
-                                    ['icon' => 'car', 'label' => 'Parking Included'],
-                                    ['icon' => 'coffee', 'label' => 'Full Kitchen'],
-                                    ['icon' => 'dumbbell', 'label' => 'Gym Access'],
-                                    ['icon' => 'wind', 'label' => 'Air Conditioning'],
-                                    ['icon' => 'flame', 'label' => 'Heating']
+                                $amenityMap = [
+                                    'wifi' => ['label' => 'WiFi', 'icon' => 'wifi'],
+                                    'parking' => ['label' => 'Parking', 'icon' => 'car'],
+                                    'kitchen' => ['label' => 'Kitchen', 'icon' => 'coffee'],
+                                    'gym' => ['label' => 'Gym', 'icon' => 'dumbbell'],
+                                    'air_conditioning' => ['label' => 'Air Conditioning', 'icon' => 'wind'],
+                                    'heating' => ['label' => 'Heating', 'icon' => 'flame'],
+                                    'washer_dryer' => ['label' => 'Washer/Dryer', 'icon' => 'shirt'],
+                                    'dishwasher' => ['label' => 'Dishwasher', 'icon' => 'utensils'],
+                                    'elevator' => ['label' => 'Elevator', 'icon' => 'arrow-up-circle'],
+                                    'balcony' => ['label' => 'Balcony/Patio', 'icon' => 'sun'],
+                                    'pool' => ['label' => 'Pool', 'icon' => 'waves'],
+                                    'security' => ['label' => 'Security System', 'icon' => 'shield-check'],
+                                    'tv' => ['label' => 'TV', 'icon' => 'tv'],
+                                    'essentials' => ['label' => 'Essentials', 'icon' => 'package']
                                 ];
-                                foreach ($amenities as $amenity): ?>
+
+                                foreach ($listing['amenities'] as $amenityValue): 
+                                    // Fallback if the value isn't in our map
+                                    $item = $amenityMap[$amenityValue] ?? ['label' => ucwords(str_replace('_', ' ', $amenityValue)), 'icon' => 'check'];
+                                ?>
                                 <div class="amenity-item">
-                                    <div class="amenity-icon"><i data-lucide="<?php echo $amenity['icon']; ?>"></i></div>
-                                    <span class="amenity-label"><?php echo $amenity['label']; ?></span>
+                                    <div class="amenity-icon"><i data-lucide="<?php echo $item['icon']; ?>"></i></div>
+                                    <span class="amenity-label"><?php echo htmlspecialchars($item['label']); ?></span>
                                 </div>
                                 <?php endforeach; ?>
                             </div>
                         </div>
+                        <?php endif; ?>
 
                         <!-- House Rules -->
+                        <?php if (!empty($listing['house_rules_data'])): ?>
                         <div class="card card-glass" style="padding: 1.5rem;">
                             <h2 style="font-size: 1.25rem; font-weight: 700; color: #000000; margin: 0 0 1rem 0;">House Rules</h2>
                             <div class="house-rules-list">
                                 <?php 
-                                $rules = [
-                                    ['rule' => 'No smoking indoors', 'allowed' => false, 'icon' => 'cigarette'],
-                                    ['rule' => 'Pets allowed (cats only)', 'allowed' => true, 'icon' => 'paw-print'],
-                                    ['rule' => 'Quiet hours: 10 PM - 8 AM', 'allowed' => true, 'icon' => 'clock']
+                                $houseRuleIcons = [
+                                    'smoking_allowed' => 'cigarette',
+                                    'pets_allowed' => 'paw-print',
+                                    'no_parties' => 'music',
+                                    'no_guests' => 'users',
+                                    'clean_up' => 'trash-2',
+                                    'no_shoes' => 'footprints',
+                                    'recycling_required' => 'recycle',
+                                    'keep_common_areas_clean' => 'sparkles',
+                                    'turn_off_lights' => 'lightbulb'
                                 ];
-                                foreach ($rules as $rule): ?>
+                                
+                                foreach ($listing['house_rules_data'] as $key => $value): 
+                                    if ($key === 'pets_details' || $key === 'quiet_hours_start' || $key === 'quiet_hours_end') continue;
+                                    // Skip if value is false/0 or string "0"
+                                    if (!$value || $value === '0') continue;
+
+                                    $label = ucwords(str_replace('_', ' ', $key));
+                                    $icon = $houseRuleIcons[$key] ?? 'check-circle';
+                                ?>
                                 <div class="house-rule-item">
-                                    <div class="house-rule-icon <?php echo $rule['allowed'] ? 'allowed' : 'not-allowed'; ?>">
-                                        <i data-lucide="<?php echo $rule['allowed'] ? 'check-circle' : 'x-circle'; ?>"></i>
+                                    <div class="house-rule-icon allowed">
+                                        <i data-lucide="<?php echo $icon; ?>"></i>
                                     </div>
                                     <div class="house-rule-content">
-                                        <i data-lucide="<?php echo $rule['icon']; ?>"></i>
-                                        <span class="house-rule-text"><?php echo $rule['rule']; ?></span>
+                                        <span class="house-rule-text"><?php echo $label; ?></span>
                                     </div>
                                 </div>
                                 <?php endforeach; ?>
+                                
+                                <?php if (!empty($listing['house_rules_data']['pets_details'])): ?>
+                                <div class="house-rule-item">
+                                    <div class="house-rule-icon allowed"><i data-lucide="paw-print"></i></div>
+                                    <div class="house-rule-content">
+                                        <span class="house-rule-text">Pets: <?php echo htmlspecialchars($listing['house_rules_data']['pets_details']); ?></span>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+
+                                <?php if (!empty($listing['house_rules_data']['quiet_hours_start']) && !empty($listing['house_rules_data']['quiet_hours_end'])): ?>
+                                <div class="house-rule-item">
+                                    <div class="house-rule-icon allowed"><i data-lucide="moon"></i></div>
+                                    <div class="house-rule-content">
+                                        <span class="house-rule-text">Quiet Hours: <?php echo date('g:i A', strtotime($listing['house_rules_data']['quiet_hours_start'])); ?> - <?php echo date('g:i A', strtotime($listing['house_rules_data']['quiet_hours_end'])); ?></span>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
                             </div>
                         </div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Sidebar -->
@@ -156,53 +218,34 @@
                         <div class="card card-glass-strong booking-card" style="padding: 1.5rem;">
                             <div style="margin-bottom: 1.5rem;">
                                 <div class="booking-price">
-                                    <span class="booking-price-amount">₱1,200</span>
+                                    <span class="booking-price-amount">₱<?php echo number_format($listing['price']); ?></span>
                                     <span class="booking-price-period">/month</span>
                                 </div>
-                                <p class="booking-price-note">Utilities included • Security deposit: ₱1,200</p>
+                                <p class="booking-price-note">
+                                    <?php echo $listing['utilities_included'] ? 'Utilities included' : 'Utilities not included'; ?> 
+                                    • Security deposit: ₱<?php echo number_format($listing['security_deposit']); ?>
+                                </p>
                             </div>
 
                             <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
-                                <button class="btn btn-primary btn-lg" style="width: 100%;">
-                                    <i data-lucide="message-square" class="btn-icon"></i>
-                                    Send Inquiry
-                                </button>
-                                <button class="btn btn-glass btn-lg" style="width: 100%;">
+                                <a href="messages.php?user_id=<?php echo $listing['landlord_id']; ?>&listing_id=<?php echo $listingId; ?>" class="btn btn-primary btn-lg" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 0.5rem; text-decoration: none;">
+                                    <i data-lucide="message-circle" class="btn-icon"></i>
+                                    Message Landlord
+                                </a>
+                                <button class="btn btn-glass btn-lg" style="width: 100%; border-color: var(--primary); color: var(--primary);">
                                     <i data-lucide="calendar" class="btn-icon"></i>
-                                    Schedule Viewing
+                                    Request Viewing
                                 </button>
                             </div>
-
-                            <div style="padding-top: 1.5rem; border-top: 1px solid rgba(0,0,0,0.1);">
-                                <h3 style="font-weight: 700; color: #000000; margin: 0 0 1rem 0;">Landlord</h3>
-                                <div class="landlord-info">
-                                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400" alt="Landlord" class="landlord-avatar">
-                                    <div>
-                                        <p class="landlord-name">David Martinez</p>
-                                        <div class="landlord-verified">
-                                            <i data-lucide="shield"></i>
-                                            <span>Verified Landlord</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="landlord-stats">
-                                    <div class="landlord-stat">
-                                        <p>8</p>
-                                        <p>Properties</p>
-                                    </div>
-                                    <div class="landlord-stat">
-                                        <p>4.9</p>
-                                        <p>Rating</p>
-                                    </div>
-                                    <div class="landlord-stat">
-                                        <p>2 years</p>
-                                        <p>Member</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style="padding-top: 1.5rem; border-top: 1px solid rgba(0,0,0,0.1); margin-top: 1.5rem;">
-                                <p class="booking-response-time">Response time: Usually within 2 hours</p>
+                            
+                            <div style="text-align: center;">
+                                <button id="saveBtn" class="btn btn-ghost btn-sm <?php echo $isSaved ? 'active' : ''; ?>" 
+                                        data-listing-id="<?php echo $listingId; ?>"
+                                        style="color: <?php echo $isSaved ? '#ef4444' : 'rgba(0,0,0,0.5)'; ?>;">
+                                    <i data-lucide="heart" style="width: 1rem; height: 1rem; margin-right: 0.5rem;" 
+                                       <?php echo $isSaved ? 'fill="#ef4444" stroke="#ef4444"' : ''; ?>></i>
+                                    <span id="saveBtnText"><?php echo $isSaved ? 'Saved to Favorites' : 'Save to Favorites'; ?></span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -218,7 +261,152 @@
             </div>
         </div>
     </div>
+
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script>lucide.createIcons();</script>
+    <script>
+        lucide.createIcons();
+
+        // Image Gallery Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const mainImage = document.querySelector('.room-gallery-main img');
+            const thumbnails = document.querySelectorAll('.room-thumbnail');
+
+            thumbnails.forEach(thumb => {
+                thumb.addEventListener('click', function() {
+                    // Update main image src
+                    const newSrc = this.querySelector('img').src;
+                    mainImage.src = newSrc;
+
+                    // Update active state
+                    thumbnails.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Save to Favorites Logic
+            const saveBtn = document.getElementById('saveBtn');
+            if (saveBtn) {
+                saveBtn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    
+                    const listingId = this.dataset.listingId;
+                    if (!listingId) return;
+
+                    const icon = this.querySelector('svg') || this.querySelector('i');
+                    const textSpan = document.getElementById('saveBtnText');
+                    
+                    // Optimistic UI update
+                    const isActive = this.classList.contains('active');
+                    
+                    if (isActive) {
+                        this.classList.remove('active');
+                        this.style.color = 'rgba(0,0,0,0.5)';
+                        if (textSpan) textSpan.textContent = 'Save to Favorites';
+                        if (icon) {
+                            icon.setAttribute('fill', 'none');
+                            icon.setAttribute('stroke', 'currentColor');
+                            icon.style.fill = 'none';
+                            icon.style.stroke = 'currentColor';
+                        }
+                    } else {
+                        this.classList.add('active');
+                        this.style.color = '#ef4444';
+                        if (textSpan) textSpan.textContent = 'Saved to Favorites';
+                        if (icon) {
+                            icon.setAttribute('fill', '#ef4444');
+                            icon.setAttribute('stroke', '#ef4444');
+                            icon.style.fill = '#ef4444';
+                            icon.style.stroke = '#ef4444';
+                        }
+                    }
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('listing_id', listingId);
+
+                        const response = await fetch('/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/controllers/ListingController.php?action=toggle_save', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            // Ensure state matches server response
+                            if (result.action === 'added') {
+                                this.classList.add('active');
+                                this.style.color = '#ef4444';
+                                if (textSpan) textSpan.textContent = 'Saved to Favorites';
+                                if (icon) {
+                                    icon.setAttribute('fill', '#ef4444');
+                                    icon.setAttribute('stroke', '#ef4444');
+                                    icon.style.fill = '#ef4444';
+                                    icon.style.stroke = '#ef4444';
+                                }
+                            } else {
+                                this.classList.remove('active');
+                                this.style.color = 'rgba(0,0,0,0.5)';
+                                if (textSpan) textSpan.textContent = 'Save to Favorites';
+                                if (icon) {
+                                    icon.setAttribute('fill', 'none');
+                                    icon.setAttribute('stroke', 'currentColor');
+                                    icon.style.fill = 'none';
+                                    icon.style.stroke = 'currentColor';
+                                }
+                            }
+                        } else {
+                            // Revert on failure
+                            if (isActive) {
+                                this.classList.add('active');
+                                this.style.color = '#ef4444';
+                                if (textSpan) textSpan.textContent = 'Saved to Favorites';
+                                if (icon) {
+                                    icon.setAttribute('fill', '#ef4444');
+                                    icon.setAttribute('stroke', '#ef4444');
+                                    icon.style.fill = '#ef4444';
+                                    icon.style.stroke = '#ef4444';
+                                }
+                            } else {
+                                this.classList.remove('active');
+                                this.style.color = 'rgba(0,0,0,0.5)';
+                                if (textSpan) textSpan.textContent = 'Save to Favorites';
+                                if (icon) {
+                                    icon.setAttribute('fill', 'none');
+                                    icon.setAttribute('stroke', 'currentColor');
+                                    icon.style.fill = 'none';
+                                    icon.style.stroke = 'currentColor';
+                                }
+                            }
+                            console.error('Failed to toggle save:', result.message);
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        // Revert
+                        if (isActive) {
+                            this.classList.add('active');
+                            this.style.color = '#ef4444';
+                            if (textSpan) textSpan.textContent = 'Saved to Favorites';
+                            if (icon) {
+                                    icon.setAttribute('fill', '#ef4444');
+                                    icon.setAttribute('stroke', '#ef4444');
+                                    icon.style.fill = '#ef4444';
+                                    icon.style.stroke = '#ef4444';
+                            }
+                        } else {
+                            this.classList.remove('active');
+                            this.style.color = 'rgba(0,0,0,0.5)';
+                            if (textSpan) textSpan.textContent = 'Save to Favorites';
+                            if (icon) {
+                                icon.setAttribute('fill', 'none');
+                                icon.setAttribute('stroke', 'currentColor');
+                                icon.style.fill = 'none';
+                                icon.style.stroke = 'currentColor';
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

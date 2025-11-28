@@ -117,21 +117,6 @@ foreach ($appointments as &$appt) {
                 // Appointments already loaded from database at top of file
                 if (empty($appointments)):
                 ?>
-                <div class="glass-card" style="padding: 4rem 2rem; text-align: center;">
-                    <i data-lucide="calendar-x" style="width: 4rem; height: 4rem; color: rgba(0,0,0,0.2); margin: 0 auto 1rem;"></i>
-                    <h3 style="color: rgba(0,0,0,0.6); margin: 0 0 0.5rem 0;">No appointments yet</h3>
-                    <p style="color: rgba(0,0,0,0.5); margin: 0;">Appointment requests will appear here</p>
-                </div>
-                <?php
-                endif;
-
-                foreach ($appointments as $index => $appointment): 
-                    $statusColor = '';
-                    switch ($appointment['status']) {
-                        case 'confirmed': $statusColor = 'color: #15803d; background-color: #dcfce7;'; break;
-                        case 'pending': $statusColor = 'color: #a16207; background-color: #fef9c3;'; break;
-                        case 'declined': $statusColor = 'color: #b91c1c; background-color: #fee2e2;'; break;
-                        default: $statusColor = 'color: rgba(0,0,0,0.6); background-color: rgba(0,0,0,0.1);';
                     }
                 ?>
                 <div class="glass-card animate-slide-up" style="padding: 1.25rem; animation-delay: <?php echo $index * 0.1; ?>s;">
@@ -222,19 +207,6 @@ foreach ($appointments as &$appt) {
             </div>
         </div>
     </div>
-
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-        lucide.createIcons();
-
-        function handleApprove(id) {
-            console.log('Approve appointment:', id);
-            // Add approval logic here
-        }
-
-        function handleDecline(id) {
-            console.log('Decline appointment:', id);
-            // Add decline logic here
         }
     </script>
 </body>

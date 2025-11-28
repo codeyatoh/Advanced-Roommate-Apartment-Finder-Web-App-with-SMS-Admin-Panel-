@@ -414,10 +414,8 @@
 
         const formStatus = document.getElementById('formStatus');
         const addListingForm = document.getElementById('addListingForm');
-
-        addListingForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
+        const submitButton = addListingForm.querySelector('button[type="submit"]');
+        let isSubmitting = false;
             // Show loading toast
             const loadingToast = Toastify({
                 text: "Submitting your listing...",
@@ -469,6 +467,12 @@
                     }, 2000);
                     
                 } else {
+                    // Re-enable submit button on error
+                    isSubmitting = false;
+                    submitButton.disabled = false;
+                    submitButton.style.opacity = '1';
+                    submitButton.style.cursor = 'pointer';
+
                     Toastify({
                         text: data.message || "Failed to submit listing",
                         duration: 4000,
@@ -484,6 +488,13 @@
             } catch (error) {
                 console.error(error);
                 loadingToast.hideToast(); // Ensure loading toast is hidden on error
+                
+                // Re-enable submit button on error
+                isSubmitting = false;
+                submitButton.disabled = false;
+                submitButton.style.opacity = '1';
+                submitButton.style.cursor = 'pointer';
+
                 Toastify({
                     text: "Something went wrong while saving the listing.",
                     duration: 4000,

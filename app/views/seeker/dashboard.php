@@ -11,16 +11,20 @@ require_once __DIR__ . '/../../models/User.php';
 require_once __DIR__ . '/../../models/Listing.php';
 require_once __DIR__ . '/../../models/Message.php';
 require_once __DIR__ . '/../../models/Appointment.php';
+require_once __DIR__ . '/../../models/SavedListing.php';
 
 $userModel = new User();
 $listingModel = new Listing();
 $messageModel = new Message();
 $appointmentModel = new Appointment();
+$savedListingModel = new SavedListing();
 
 // Fetch dashboard data
 $unreadMessages = $messageModel->getUnreadCount($userId);
 $upcomingAppointments = $appointmentModel->getUpcoming($userId, 'seeker');
 $recommendedListings = $listingModel->getAvailable(2); // Get 2 listings
+$savedCount = $savedListingModel->getCount($userId);
+$savedListings = $savedListingModel->getSavedListings($userId);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -52,7 +56,7 @@ $recommendedListings = $listingModel->getAvailable(2); // Get 2 listings
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2.5rem;">
                     <?php 
                     $stats = [
-                        ['icon' => 'heart', 'value' => '0', 'label' => 'Saved Rooms'], // TODO: Implement favorites
+                        ['icon' => 'heart', 'value' => $savedCount, 'label' => 'Saved Rooms', 'id' => 'savedCount'],
                         ['icon' => 'message-square', 'value' => $unreadMessages, 'label' => 'Messages'],
                         ['icon' => 'users', 'value' => '0', 'label' => 'Matches'], // TODO: Implement matching
                         ['icon' => 'calendar', 'value' => count($upcomingAppointments), 'label' => 'Viewings']
@@ -62,7 +66,7 @@ $recommendedListings = $listingModel->getAvailable(2); // Get 2 listings
                         <div style="width: 3rem; height: 3rem; background: rgba(16,185,129,0.2); border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; margin-bottom: 0.5rem;">
                             <i data-lucide="<?php echo $stat['icon']; ?>" style="width: 1.5rem; height: 1.5rem; color: #10b981;"></i>
                         </div>
-                        <p style="font-size: 1.5rem; font-weight: 700; color: #000000; margin: 0 0 0.125rem 0;"><?php echo $stat['value']; ?></p>
+                        <p id="<?php echo $stat['id'] ?? ''; ?>" style="font-size: 1.5rem; font-weight: 700; color: #000000; margin: 0 0 0.125rem 0;"><?php echo $stat['value']; ?></p>
                         <p style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.6); margin: 0;"><?php echo $stat['label']; ?></p>
                     </div>
                     <?php endforeach; ?>
@@ -92,25 +96,32 @@ $recommendedListings = $listingModel->getAvailable(2); // Get 2 listings
                                 foreach ($recommendedListings as $room): 
                                     $image = $room['primary_image'] ?? 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800';
                                     $availableText = !empty($room['available_from']) ? date('M j', strtotime($room['available_from'])) : 'Now';
+                                    $isSaved = $savedListingModel->isSaved($userId, $room['listing_id']);
                                 ?>
-                                <div class="room-card">
-                                    <div class="room-card-image-wrapper">
-                                        <img src="<?php echo htmlspecialchars($image); ?>" alt="<?php echo htmlspecialchars($room['title']); ?>" class="room-card-image">
-                                        <button class="room-card-favorite"><i data-lucide="heart"></i></button>
-                                        <div class="room-card-badge">Available <?php echo htmlspecialchars($availableText); ?></div>
-                                    </div>
-                                    <div class="room-card-content">
-                                        <h3 class="room-card-title"><?php echo htmlspecialchars($room['title']); ?></h3>
-                                        <div class="room-card-location"><i data-lucide="map-pin"></i><?php echo htmlspecialchars($room['location']); ?></div>
-                                        <div class="room-card-details">
-                                            <div class="room-card-detail"><i data-lucide="bed"></i><?php echo intval($room['bedrooms'] ?? 1); ?> bed</div>
-                                            <div class="room-card-detail"><i data-lucide="bath"></i><?php echo intval($room['bathrooms'] ?? 1); ?> bath</div>
-                                            <div class="room-card-detail"><i data-lucide="users"></i><?php echo intval($room['current_roommates'] ?? 0); ?> roommates</div>
+                                <div class="room-card" style="position: relative;">
+                                    <button class="room-card-favorite <?php echo $isSaved ? 'active' : ''; ?>" 
+                                            data-listing-id="<?php echo $room['listing_id']; ?>"
+                                            style="position: absolute; top: 1rem; right: 1rem; z-index: 10;">
+                                        <i data-lucide="heart" <?php echo $isSaved ? 'fill="#ef4444" stroke="#ef4444"' : ''; ?>></i>
+                                    </button>
+                                    <a href="room_details.php?id=<?php echo $room['listing_id']; ?>" style="text-decoration: none; color: inherit; display: block;">
+                                        <div class="room-card-image-wrapper">
+                                            <img src="<?php echo htmlspecialchars($image); ?>" alt="<?php echo htmlspecialchars($room['title']); ?>" class="room-card-image">
+                                            <div class="room-card-badge">Available <?php echo htmlspecialchars($availableText); ?></div>
                                         </div>
-                                        <div style="padding-top: 0.75rem; border-top: 1px solid rgba(0,0,0,0.1);">
-                                            <div class="room-card-price"><span>₱<?php echo number_format($room['price'], 0); ?></span><span class="room-card-price-period">/month</span></div>
+                                        <div class="room-card-content">
+                                            <h3 class="room-card-title"><?php echo htmlspecialchars($room['title']); ?></h3>
+                                            <div class="room-card-location"><i data-lucide="map-pin"></i><?php echo htmlspecialchars($room['location']); ?></div>
+                                            <div class="room-card-details">
+                                                <div class="room-card-detail"><i data-lucide="bed"></i><?php echo intval($room['bedrooms'] ?? 1); ?> bed</div>
+                                                <div class="room-card-detail"><i data-lucide="bath"></i><?php echo intval($room['bathrooms'] ?? 1); ?> bath</div>
+                                                <div class="room-card-detail"><i data-lucide="users"></i><?php echo intval($room['current_roommates'] ?? 0); ?> roommates</div>
+                                            </div>
+                                            <div style="padding-top: 0.75rem; border-top: 1px solid rgba(0,0,0,0.1);">
+                                                <div class="room-card-price"><span>₱<?php echo number_format($room['price'], 0); ?></span><span class="room-card-price-period">/month</span></div>
+                                            </div>
                                         </div>
-                                    </div>
+                                    </a>
                                 </div>
                                 <?php endforeach; ?>
                             </div>
@@ -170,6 +181,38 @@ $recommendedListings = $listingModel->getAvailable(2); // Get 2 listings
                                 <?php endforeach; ?>
                             </div>
                         </div>
+
+                        <!-- Saved Rooms -->
+                        <div class="card card-glass" style="padding: 1.25rem;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                                <div>
+                                    <h3 style="font-size: 1rem; font-weight: 700; color: #000000; margin: 0 0 0.125rem 0;">Saved Rooms</h3>
+                                    <p style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.6); margin: 0;">Your favorites</p>
+                                </div>
+                                <button class="btn btn-ghost btn-sm" style="font-size: 0.75rem;">View All</button>
+                            </div>
+                            <div id="savedRoomsContainer" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                <?php 
+                                if (empty($savedListings)) {
+                                    echo '<p id="noSavedMsg" style="color: rgba(0,0,0,0.5); text-align: center; padding: 1rem;">No saved rooms yet.</p>';
+                                } else {
+                                    foreach (array_slice($savedListings, 0, 3) as $saved): 
+                                        $sImage = $saved['primary_image'] ?? 'https://via.placeholder.com/100';
+                                ?>
+                                <a href="room_details.php?id=<?php echo $saved['listing_id']; ?>" class="saved-room-item" style="display: flex; gap: 0.75rem; text-decoration: none; color: inherit; padding: 0.5rem; border-radius: 0.5rem; transition: background 0.2s;">
+                                    <img src="<?php echo htmlspecialchars($sImage); ?>" alt="<?php echo htmlspecialchars($saved['title']); ?>" style="width: 4rem; height: 4rem; object-fit: cover; border-radius: 0.5rem;">
+                                    <div style="flex: 1; min-width: 0;">
+                                        <h4 style="font-size: 0.875rem; font-weight: 600; margin: 0 0 0.25rem 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo htmlspecialchars($saved['title']); ?></h4>
+                                        <p style="font-size: 0.75rem; color: rgba(0,0,0,0.6); margin: 0;">₱<?php echo number_format($saved['price']); ?>/mo</p>
+                                        <div style="font-size: 0.75rem; color: rgba(0,0,0,0.5); display: flex; align-items: center; gap: 0.25rem; margin-top: 0.25rem;">
+                                            <i data-lucide="map-pin" style="width: 0.75rem; height: 0.75rem;"></i>
+                                            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo htmlspecialchars($saved['location']); ?></span>
+                                        </div>
+                                    </div>
+                                </a>
+                                <?php endforeach; } ?>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -184,12 +227,129 @@ $recommendedListings = $listingModel->getAvailable(2); // Get 2 listings
                             grid-template-columns: 2fr 1fr !important;
                         }
                     }
+                    .saved-room-item:hover {
+                        background: rgba(0,0,0,0.03);
+                    }
                 </style>
             </div>
         </div>
         <?php include __DIR__ . '/../includes/report_widget.php'; ?>
     </div>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script>lucide.createIcons();</script>
+    <script>
+        lucide.createIcons();
+
+        // Toggle Favorite Logic
+        document.querySelectorAll('.room-card-favorite').forEach(btn => {
+            btn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const listingId = this.dataset.listingId;
+                if (!listingId) return;
+                
+                // Lucide replaces <i> with <svg>, so we need to find the svg
+                const icon = this.querySelector('svg') || this.querySelector('i');
+
+                // Optimistic UI update
+                const isActive = this.classList.contains('active');
+                
+                if (isActive) {
+                    this.classList.remove('active');
+                    if (icon) {
+                        icon.setAttribute('fill', 'none');
+                        icon.setAttribute('stroke', 'currentColor');
+                        icon.style.fill = 'none';
+                        icon.style.stroke = 'currentColor';
+                    }
+                } else {
+                    this.classList.add('active');
+                    if (icon) {
+                        icon.setAttribute('fill', '#ef4444');
+                        icon.setAttribute('stroke', '#ef4444');
+                        icon.style.fill = '#ef4444';
+                        icon.style.stroke = '#ef4444';
+                    }
+                }
+
+                try {
+                    const formData = new FormData();
+                    formData.append('listing_id', listingId);
+
+                    const response = await fetch('/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/controllers/ListingController.php?action=toggle_save', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // Update count
+                        const countEl = document.getElementById('savedCount');
+                        if (countEl) countEl.textContent = result.count;
+                        
+                        // Ensure state matches server response (in case of race condition or error)
+                        if (result.action === 'added') {
+                            this.classList.add('active');
+                            if(icon) {
+                                icon.setAttribute('fill', '#ef4444');
+                                icon.setAttribute('stroke', '#ef4444');
+                                icon.style.fill = '#ef4444';
+                                icon.style.stroke = '#ef4444';
+                            }
+                        } else {
+                            this.classList.remove('active');
+                            if(icon) {
+                                icon.setAttribute('fill', 'none');
+                                icon.setAttribute('stroke', 'currentColor');
+                                icon.style.fill = 'none';
+                                icon.style.stroke = 'currentColor';
+                            }
+                        }
+                    } else {
+                        // Revert on failure
+                        if (isActive) {
+                            this.classList.add('active');
+                            if (icon) {
+                                icon.setAttribute('fill', '#ef4444');
+                                icon.setAttribute('stroke', '#ef4444');
+                                icon.style.fill = '#ef4444';
+                                icon.style.stroke = '#ef4444';
+                            }
+                        } else {
+                            this.classList.remove('active');
+                            if (icon) {
+                                icon.setAttribute('fill', 'none');
+                                icon.setAttribute('stroke', 'currentColor');
+                                icon.style.fill = 'none';
+                                icon.style.stroke = 'currentColor';
+                            }
+                        }
+                        console.error('Failed to toggle save:', result.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    // Revert UI on error
+                    if (isActive) {
+                        this.classList.add('active');
+                        if (icon) {
+                            icon.setAttribute('fill', '#ef4444');
+                            icon.setAttribute('stroke', '#ef4444');
+                            icon.style.fill = '#ef4444';
+                            icon.style.stroke = '#ef4444';
+                        }
+                    } else {
+                        this.classList.remove('active');
+                        if (icon) {
+                            icon.setAttribute('fill', 'none');
+                            icon.setAttribute('stroke', 'currentColor');
+                            icon.style.fill = 'none';
+                            icon.style.stroke = 'currentColor';
+                        }
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>
