@@ -177,6 +177,44 @@ class Listing extends BaseModel {
     }
 
     /**
+     * Search all listings for admin
+     * @param array $filters
+     * @return array
+     */
+    public function searchAllListings($filters = []) {
+        $sql = "SELECT l.*, 
+                    u.first_name, u.last_name, u.profile_photo,
+                    (SELECT image_url FROM listing_images WHERE listing_id = l.listing_id AND is_primary = 1 LIMIT 1) as primary_image
+                FROM {$this->table} l
+                LEFT JOIN users u ON l.landlord_id = u.user_id
+                WHERE 1=1";
+        
+        $params = [];
+
+        if (!empty($filters['search'])) {
+            $sql .= " AND (l.title LIKE :search1 OR l.location LIKE :search2)";
+            $searchTerm = '%' . $filters['search'] . '%';
+            $params[':search1'] = $searchTerm;
+            $params[':search2'] = $searchTerm;
+        }
+
+        if (!empty($filters['status']) && $filters['status'] !== 'All Status') {
+            $sql .= " AND l.approval_status = :status";
+            $params[':status'] = strtolower($filters['status']);
+        }
+
+        $sql .= " ORDER BY l.created_at DESC";
+
+        $stmt = $this->conn->prepare($sql);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->execute();
+        
+        return $stmt->fetchAll();
+    }
+
+    /**
      * Get listing statistics
      * @return array
      */
@@ -298,6 +336,17 @@ class Listing extends BaseModel {
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Get pending listings count
+     * @return int
+     */
+    public function getPendingCount() {
+        $sql = "SELECT COUNT(*) as count FROM {$this->table} WHERE approval_status = 'pending'";
+        $stmt = $this->conn->query($sql);
+        $result = $stmt->fetch();
+        return $result['count'] ?? 0;
     }
 
     public function getPendingApprovals() {

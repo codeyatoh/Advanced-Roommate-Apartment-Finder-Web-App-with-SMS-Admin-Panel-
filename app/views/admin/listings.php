@@ -22,16 +22,15 @@
     $listingModel = new Listing();
     $userModel = new User();
     
-    // Get all listings from database with landlord info
-    $sql = "SELECT l.*, 
-                u.first_name, u.last_name, u.profile_photo,
-                (SELECT image_url FROM listing_images WHERE listing_id = l.listing_id AND is_primary = 1 LIMIT 1) as primary_image
-            FROM listings l
-            LEFT JOIN users u ON l.landlord_id = u.user_id
-            ORDER BY l.created_at DESC";
-    $stmt = $listingModel->getConnection()->prepare($sql);
-    $stmt->execute();
-    $listingsData = $stmt->fetchAll();
+    // Get filters
+    $search = $_GET['search'] ?? '';
+    $status = $_GET['status'] ?? 'All Status';
+
+    // Get listings with filters
+    $listingsData = $listingModel->searchAllListings([
+        'search' => $search,
+        'status' => $status
+    ]);
     
     // Helper function for time ago
     function time_elapsed($datetime) {
@@ -81,33 +80,34 @@
             </div>
 
             <!-- Search & Filters -->
-            <div class="glass-card animate-slide-up" style="padding: 1rem; margin-bottom: 1.5rem; background: transparent; border: none; box-shadow: none;">
+            <!-- Search & Filters -->
+            <form method="GET" action="listings.php" class="glass-card animate-slide-up" style="padding: 1rem; margin-bottom: 1.5rem; background: transparent; border: none; box-shadow: none;">
                 <div class="search-bar-container">
                     <div class="search-input-wrapper">
                         <i data-lucide="search" class="search-icon"></i>
-                        <input type="text" class="search-input-clean" placeholder="Search listings...">
+                        <input type="text" name="search" class="search-input-clean" placeholder="Search listings..." value="<?php echo htmlspecialchars($search); ?>">
                     </div>
                     <div class="search-actions">
-                        <button class="btn-filters" onclick="document.getElementById('filterOptions').style.display = document.getElementById('filterOptions').style.display === 'none' ? 'flex' : 'none'">
+                        <button type="button" class="btn-filters" onclick="document.getElementById('filterOptions').style.display = document.getElementById('filterOptions').style.display === 'none' ? 'flex' : 'none'">
                             <i data-lucide="sliders-horizontal" style="width: 1rem; height: 1rem;"></i>
                             Filters
                         </button>
-                        <button class="btn-search">
+                        <button type="submit" class="btn-search">
                             Search
                         </button>
                     </div>
                 </div>
                 
                 <!-- Expanded Filters -->
-                <div id="filterOptions" style="display: none; gap: 1rem; margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border-radius: 1rem;">
-                    <select class="form-select-sm" style="flex: 1;">
-                        <option>All Status</option>
-                        <option>Pending</option>
-                        <option>Approved</option>
-                        <option>Rejected</option>
+                <div id="filterOptions" style="display: <?php echo ($status !== 'All Status') ? 'flex' : 'none'; ?>; gap: 1rem; margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border-radius: 1rem;">
+                    <select name="status" class="form-select-sm" style="flex: 1;">
+                        <option <?php echo $status === 'All Status' ? 'selected' : ''; ?>>All Status</option>
+                        <option <?php echo $status === 'Pending' ? 'selected' : ''; ?>>Pending</option>
+                        <option <?php echo $status === 'Approved' ? 'selected' : ''; ?>>Approved</option>
+                        <option <?php echo $status === 'Rejected' ? 'selected' : ''; ?>>Rejected</option>
                     </select>
                 </div>
-            </div>
+            </form>
 
             <!-- Listings Grid -->
             <div class="listings-grid">

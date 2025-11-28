@@ -295,4 +295,93 @@ class User extends BaseModel {
         $result = $stmt->fetch();
         return $result['count'] ?? 0;
     }
+
+    /**
+     * Search users with filters
+     * @param array $filters
+     * @return array
+     */
+    public function searchUsers($filters = []) {
+        $sql = "SELECT * FROM {$this->table} WHERE 1=1";
+        $params = [];
+
+        if (!empty($filters['search'])) {
+            $sql .= " AND (first_name LIKE :search1 OR last_name LIKE :search2 OR email LIKE :search3)";
+            $searchTerm = '%' . $filters['search'] . '%';
+            $params[':search1'] = $searchTerm;
+            $params[':search2'] = $searchTerm;
+            $params[':search3'] = $searchTerm;
+        }
+
+        if (!empty($filters['role']) && $filters['role'] !== 'All Roles') {
+            $roleMap = [
+                'Seekers' => 'room_seeker',
+                'Landlords' => 'landlord'
+            ];
+            if (isset($roleMap[$filters['role']])) {
+                $sql .= " AND role = :role";
+                $params[':role'] = $roleMap[$filters['role']];
+            }
+        }
+
+        if (!empty($filters['status']) && $filters['status'] !== 'All Status') {
+            if ($filters['status'] === 'Verified') {
+                $sql .= " AND is_verified = 1";
+            } elseif ($filters['status'] === 'Pending') {
+                $sql .= " AND is_active = 1 AND is_verified = 0"; // Assuming pending means active but not verified, or just check is_active? 
+                // Based on users.php: status is verified if is_verified, pending if is_active, banned if !is_active.
+                // Let's match users.php logic:
+                // verified: is_verified = 1
+                // pending: is_verified = 0 AND is_active = 1
+                // banned: is_active = 0
+            } elseif ($filters['status'] === 'Banned') {
+                $sql .= " AND is_active = 0";
+            }
+        }
+
+        $sql .= " ORDER BY created_at DESC";
+
+        $stmt = $this->conn->prepare($sql);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+    /**
+     * Verify a user
+     * @param int $userId
+     * @return bool
+     */
+    public function verifyUser($userId) {
+        return $this->update($userId, ['is_verified' => 1]);
+    }
+
+    /**
+     * Ban a user (deactivate)
+     * @param int $userId
+     * @return bool
+     */
+    public function banUser($userId) {
+        return $this->update($userId, ['is_active' => 0]);
+    }
+
+    /**
+     * Unban a user (activate)
+     * @param int $userId
+     * @return bool
+     */
+    public function unbanUser($userId) {
+        return $this->update($userId, ['is_active' => 1]);
+    }
+
+    /**
+     * Update user details
+     * @param int $userId
+     * @param array $data
+     * @return bool
+     */
+    public function updateUser($userId, $data) {
+        return $this->update($userId, $data);
+    }
 }

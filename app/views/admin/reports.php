@@ -27,19 +27,17 @@
     // Get report statistics
     $reportStats = $reportModel->getStats();
     
-    // Get all reports from database
-    $sql = "SELECT r.*, 
-                reporter.first_name as reporter_first, reporter.last_name as reporter_last, reporter.profile_photo as reporter_photo,
-                reported_user.first_name as reported_first, reported_user.last_name as reported_last,
-                l.title as listing_title
-            FROM reports r
-            LEFT JOIN users reporter ON r.reporter_id = reporter.user_id
-            LEFT JOIN users reported_user ON r.reported_user_id = reported_user.user_id
-            LEFT JOIN listings l ON r.reported_listing_id = l.listing_id
-            ORDER BY r.created_at DESC";
-    $stmt = $reportModel->getConnection()->prepare($sql);
-    $stmt->execute();
-    $reportsData = $stmt->fetchAll();
+    // Get filters
+    $search = $_GET['search'] ?? '';
+    $type = $_GET['type'] ?? 'All Types';
+    $status = $_GET['status'] ?? 'All Status';
+
+    // Get reports with filters
+    $reportsData = $reportModel->searchReports([
+        'search' => $search,
+        'type' => $type,
+        'status' => $status
+    ]);
     
     // Helper function for time ago
     function report_time_ago($datetime) {
@@ -153,39 +151,39 @@
             </div>
 
             <!-- Search & Filters -->
-            <div class="glass-card animate-slide-up" style="padding: 1rem; margin-bottom: 1.5rem; background: transparent; border: none; box-shadow: none;">
+            <form method="GET" action="reports.php" class="glass-card animate-slide-up" style="padding: 1rem; margin-bottom: 1.5rem; background: transparent; border: none; box-shadow: none;">
                 <div class="search-bar-container">
                     <div class="search-input-wrapper">
                         <i data-lucide="search" class="search-icon"></i>
-                        <input type="text" class="search-input-clean" placeholder="Search reports...">
+                        <input type="text" name="search" class="search-input-clean" placeholder="Search reports..." value="<?php echo htmlspecialchars($search); ?>">
                     </div>
                     <div class="search-actions">
-                        <button class="btn-filters" onclick="document.getElementById('filterOptions').style.display = document.getElementById('filterOptions').style.display === 'none' ? 'flex' : 'none'">
+                        <button type="button" class="btn-filters" onclick="document.getElementById('filterOptions').style.display = document.getElementById('filterOptions').style.display === 'none' ? 'flex' : 'none'">
                             <i data-lucide="sliders-horizontal" style="width: 1rem; height: 1rem;"></i>
                             Filters
                         </button>
-                        <button class="btn-search">
+                        <button type="submit" class="btn-search">
                             Search
                         </button>
                     </div>
                 </div>
                 
                 <!-- Expanded Filters -->
-                <div id="filterOptions" style="display: none; gap: 1rem; margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border-radius: 1rem;">
-                    <select class="form-select-sm" style="flex: 1;">
-                        <option>All Types</option>
-                        <option>Listing Reports</option>
-                        <option>User Reports</option>
-                        <option>Message Reports</option>
+                <div id="filterOptions" style="display: <?php echo ($type !== 'All Types' || $status !== 'All Status') ? 'flex' : 'none'; ?>; gap: 1rem; margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border-radius: 1rem;">
+                    <select name="type" class="form-select-sm" style="flex: 1;">
+                        <option <?php echo $type === 'All Types' ? 'selected' : ''; ?>>All Types</option>
+                        <option <?php echo $type === 'Listing Reports' ? 'selected' : ''; ?>>Listing Reports</option>
+                        <option <?php echo $type === 'User Reports' ? 'selected' : ''; ?>>User Reports</option>
+                        <option <?php echo $type === 'Message Reports' ? 'selected' : ''; ?>>Message Reports</option>
                     </select>
-                    <select class="form-select-sm" style="flex: 1;">
-                        <option>All Status</option>
-                        <option>Pending</option>
-                        <option>Investigating</option>
-                        <option>Resolved</option>
+                    <select name="status" class="form-select-sm" style="flex: 1;">
+                        <option <?php echo $status === 'All Status' ? 'selected' : ''; ?>>All Status</option>
+                        <option <?php echo $status === 'Pending' ? 'selected' : ''; ?>>Pending</option>
+                        <option <?php echo $status === 'Investigating' ? 'selected' : ''; ?>>Investigating</option>
+                        <option <?php echo $status === 'Resolved' ? 'selected' : ''; ?>>Resolved</option>
                     </select>
                 </div>
-            </div>
+            </form>
 
             <!-- Reports List -->
             <div style="display: flex; flex-direction: column; gap: 1rem;">

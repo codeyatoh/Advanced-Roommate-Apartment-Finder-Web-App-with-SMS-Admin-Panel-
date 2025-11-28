@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/navbar.module.css">
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/admin.module.css">
 </head>
-<\u003cbody>
+<body>
     <?php
     // Start session and load models
     session_start();
@@ -24,11 +24,50 @@
     $listingModel = new Listing();
     $reportModel = new Report();
     
-    // Get all users from database
-    $sql = "SELECT * FROM users ORDER BY created_at DESC";
-    $stmt = $userModel->getConnection()->prepare($sql);
-    $stmt->execute();
-    $usersData = $stmt->fetchAll();
+    // Handle Actions
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (isset($_POST['action'])) {
+            $userId = $_POST['user_id'] ?? null;
+            
+            if ($userId) {
+                switch ($_POST['action']) {
+                    case 'verify':
+                        $userModel->verifyUser($userId);
+                        break;
+                    case 'ban':
+                        $userModel->banUser($userId);
+                        break;
+                    case 'unban':
+                        $userModel->unbanUser($userId);
+                        break;
+                    case 'update':
+                        $data = [
+                            'first_name' => $_POST['first_name'],
+                            'last_name' => $_POST['last_name'],
+                            'email' => $_POST['email'],
+                            'phone' => $_POST['phone']
+                        ];
+                        $userModel->updateUser($userId, $data);
+                        break;
+                }
+                // Redirect to refresh page and clear post data
+                header("Location: users.php" . (isset($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : ''));
+                exit;
+            }
+        }
+    }
+    
+    // Get filters
+    $search = $_GET['search'] ?? '';
+    $role = $_GET['role'] ?? 'All Roles';
+    $status = $_GET['status'] ?? 'All Status';
+
+    // Get users with filters
+    $usersData = $userModel->searchUsers([
+        'search' => $search,
+        'role' => $role,
+        'status' => $status
+    ]);
     
     // Format user data with additional stats
     $users = [];
@@ -55,6 +94,8 @@
         // Format data
         $users[] = [
             'id' => $userData['user_id'],
+            'first_name' => $userData['first_name'],
+            'last_name' => $userData['last_name'],
             'name' => $userData['first_name'] . ' ' . $userData['last_name'],
             'email' => $userData['email'],
             'phone' => $userData['phone'] ?? 'N/A',
@@ -78,38 +119,39 @@
             </div>
 
             <!-- Search & Filters -->
-            <div class="glass-card animate-slide-up" style="padding: 1rem; margin-bottom: 1.5rem; background: transparent; border: none; box-shadow: none;">
+            <!-- Search & Filters -->
+            <form method="GET" action="users.php" class="glass-card animate-slide-up" style="padding: 1rem; margin-bottom: 1.5rem; background: transparent; border: none; box-shadow: none;">
                 <div class="search-bar-container">
                     <div class="search-input-wrapper">
                         <i data-lucide="search" class="search-icon"></i>
-                        <input type="text" class="search-input-clean" placeholder="Search users...">
+                        <input type="text" name="search" class="search-input-clean" placeholder="Search users..." value="<?php echo htmlspecialchars($search); ?>">
                     </div>
                     <div class="search-actions">
-                        <button class="btn-filters" onclick="document.getElementById('filterOptions').style.display = document.getElementById('filterOptions').style.display === 'none' ? 'flex' : 'none'">
+                        <button type="button" class="btn-filters" onclick="document.getElementById('filterOptions').style.display = document.getElementById('filterOptions').style.display === 'none' ? 'flex' : 'none'">
                             <i data-lucide="sliders-horizontal" style="width: 1rem; height: 1rem;"></i>
                             Filters
                         </button>
-                        <button class="btn-search">
+                        <button type="submit" class="btn-search">
                             Search
                         </button>
                     </div>
                 </div>
                 
                 <!-- Expanded Filters -->
-                <div id="filterOptions" style="display: none; gap: 1rem; margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border-radius: 1rem;">
-                    <select class="form-select-sm" style="flex: 1;">
-                        <option>All Roles</option>
-                        <option>Seekers</option>
-                        <option>Landlords</option>
+                <div id="filterOptions" style="display: <?php echo ($role !== 'All Roles' || $status !== 'All Status') ? 'flex' : 'none'; ?>; gap: 1rem; margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border-radius: 1rem;">
+                    <select name="role" class="form-select-sm" style="flex: 1;">
+                        <option <?php echo $role === 'All Roles' ? 'selected' : ''; ?>>All Roles</option>
+                        <option <?php echo $role === 'Seekers' ? 'selected' : ''; ?>>Seekers</option>
+                        <option <?php echo $role === 'Landlords' ? 'selected' : ''; ?>>Landlords</option>
                     </select>
-                    <select class="form-select-sm" style="flex: 1;">
-                        <option>All Status</option>
-                        <option>Verified</option>
-                        <option>Pending</option>
-                        <option>Banned</option>
+                    <select name="status" class="form-select-sm" style="flex: 1;">
+                        <option <?php echo $status === 'All Status' ? 'selected' : ''; ?>>All Status</option>
+                        <option <?php echo $status === 'Verified' ? 'selected' : ''; ?>>Verified</option>
+                        <option <?php echo $status === 'Pending' ? 'selected' : ''; ?>>Pending</option>
+                        <option <?php echo $status === 'Banned' ? 'selected' : ''; ?>>Banned</option>
                     </select>
                 </div>
-            </div>
+            </form>
 
             <!-- Users Table -->
             <div class="glass-card animate-slide-up" style="padding: 0; overflow: hidden;">
@@ -188,14 +230,14 @@
                                                 Verify
                                             </button>
                                         <?php elseif ($user['status'] === 'verified'): ?>
-                                            <button class="btn btn-ghost btn-sm" onclick="handleEdit(<?php echo $user['id']; ?>)">
+                                            <button class="btn btn-ghost btn-sm" onclick='handleEdit(<?php echo htmlspecialchars(json_encode($user), ENT_QUOTES, 'UTF-8'); ?>)'>
                                                 <i data-lucide="edit" style="width: 1rem; height: 1rem;"></i>
                                             </button>
                                             <button class="btn btn-ghost btn-sm" style="color: #dc2626;" onclick="handleBan(<?php echo $user['id']; ?>)">
                                                 <i data-lucide="ban" style="width: 1rem; height: 1rem;"></i>
                                             </button>
                                         <?php elseif ($user['status'] === 'banned'): ?>
-                                            <button class="btn btn-primary btn-sm" onclick="handleVerify(<?php echo $user['id']; ?>)">
+                                            <button class="btn btn-primary btn-sm" onclick="handleUnban(<?php echo $user['id']; ?>)">
                                                 Unban
                                             </button>
                                         <?php endif; ?>
@@ -210,24 +252,180 @@
         </div>
     </div>
 
+    <!-- Modals -->
+    <!-- Verify Modal -->
+    <div id="verifyModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Verify User</h3>
+                <button class="close-modal" onclick="closeModal('verifyModal')" style="color: #6b7280; padding: 0.25rem; background: transparent; border: none; cursor: pointer;"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to verify this user? They will gain full access to the platform.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" onclick="closeModal('verifyModal')">Cancel</button>
+                <form method="POST" style="display: inline;">
+                    <input type="hidden" name="action" value="verify">
+                    <input type="hidden" name="user_id" id="verifyUserId">
+                    <button type="submit" class="btn btn-primary">Verify User</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ban Modal -->
+    <div id="banModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" style="color: #dc2626;">Ban User</h3>
+                <button class="close-modal" onclick="closeModal('banModal')" style="color: #6b7280; padding: 0.25rem; background: transparent; border: none; cursor: pointer;"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to ban this user? They will lose access to their account immediately.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" onclick="closeModal('banModal')">Cancel</button>
+                <form method="POST" style="display: inline;">
+                    <input type="hidden" name="action" value="ban">
+                    <input type="hidden" name="user_id" id="banUserId">
+                    <button type="submit" class="btn btn-primary" style="background-color: #dc2626; border-color: #dc2626;">Ban User</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unban Modal -->
+    <div id="unbanModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Unban User</h3>
+                <button class="close-modal" onclick="closeModal('unbanModal')" style="color: #6b7280; padding: 0.25rem; background: transparent; border: none; cursor: pointer;"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to unban this user? Their account access will be restored.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" onclick="closeModal('unbanModal')">Cancel</button>
+                <form method="POST" style="display: inline;">
+                    <input type="hidden" name="action" value="unban">
+                    <input type="hidden" name="user_id" id="unbanUserId">
+                    <button type="submit" class="btn btn-primary">Unban User</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit User</h3>
+                <button class="close-modal" onclick="closeModal('editModal')" style="color: #6b7280; padding: 0.25rem; background: transparent; border: none; cursor: pointer;"><i data-lucide="x"></i></button>
+            </div>
+            <form method="POST">
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="user_id" id="editUserId">
+                <div class="modal-body">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">First Name</label>
+                        <input type="text" name="first_name" id="editFirstName" class="form-input" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Last Name</label>
+                        <input type="text" name="last_name" id="editLastName" class="form-input" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Email</label>
+                        <input type="email" name="email" id="editEmail" class="form-input" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Phone</label>
+                        <input type="text" name="phone" id="editPhone" class="form-input">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('editModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="https://unpkg.com/lucide@latest"></script>
+
     <script>
-        lucide.createIcons();
+        console.log('Admin Users Script Loaded');
 
-        function handleVerify(id) {
-            console.log('Verify user:', id);
-            // Add verify logic here
+        // Define functions globally
+        window.openModal = function(modalId) {
+            console.log('Opening modal:', modalId);
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('show');
+            } else {
+                console.error('Modal not found:', modalId);
+            }
         }
 
-        function handleBan(id) {
-            console.log('Ban user:', id);
-            // Add ban logic here
+        window.closeModal = function(modalId) {
+            console.log('Closing modal:', modalId);
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('show');
+            }
         }
 
-        function handleEdit(id) {
-            console.log('Edit user:', id);
-            // Add edit logic here
+        window.handleVerify = function(id) {
+            console.log('handleVerify called with id:', id);
+            const input = document.getElementById('verifyUserId');
+            if (input) {
+                input.value = id;
+                openModal('verifyModal');
+            } else {
+                console.error('verifyUserId input not found');
+            }
+        }
+
+        window.handleUnban = function(id) {
+            console.log('handleUnban called with id:', id);
+            document.getElementById('unbanUserId').value = id;
+            openModal('unbanModal');
+        }
+
+        window.handleBan = function(id) {
+            console.log('handleBan called with id:', id);
+            document.getElementById('banUserId').value = id;
+            openModal('banModal');
+        }
+
+        window.handleEdit = function(user) {
+            console.log('handleEdit called with user:', user);
+            try {
+                document.getElementById('editUserId').value = user.id;
+                document.getElementById('editFirstName').value = user.first_name;
+                document.getElementById('editLastName').value = user.last_name;
+                document.getElementById('editEmail').value = user.email;
+                document.getElementById('editPhone').value = user.phone;
+                openModal('editModal');
+            } catch (e) {
+                console.error('Error in handleEdit:', e);
+            }
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.classList.remove('show');
+            }
+        }
+
+        // Initialize Lucide icons
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
         }
     </script>
+
+
 </body>
 </html>

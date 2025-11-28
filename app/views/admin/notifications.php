@@ -17,8 +17,10 @@
     // Start session and load models
     session_start();
     require_once __DIR__ . '/../../models/User.php';
+    require_once __DIR__ . '/../../models/Notification.php';
     
     $userModel = new User();
+    $notificationModel = new Notification();
     
     // Get notification statistics from database
     $today = date('Y-m-d');
@@ -30,6 +32,11 @@
     $failedDeliveries = 0;
     $pendingQueue = 0;
     $notifications = [];
+
+    // Get filters
+    $search = $_GET['search'] ?? '';
+    $type = $_GET['type'] ?? 'All Types';
+    $status = $_GET['status'] ?? 'All Status';
     
     try {
         // Count emails sent today
@@ -57,16 +64,12 @@
         $result = $stmt->fetch();
         $pendingQueue = $result['count'] ?? 0;
         
-        // Get all notifications with user details
-        $sql = "SELECT n.*, 
-                    u.first_name, u.last_name, u.email as user_email, u.phone
-                FROM notifications n
-                LEFT JOIN users u ON n.user_id = u.user_id
-                ORDER BY n.created_at DESC
-                LIMIT 20";
-        $stmt = $conn->prepare($sql);
-        $stmt->execute();
-        $notificationsData = $stmt->fetchAll();
+        // Get notifications with filters
+        $notificationsData = $notificationModel->searchNotifications([
+            'search' => $search,
+            'type' => $type,
+            'status' => $status
+        ]);
         
         // Helper function for time ago
         function notif_time_ago($datetime) {
@@ -165,38 +168,38 @@
             </div>
 
             <!-- Search & Filters -->
-            <div class="glass-card animate-slide-up" style="padding: 1rem; margin-bottom: 1.5rem; background: transparent; border: none; box-shadow: none;">
+            <form method="GET" action="notifications.php" class="glass-card animate-slide-up" style="padding: 1rem; margin-bottom: 1.5rem; background: transparent; border: none; box-shadow: none;">
                 <div class="search-bar-container">
                     <div class="search-input-wrapper">
                         <i data-lucide="search" class="search-icon"></i>
-                        <input type="text" class="search-input-clean" placeholder="Search notifications...">
+                        <input type="text" name="search" class="search-input-clean" placeholder="Search notifications..." value="<?php echo htmlspecialchars($search); ?>">
                     </div>
                     <div class="search-actions">
-                        <button class="btn-filters" onclick="document.getElementById('filterOptions').style.display = document.getElementById('filterOptions').style.display === 'none' ? 'flex' : 'none'">
+                        <button type="button" class="btn-filters" onclick="document.getElementById('filterOptions').style.display = document.getElementById('filterOptions').style.display === 'none' ? 'flex' : 'none'">
                             <i data-lucide="sliders-horizontal" style="width: 1rem; height: 1rem;"></i>
                             Filters
                         </button>
-                        <button class="btn-search">
+                        <button type="submit" class="btn-search">
                             Search
                         </button>
                     </div>
                 </div>
                 
                 <!-- Expanded Filters -->
-                <div id="filterOptions" style="display: none; gap: 1rem; margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border-radius: 1rem;">
-                    <select class="form-select-sm" style="flex: 1;">
-                        <option>All Types</option>
-                        <option>Email</option>
-                        <option>SMS</option>
+                <div id="filterOptions" style="display: <?php echo ($type !== 'All Types' || $status !== 'All Status') ? 'flex' : 'none'; ?>; gap: 1rem; margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border-radius: 1rem;">
+                    <select name="type" class="form-select-sm" style="flex: 1;">
+                        <option <?php echo $type === 'All Types' ? 'selected' : ''; ?>>All Types</option>
+                        <option <?php echo $type === 'Email' ? 'selected' : ''; ?>>Email</option>
+                        <option <?php echo $type === 'SMS' ? 'selected' : ''; ?>>SMS</option>
                     </select>
-                    <select class="form-select-sm" style="flex: 1;">
-                        <option>All Status</option>
-                        <option>Delivered</option>
-                        <option>Failed</option>
-                        <option>Pending</option>
+                    <select name="status" class="form-select-sm" style="flex: 1;">
+                        <option <?php echo $status === 'All Status' ? 'selected' : ''; ?>>All Status</option>
+                        <option <?php echo $status === 'Delivered' ? 'selected' : ''; ?>>Delivered</option>
+                        <option <?php echo $status === 'Failed' ? 'selected' : ''; ?>>Failed</option>
+                        <option <?php echo $status === 'Pending' ? 'selected' : ''; ?>>Pending</option>
                     </select>
                 </div>
-            </div>
+            </form>
 
             <!-- Notifications Table -->
             <div class="glass-card animate-slide-up" style="padding: 0; overflow: hidden;">

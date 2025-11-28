@@ -197,4 +197,83 @@ class Notification extends BaseModel {
         
         return $stmt->execute();
     }
+
+
+    /**
+     * Search notifications for admin
+     * @param array $filters
+     * @return array
+     */
+    public function searchNotifications($filters = []) {
+        $sql = "SELECT n.*, 
+                    u.first_name, u.last_name, u.email as user_email, u.phone
+                FROM {$this->table} n
+                LEFT JOIN users u ON n.user_id = u.user_id
+                WHERE 1=1";
+        
+        $params = [];
+
+        if (!empty($filters['search'])) {
+            $sql .= " AND (
+                n.title LIKE :search1 OR 
+                n.message LIKE :search2 OR 
+                u.first_name LIKE :search3 OR 
+                u.last_name LIKE :search4 OR 
+                u.email LIKE :search5
+            )";
+            $searchTerm = '%' . $filters['search'] . '%';
+            $params[':search1'] = $searchTerm;
+            $params[':search2'] = $searchTerm;
+            $params[':search3'] = $searchTerm;
+            $params[':search4'] = $searchTerm;
+            $params[':search5'] = $searchTerm;
+        }
+
+        if (!empty($filters['type']) && $filters['type'] !== 'All Types') {
+            $sql .= " AND n.type = :type";
+            $params[':type'] = strtolower($filters['type']);
+        }
+
+        if (!empty($filters['status']) && $filters['status'] !== 'All Status') {
+            $sql .= " AND n.status = :status";
+            $params[':status'] = strtolower($filters['status']);
+        }
+
+        $sql .= " ORDER BY n.created_at DESC";
+
+        $stmt = $this->conn->prepare($sql);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->execute();
+        
+        return $stmt->fetchAll();
+    }
+    /**
+     * Get dashboard statistics
+     * @return array
+     */
+    public function getDashboardStats() {
+        $today = date('Y-m-d');
+        $stats = [
+            'emails_sent_today' => 0,
+            'failed_deliveries' => 0,
+            'pending_queue' => 0
+        ];
+
+        // Emails sent today
+        $sql = "SELECT COUNT(*) as count FROM {$this->table} WHERE DATE(created_at) = :today AND type = 'email'";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':today', $today);
+        $stmt->execute();
+        $stats['emails_sent_today'] = (int)($stmt->fetch()['count'] ?? 0);
+
+        // Failed deliveries (Column 'status' does not exist, defaulting to 0)
+        $stats['failed_deliveries'] = 0;
+
+        // Pending queue (Column 'status' does not exist, defaulting to 0)
+        $stats['pending_queue'] = 0;
+
+        return $stats;
+    }
 }

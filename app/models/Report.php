@@ -41,6 +41,72 @@ class Report extends BaseModel {
     }
 
     /**
+     * Search reports with filters
+     * @param array $filters
+     * @return array
+     */
+    public function searchReports($filters = []) {
+        $sql = "SELECT 
+                    r.*,
+                    reporter.first_name as reporter_first, reporter.last_name as reporter_last, reporter.profile_photo as reporter_photo,
+                    reported_user.first_name as reported_first, reported_user.last_name as reported_last,
+                    l.title as listing_title
+                FROM {$this->table} r
+                LEFT JOIN users reporter ON r.reporter_id = reporter.user_id
+                LEFT JOIN users reported_user ON r.reported_user_id = reported_user.user_id
+                LEFT JOIN listings l ON r.reported_listing_id = l.listing_id
+                WHERE 1=1";
+        
+        $params = [];
+
+        if (!empty($filters['search'])) {
+            $sql .= " AND (
+                reporter.first_name LIKE :search1 OR 
+                reporter.last_name LIKE :search2 OR 
+                reported_user.first_name LIKE :search3 OR 
+                reported_user.last_name LIKE :search4 OR 
+                l.title LIKE :search5
+            )";
+            $searchTerm = '%' . $filters['search'] . '%';
+            $params[':search1'] = $searchTerm;
+            $params[':search2'] = $searchTerm;
+            $params[':search3'] = $searchTerm;
+            $params[':search4'] = $searchTerm;
+            $params[':search5'] = $searchTerm;
+        }
+
+        if (!empty($filters['type']) && $filters['type'] !== 'All Types') {
+            // Map display types to db types if needed, or assume they match
+            // UI: Listing Reports, User Reports, Message Reports
+            // DB: listing, user, message
+            $typeMap = [
+                'Listing Reports' => 'listing',
+                'User Reports' => 'user',
+                'Message Reports' => 'message'
+            ];
+            if (isset($typeMap[$filters['type']])) {
+                $sql .= " AND r.report_type = :type";
+                $params[':type'] = $typeMap[$filters['type']];
+            }
+        }
+
+        if (!empty($filters['status']) && $filters['status'] !== 'All Status') {
+            $sql .= " AND r.status = :status";
+            $params[':status'] = strtolower($filters['status']);
+        }
+
+        $sql .= " ORDER BY r.created_at DESC";
+
+        $stmt = $this->conn->prepare($sql);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->execute();
+        
+        return $stmt->fetchAll();
+    }
+
+    /**
      * Get pending reports count
      * @return int
      */

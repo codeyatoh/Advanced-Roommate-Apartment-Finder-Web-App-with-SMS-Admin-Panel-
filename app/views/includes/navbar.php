@@ -164,9 +164,6 @@ if ($role === 'room_seeker') {
                 <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/admin/users.php" class="navbar-link <?php echo $current_page === 'users.php' ? 'active' : ''; ?>">
                     <i data-lucide="users" class="nav-icon"></i>
                     <span>Users</span>
-                    <?php if ($nav_unverifiedLandlords > 0): ?>
-                    <span class="notification-badge"><?php echo $nav_unverifiedLandlords; ?></span>
-                    <?php endif; ?>
                 </a>
                 <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/admin/listings.php" class="navbar-link <?php echo $current_page === 'listings.php' ? 'active' : ''; ?>">
                     <i data-lucide="home" class="nav-icon"></i>

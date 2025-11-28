@@ -89,11 +89,7 @@
 
         <!-- Hero Section with Carousel -->
         <section class="hero-section">
-            <div class="back-to-login">
-                <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/public/login.php" class="back-to-login-link">
-                    ← Back to Login
-                </a>
-            </div>
+
             <div class="hero-container">
                 <div class="carousel">
                     <div class="carousel-container">
@@ -106,11 +102,11 @@
                                         <h1 class="carousel-title">Find Your Perfect Room Today</h1>
                                         <p class="carousel-description">Connect with verified landlords and compatible roommates in your area</p>
                                         <div class="carousel-actions">
-                                            <a href="#featured-rooms" class="btn btn-login btn-lg">
+                                            <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/public/login.php" class="btn btn-login btn-lg">
                                                 <i data-lucide="search" class="btn-icon"></i>
                                                 Browse Rooms
                                             </a>
-                                            <a href="#features" class="btn btn-glass btn-lg">
+                                            <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/public/login.php" class="btn btn-glass btn-lg">
                                                 <i data-lucide="users" class="btn-icon"></i>
                                                 Find Roommates
                                             </a>
@@ -126,7 +122,7 @@
                                     <div class="carousel-content">
                                         <h1 class="carousel-title">Meet Your Ideal Roommate</h1>
                                         <p class="carousel-description">Match with compatible people based on lifestyle and preferences</p>
-                                        <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/public/register.php" class="btn btn-login btn-lg">
+                                        <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/public/login.php" class="btn btn-login btn-lg">
                                             <i data-lucide="users" class="btn-icon"></i>
                                             Start Matching
                                         </a>
@@ -141,7 +137,7 @@
                                     <div class="carousel-content">
                                         <h1 class="carousel-title">List Your Property</h1>
                                         <p class="carousel-description">Reach thousands of verified room seekers instantly</p>
-                                        <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/public/register.php" class="btn btn-login btn-lg">
+                                        <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/public/login.php" class="btn btn-login btn-lg">
                                             <i data-lucide="home" class="btn-icon"></i>
                                             List Now
                                         </a>

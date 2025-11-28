@@ -133,7 +133,7 @@
 
 @media (min-width: 1024px) {
     .content-grid {
-        grid-template-columns: 2fr 1fr; /* lg:grid-cols-3 (2+1) */
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
