@@ -100,6 +100,9 @@ class MessageController {
             exit;
         }
 
+        // Mark messages as read
+        $this->messageModel->markAsRead($landlordId, $otherUserId);
+
         $messages = $this->messageModel->getConversation($landlordId, $otherUserId);
 
         echo json_encode(['success' => true, 'messages' => $messages]);

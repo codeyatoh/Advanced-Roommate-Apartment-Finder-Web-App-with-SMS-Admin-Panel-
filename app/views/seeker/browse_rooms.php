@@ -158,7 +158,13 @@
                 <?php 
                     // Fetch listings from database
                     require_once __DIR__ . '/../../models/Listing.php';
+                    require_once __DIR__ . '/../../models/SavedListing.php';
+                    
                     $listingModel = new Listing();
+                    $savedListingModel = new SavedListing();
+                    
+                    // Get current user ID
+                    $userId = $_SESSION['user_id'] ?? null;
                     
                     // Get filter parameters if any
                     $filters = [];
@@ -184,6 +190,12 @@
                         $image = $room['primary_image'] ?? 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800';
                         $listingId = $room['listing_id'] ?? '';
                         $availableText = !empty($room['available_from']) ? date('M j', strtotime($room['available_from'])) : 'Now';
+                        
+                        // Check if saved
+                        $isSaved = $userId ? $savedListingModel->isSaved($userId, $listingId) : false;
+                        $heartClass = $isSaved ? 'fill-current text-red-500' : '';
+                        $heartColor = $isSaved ? '#ef4444' : 'currentColor';
+                        $heartFill = $isSaved ? '#ef4444' : 'none';
                     ?>
                     <div style="animation: slideUp 0.3s ease-out; animation-delay: <?php echo $index * 0.05; ?>s; animation-fill-mode: both;">
                         <a href="room_details.php?id=<?php echo $listingId; ?>" style="text-decoration: none; color: inherit; display: block;">
@@ -191,8 +203,8 @@
                                 <!-- Image -->
                                 <div class="room-card-image-wrapper">
                                     <img src="<?php echo htmlspecialchars($image); ?>" alt="<?php echo htmlspecialchars($room['title']); ?>" class="room-card-image">
-                                    <button class="room-card-favorite" onclick="event.preventDefault();">
-                                        <i data-lucide="heart"></i>
+                                    <button class="room-card-favorite" onclick="toggleFavorite(event, <?php echo $listingId; ?>, this)">
+                                        <i data-lucide="heart" style="color: <?php echo $heartColor; ?>; fill: <?php echo $heartFill; ?>;"></i>
                                     </button>
                                     <div class="room-card-badge">Available <?php echo htmlspecialchars($availableText); ?></div>
                                 </div>
@@ -255,6 +267,39 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
         lucide.createIcons();
+
+        function toggleFavorite(event, listingId, btn) {
+            event.preventDefault(); // Prevent link click
+            event.stopPropagation();
+
+            fetch('../../controllers/seeker/FavoritesController.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ listing_id: listingId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const icon = btn.querySelector('svg'); // Lucide replaces <i> with <svg>
+                    if (data.action === 'added') {
+                        icon.setAttribute('fill', '#ef4444');
+                        icon.setAttribute('color', '#ef4444');
+                        // Optional: Show toast
+                    } else {
+                        icon.setAttribute('fill', 'none');
+                        icon.setAttribute('color', 'currentColor');
+                    }
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        }
     </script>
 </body>
 </html>

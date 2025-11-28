@@ -86,6 +86,9 @@ foreach ($inquiries as &$inquiry) {
 // Get full conversation for first inquiry (if exists)
 $firstInquiryMessages = [];
 if (!empty($inquiries)) {
+    // Mark as read for the first conversation
+    $messageModel->markAsRead($landlordId, $inquiries[0]['other_user_id']);
+    
     $firstInquiryMessages = $messageModel->getConversation(
         $landlordId,
         $inquiries[0]['other_user_id']
@@ -346,6 +349,34 @@ if (!empty($inquiries)) {
                 link.style.display = 'inline-flex';
             } else {
                 link.style.display = 'none';
+            }
+
+            // Handle Unread State UI Update
+            if (data.unread) {
+                // 1. Remove unread dot from sidebar
+                const unreadDot = element.querySelector('div[style*="background-color: var(--deep-blue)"]');
+                if (unreadDot) {
+                    unreadDot.remove();
+                }
+
+                // 2. Decrement Navbar Badge
+                const navBadge = document.querySelector('a[href*="inquiries.php"] .notification-badge');
+                if (navBadge) {
+                    let count = parseInt(navBadge.textContent);
+                    if (!isNaN(count) && count > 0) {
+                        count--;
+                        if (count === 0) {
+                            navBadge.remove();
+                        } else {
+                            navBadge.textContent = count;
+                        }
+                    }
+                }
+
+                // 3. Update data to prevent double counting
+                data.unread = false;
+                // Update the onclick attribute to reflect the new data state
+                element.setAttribute('onclick', `selectInquiry(this, ${JSON.stringify(data)})`);
             }
         }
 

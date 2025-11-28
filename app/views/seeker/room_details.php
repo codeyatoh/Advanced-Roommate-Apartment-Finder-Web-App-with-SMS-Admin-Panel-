@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/forms.module.css">
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/room-card.module.css">
     <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/room-details.module.css">
+    <link rel="stylesheet" href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/css/modules/match-modal.module.css">
 </head>
 <body>
     <div style="min-height: 100vh; background: linear-gradient(to bottom right, var(--softBlue-20), var(--neutral), var(--deepBlue-10));">
@@ -232,9 +233,16 @@
                                     <i data-lucide="message-circle" class="btn-icon"></i>
                                     Message Landlord
                                 </a>
-                                <button class="btn btn-glass btn-lg" style="width: 100%; border-color: var(--primary); color: var(--primary);">
+                                <?php 
+                                require_once __DIR__ . '/../../models/Appointment.php';
+                                $appointmentModel = new Appointment();
+                                $hasPendingRequest = $appointmentModel->hasPendingRequest($userId, $listingId);
+                                ?>
+                                <button class="btn btn-glass btn-lg" 
+                                        style="width: 100%; border-color: var(--primary); color: var(--primary);"
+                                        <?php echo $hasPendingRequest ? 'disabled' : 'onclick="openModal()"'; ?>>
                                     <i data-lucide="calendar" class="btn-icon"></i>
-                                    Request Viewing
+                                    <?php echo $hasPendingRequest ? 'Already Requested' : 'Request Viewing'; ?>
                                 </button>
                             </div>
                             
@@ -262,7 +270,149 @@
         </div>
     </div>
 
+    <!-- Request Viewing Modal -->
+    <div id="viewingModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Request Viewing</h3>
+                <button onclick="closeModal()" class="modal-close">
+                    <i data-lucide="x" style="width: 1.25rem; height: 1.25rem;"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <p class="modal-description">
+                    Schedule a time to visit this property. The landlord will receive your request and confirm the appointment.
+                </p>
+                
+                <form id="viewingForm" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <input type="hidden" name="listing_id" value="<?php echo $listingId; ?>">
+                    
+                    <div>
+                        <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Preferred Date</label>
+                        <input type="date" name="date" required class="form-input" min="<?php echo date('Y-m-d'); ?>" style="background: #f9fafb; border-color: #e5e7eb;">
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Preferred Time</label>
+                        <input type="time" name="time" required class="form-input" style="background: #f9fafb; border-color: #e5e7eb;">
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Message (Optional)</label>
+                        <textarea name="message" class="form-input" rows="3" placeholder="Hi, I'm interested in viewing this room..." style="background: #f9fafb; border-color: #e5e7eb; resize: vertical;"></textarea>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button onclick="closeModal()" class="btn btn-ghost" style="color: #6b7280;">Cancel</button>
+                <button type="submit" form="viewingForm" class="btn btn-primary" style="background: #3b82f6; border-color: #3b82f6;">
+                    Send Request
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Admin Modal Styles Replicated */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+        }
+
+        .modal-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #111827;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .modal-description {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #f3f4f6;
+            background: #f9fafb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+    </style>
+
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/public/assets/js/toast-helper.js"></script>
     <script>
         lucide.createIcons();
 
@@ -282,6 +432,79 @@
                     this.classList.add('active');
                 });
             });
+
+            // Modal Logic
+            const modal = document.getElementById('viewingModal');
+            const requestBtn = document.querySelector('button[onclick="openModal()"]') || document.querySelector('.btn-glass[style*="color: var(--primary)"]');
+            
+            // Attach click handler to the Request Viewing button
+            if (requestBtn) {
+                requestBtn.onclick = function(e) {
+                    e.preventDefault();
+                    modal.classList.add('show');
+                };
+            }
+
+            window.closeModal = function() {
+                modal.classList.remove('show');
+            }
+
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    closeModal();
+                }
+            }
+
+            // Form Submission
+            const viewingForm = document.getElementById('viewingForm');
+            if (viewingForm) {
+                viewingForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    // Find the submit button inside the footer
+                    const submitBtn = document.querySelector('button[type="submit"][form="viewingForm"]');
+                    const originalText = submitBtn.innerText;
+                    submitBtn.disabled = true;
+                    submitBtn.innerText = 'Sending...';
+
+                    try {
+                        const formData = new FormData(this);
+                        
+                        const response = await fetch('/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/controllers/AppointmentController.php?action=book', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            showToast(result.message, 'success');
+                            closeModal();
+                            this.reset();
+                            
+                            // Update the main "Request Viewing" button to "Already Requested"
+                            const requestBtn = document.querySelector('button[onclick="openModal()"]') || document.querySelector('.btn-glass[style*="color: var(--primary)"]');
+                            if (requestBtn) {
+                                requestBtn.innerText = 'Already Requested';
+                                requestBtn.disabled = true;
+                                requestBtn.removeAttribute('onclick');
+                                // Re-add icon if needed, though innerText replaces content. 
+                                // Let's reconstruct the innerHTML to keep the icon
+                                requestBtn.innerHTML = '<i data-lucide="calendar" class="btn-icon"></i> Already Requested';
+                                lucide.createIcons();
+                            }
+                        } else {
+                            showToast(result.message, 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        showToast('An error occurred. Please try again.', 'error');
+                    } finally {
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = originalText;
+                    }
+                });
+            }
 
             // Save to Favorites Logic
             const saveBtn = document.getElementById('saveBtn');

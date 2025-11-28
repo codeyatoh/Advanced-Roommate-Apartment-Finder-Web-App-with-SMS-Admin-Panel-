@@ -23,6 +23,11 @@ $pendingMatches = $matchModel->getPendingMatches($userId);
 
 // Get mutual matches
 $mutualMatches = $matchModel->getMutualMatches($userId);
+
+// Mark match notifications as read
+require_once __DIR__ . '/../../models/Notification.php';
+$notificationModel = new Notification();
+$notificationModel->markAsReadByType($userId, 'match');
 ?>
 <!DOCTYPE html>
 <html lang="en">

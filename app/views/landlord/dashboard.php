@@ -20,46 +20,31 @@
     // For now, using hardcoded landlord ID - should come from session in production
     $landlordId = $_SESSION['user_id'] ?? 2;
     
-    // Load models
-    require_once __DIR__ . '/../../models/Listing.php';
-    require_once __DIR__ . '/../../models/Message.php';
-    require_once __DIR__ . '/../../models/Appointment.php';
-    require_once __DIR__ . '/../../models/User.php';
-    
-    $listingModel = new Listing();
-    $messageModel = new Message();
-    $appointmentModel = new Appointment();
-    $userModel = new User();
-    
-    // Fetch landlord stats
-    $landlordStats = $listingModel->getLandlordStats($landlordId);
-    $pendingAppointments = $appointmentModel->getPendingCount($landlordId);
-    
-    // Fetch pending viewings (appointments with status 'pending')
-    $pendingViewings = $appointmentModel->getPendingForLandlord($landlordId);
-    
-    // Fetch recent inquiries (messages to landlord)
-    $recentInquiriesData = []; // Placeholder - will implement later
-    
-    // Calculate performance metrics
-    // Monthly Revenue: Sum of prices from all active listings
-    // Calculate performance metrics
-    // Monthly Revenue: Sum of prices from all rented/occupied listings
-    $monthlyRevenue = 0;
-    $activeListings = $listingModel->getByLandlord($landlordId);
-    $totalListings = count($activeListings);
-    $occupiedListings = 0;
+    // Load Controller
+    require_once __DIR__ . '/../../controllers/landlord/DashboardController.php';
+    $dashboardController = new DashboardController();
+    $data = $dashboardController->getDashboardData($landlordId);
 
-    foreach ($activeListings as $listing) {
-        $status = $listing['availability_status'] ?? 'available';
-        if ($status === 'occupied' || $status === 'rented') {
-            $monthlyRevenue += floatval($listing['price']);
-            $occupiedListings++;
-        }
-    }
+    // Extract data
+    $stats = $data['stats'];
+    $pendingViewings = $data['pending_viewings'];
+    $recentInquiries = $data['recent_inquiries'];
+    $recentActivity = $data['recent_activity'];
+    $performance = $data['performance'];
+    $monthlyRevenue = $performance['monthly_revenue'];
+    $occupancyRate = $performance['occupancy_rate'];
+    $occupiedListings = $performance['occupied_count'];
+    $totalListings = $performance['total_count'];
     
-    // Occupancy Rate: (Occupied listings / Total listings) * 100
-    $occupancyRate = $totalListings > 0 ? round(($occupiedListings / $totalListings) * 100) : 0;
+    // User model needed for tenant names in viewings (or could be fetched in controller)
+    // Controller returns raw rows, need to fetch user details if not joined.
+    // AppointmentModel getPendingForLandlord usually joins user table?
+    // Let's check AppointmentModel::getPendingForLandlord.
+    // Assuming it does or I'll need to instantiate User model here or update controller.
+    // To be safe, I'll instantiate User model here for helper lookups if needed, 
+    // but ideally controller should return everything.
+    require_once __DIR__ . '/../../models/User.php';
+    $userModel = new User();
     ?>
     <div class="landlord-page">
         <?php include __DIR__ . '/../includes/navbar.php'; ?>
@@ -81,7 +66,7 @@
                             <i data-lucide="home" class="stat-icon"></i>
                         </div>
                     </div>
-                    <p class="stat-value"><?php echo intval($landlordStats['active_listings'] ?? 0); ?></p>
+                    <p class="stat-value"><?php echo intval($stats['active_listings']); ?></p>
                     <p class="stat-label">Active Listings</p>
                 </div>
 
@@ -91,7 +76,7 @@
                             <i data-lucide="message-square" class="stat-icon"></i>
                         </div>
                     </div>
-                    <p class="stat-value"><?php echo count($recentInquiriesData); ?></p>
+                    <p class="stat-value"><?php echo intval($stats['new_inquiries']); ?></p>
                     <p class="stat-label">New Inquiries</p>
                 </div>
 
@@ -101,7 +86,7 @@
                             <i data-lucide="calendar" class="stat-icon"></i>
                         </div>
                     </div>
-                    <p class="stat-value"><?php echo intval($pendingAppointments); ?></p>
+                    <p class="stat-value"><?php echo intval($stats['pending_viewings']); ?></p>
                     <p class="stat-label">Pending Viewings</p>
                 </div>
 
@@ -111,7 +96,7 @@
                             <i data-lucide="eye" class="stat-icon"></i>
                         </div>
                     </div>
-                    <p class="stat-value"><?php echo intval($landlordStats['total_listings'] ?? 0); ?></p>
+                    <p class="stat-value"><?php echo intval($stats['total_listings']); ?></p>
                     <p class="stat-label">Total Listings</p>
                 </div>
             </div>
@@ -128,8 +113,38 @@
                                 <p style="font-size: 0.75rem; color: rgba(0,0,0,0.6);">New messages from potential tenants</p>
                             </div>
                         </div>
-                        <!-- Inquiries list will go here -->
-                        <p style="color: rgba(0,0,0,0.5); text-align: center; padding: 2rem;">No recent inquiries</p>
+                        <?php if (empty($recentInquiries)): ?>
+                            <p style="color: rgba(0,0,0,0.5); text-align: center; padding: 2rem;">No recent inquiries</p>
+                        <?php else: ?>
+                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                <?php foreach ($recentInquiries as $inquiry): 
+                                    // Fetch sender details if not in inquiry array (Message model usually returns sender_id)
+                                    // getLandlordInquiries returns: other_user_id, listing_id, last_message, last_message_time, unread_count
+                                    $sender = $userModel->getById($inquiry['other_user_id']);
+                                    $senderName = $sender ? $sender['first_name'] . ' ' . $sender['last_name'] : 'Unknown User';
+                                    $timeAgo = 'Just now'; // Simplified
+                                    $seconds = time() - strtotime($inquiry['last_message_time']);
+                                    if ($seconds < 60) $timeAgo = 'Just now';
+                                    elseif ($seconds < 3600) $timeAgo = floor($seconds/60) . 'm ago';
+                                    elseif ($seconds < 86400) $timeAgo = floor($seconds/3600) . 'h ago';
+                                    else $timeAgo = floor($seconds/86400) . 'd ago';
+                                ?>
+                                <a href="inquiries.php?user_id=<?php echo $inquiry['other_user_id']; ?>" class="inquiry-item" style="text-decoration: none; color: inherit;">
+                                    <img src="<?php echo $sender['profile_photo'] ?? 'https://ui-avatars.com/api/?name='.urlencode($senderName); ?>" class="inquiry-avatar" alt="<?php echo htmlspecialchars($senderName); ?>">
+                                    <div class="inquiry-content">
+                                        <div class="inquiry-header">
+                                            <span class="inquiry-name"><?php echo htmlspecialchars($senderName); ?></span>
+                                            <span class="inquiry-time"><?php echo $timeAgo; ?></span>
+                                        </div>
+                                        <p class="inquiry-message"><?php echo htmlspecialchars($inquiry['last_message']); ?></p>
+                                    </div>
+                                    <?php if ($inquiry['unread_count'] > 0): ?>
+                                        <div class="unread-indicator"></div>
+                                    <?php endif; ?>
+                                </a>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Performance Overview -->
@@ -143,7 +158,7 @@
                                 </div>
                                 <p style="font-size: 1.5rem; font-weight: 700; color: #000;">₱<?php echo number_format($monthlyRevenue, 0); ?></p>
                                 <div style="display: flex; align-items: center; gap: 0.25rem; margin-top: 0.25rem;">
-                                    <span style="font-size: 0.75rem; color: rgba(0,0,0,0.6);">From <?php echo count($activeListings); ?> active listings</span>
+                                    <span style="font-size: 0.75rem; color: rgba(0,0,0,0.6);">From <?php echo $occupiedListings; ?> rented listings</span>
                                 </div>
                             </div>
                             <div class="glass-subtle" style="padding: 1rem; border-radius: 0.75rem;">
@@ -185,19 +200,50 @@
                                     </div>
                                     <div style="flex: 1; min-width: 0;">
                                         <p style="font-weight: 600; font-size: 0.875rem; color: #000; margin-bottom: 0.25rem;"><?php echo htmlspecialchars($tenant['first_name'] . ' ' . $tenant['last_name']); ?></p>
-                                        <p style="font-size: 0.75rem; color: rgba(0,0,0,0.6); margin-bottom: 0.25rem;"><?php echo htmlspecialchars($viewing['listing_title']); ?></p>
+                                        <p style="font-size: 0.75rem; color: rgba(0,0,0,0.6); margin-bottom: 0.25rem;"><?php echo htmlspecialchars($viewing['listing_title'] ?? 'Listing'); ?></p>
                                         <p style="font-size: 0.75rem; color: rgba(0,0,0,0.5);"><?php echo $dateFormatted; ?>, <?php echo $timeFormatted; ?></p>
                                     </div>
                                 </div>
                                 <div style="display: flex; gap: 0.5rem;">
-                                    <button class="btn btn-primary btn-sm" style="flex: 1; font-size: 0.75rem;">Approve</button>
-                                    <button class="btn btn-ghost btn-sm" style="flex: 1; font-size: 0.75rem;">Decline</button>
+                                    <a href="appointments.php" class="btn btn-primary btn-sm" style="flex: 1; font-size: 0.75rem; text-decoration: none; text-align: center;">View</a>
                                 </div>
                             </div>
                             <?php
                                 endforeach;
                             endif;
                             ?>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="glass-card" style="padding: 1.25rem;">
+                        <h3 style="font-size: 1rem; font-weight: 700; color: #000; margin-bottom: 1rem;">Recent Activity</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <?php if (empty($recentActivity)): ?>
+                                <p style="color: rgba(0,0,0,0.5); text-align: center; padding: 1rem; font-size: 0.875rem;">No recent activity</p>
+                            <?php else: ?>
+                                <?php foreach ($recentActivity as $activity): 
+                                    $timeAgo = 'Just now';
+                                    $seconds = time() - strtotime($activity['created_at']);
+                                    if ($seconds < 60) $timeAgo = 'Just now';
+                                    elseif ($seconds < 3600) $timeAgo = floor($seconds/60) . 'm ago';
+                                    elseif ($seconds < 86400) $timeAgo = floor($seconds/3600) . 'h ago';
+                                    else $timeAgo = floor($seconds/86400) . 'd ago';
+                                    
+                                    $icon = 'activity';
+                                    if (strpos($activity['action'], 'login') !== false) $icon = 'log-in';
+                                    elseif (strpos($activity['action'], 'listing') !== false) $icon = 'home';
+                                    elseif (strpos($activity['action'], 'appointment') !== false) $icon = 'calendar';
+                                ?>
+                                <div style="display: flex; gap: 0.75rem; align-items: start; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                                    <i data-lucide="<?php echo $icon; ?>" style="width: 1rem; height: 1rem; color: var(--deep-blue); margin-top: 0.25rem;"></i>
+                                    <div>
+                                        <p style="font-size: 0.8rem; color: #000; margin: 0;"><?php echo htmlspecialchars($activity['description']); ?></p>
+                                        <p style="font-size: 0.7rem; color: rgba(0,0,0,0.5); margin: 0;"><?php echo $timeAgo; ?></p>
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>

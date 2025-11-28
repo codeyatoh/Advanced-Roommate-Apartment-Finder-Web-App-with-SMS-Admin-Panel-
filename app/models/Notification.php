@@ -155,4 +155,46 @@ class Notification extends BaseModel {
         
         return $stmt->execute();
     }
+
+    /**
+     * Get unread count by type
+     * @param int $userId
+     * @param string $type
+     * @return int
+     */
+    public function getUnreadCountByType($userId, $type) {
+        $sql = "SELECT COUNT(*) as count 
+                FROM {$this->table} 
+                WHERE user_id = :user_id 
+                  AND type = :type 
+                  AND is_read = 0";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->bindValue(':type', $type);
+        $stmt->execute();
+        
+        $result = $stmt->fetch();
+        return (int)$result['count'];
+    }
+
+    /**
+     * Mark notifications of a specific type as read
+     * @param int $userId
+     * @param string $type
+     * @return bool
+     */
+    public function markAsReadByType($userId, $type) {
+        $sql = "UPDATE {$this->table} 
+                SET is_read = 1, read_at = NOW() 
+                WHERE user_id = :user_id 
+                  AND type = :type 
+                  AND is_read = 0";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->bindValue(':type', $type);
+        
+        return $stmt->execute();
+    }
 }

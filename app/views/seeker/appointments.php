@@ -11,6 +11,9 @@ require_once __DIR__ . '/../../models/User.php';
 // Get current user
 $userId = $_SESSION['user_id'] ?? 1; // Fallback for development
 
+// Update last viewed timestamp for appointments badge
+$_SESSION['last_viewed_appointments_seeker'] = time();
+
 $appointmentModel = new Appointment();
 $listingModel = new Listing();
 $userModel = new User();
@@ -97,75 +100,57 @@ foreach ($appointments as $apt) {
                             $timeDisplay = $time->format('g:i A');
                             
                             // Get property image
-                            $image = !empty($apt['primary_image']) 
-                                ? htmlspecialchars($apt['primary_image'])
+                            $image = !empty($apt['property_image']) 
+                                ? htmlspecialchars($apt['property_image'])
                                 : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400';
                         ?>
-                        <div class="card card-glass appointment-card" style="animation-delay: <?php echo $index * 0.1; ?>s;">
-                            <div class="appointment-card-content" style="display: flex; flex-direction: column; gap: 1.25rem; padding: 1.25rem;">
-                                <!-- Image -->
-                                <div class="appointment-image">
-                                    <img src="<?php echo $image; ?>" alt="<?php echo htmlspecialchars($apt['title']); ?>">
+                        <div class="card appointment-card" style="animation-delay: <?php echo $index * 0.1; ?>s;">
+                            <!-- Image Section -->
+                            <div class="appointment-image">
+                                <img src="<?php echo $image; ?>" alt="<?php echo htmlspecialchars($apt['property_title'] ?? 'Property'); ?>">
+                                <span class="status-badge-overlay status-<?php echo $apt['status']; ?>"><?php echo ucfirst($apt['status']); ?></span>
+                            </div>
+
+                            <!-- Main Content -->
+                            <div class="appointment-details">
+                                <div class="appointment-header">
+                                    <div class="appointment-title">
+                                        <h3><?php echo htmlspecialchars($apt['property_title'] ?? 'Untitled Property'); ?></h3>
+                                    </div>
                                 </div>
 
-                                <!-- Content -->
-                                <div class="appointment-details">
-                                    <div class="appointment-header">
-                                        <div class="appointment-title">
-                                            <h3><?php echo htmlspecialchars($apt['title']); ?></h3>
-                                            <div class="appointment-landlord">
-                                                <i data-lucide="user"></i>
-                                                <span>with <?php echo $landlordName; ?></span>
-                                            </div>
-                                        </div>
-                                        <span class="appointment-status <?php echo $apt['status']; ?>">
-                                            <?php if ($apt['status'] === 'confirmed'): ?>
-                                                <i data-lucide="check-circle"></i>
-                                            <?php elseif ($apt['status'] === 'pending'): ?>
-                                                <i data-lucide="clock"></i>
-                                            <?php elseif ($apt['status'] === 'declined'): ?>
-                                                <i data-lucide="x-circle"></i>
-                                            <?php endif; ?>
-                                            <span><?php echo ucfirst($apt['status']); ?></span>
-                                        </span>
-                                    </div>
+                                <div class="appointment-meta-row">
+                                    <span class="meta-item"><i data-lucide="calendar"></i> <?php echo $dateDisplay; ?></span>
+                                    <span class="meta-item"><i data-lucide="clock"></i> <?php echo $timeDisplay; ?></span>
+                                    <span class="meta-item"><i data-lucide="map-pin"></i> <?php echo htmlspecialchars($apt['location'] ?? 'Location not available'); ?></span>
+                                </div>
 
-                                    <div class="appointment-info">
-                                        <div class="appointment-info-item">
-                                            <i data-lucide="calendar"></i>
-                                            <span><?php echo $dateDisplay; ?></span>
-                                        </div>
-                                        <div class="appointment-info-item">
-                                            <i data-lucide="clock"></i>
-                                            <span><?php echo $timeDisplay; ?></span>
-                                        </div>
-                                        <div class="appointment-info-item">
-                                            <i data-lucide="map-pin"></i>
-                                            <span><?php echo htmlspecialchars($apt['location']); ?></span>
-                                        </div>
+                                <div class="appointment-landlord-row">
+                                    <img src="<?php echo $landlord['profile_photo'] ?? 'https://ui-avatars.com/api/?name=' . urlencode($landlordName); ?>" alt="Landlord" class="landlord-avatar-xs">
+                                    <div class="landlord-info-text">
+                                        <span class="landlord-name"><?php echo $landlordName; ?></span>
+                                        <span class="landlord-role-badge">Landlord</span>
                                     </div>
-
-                                    <?php if ($apt['status'] === 'pending'): ?>
-                                    <div class="appointment-actions">
-                                        <button class="btn btn-ghost btn-sm" onclick="cancelAppointment(<?php echo $apt['appointment_id']; ?>)">
-                                            <i data-lucide="x"></i>
-                                            Cancel
-                                        </button>
-                                        <button class="btn btn-glass btn-sm">
-                                            <i data-lucide="calendar"></i>
-                                            Reschedule
-                                        </button>
-                                    </div>
-                                    <?php elseif ($apt['status'] === 'confirmed'): ?>
-                                    <div class="appointment-actions">
-                                        <button class="btn btn-ghost btn-sm" onclick="cancelAppointment(<?php echo $apt['appointment_id']; ?>)">
-                                            <i data-lucide="x"></i>
-                                            Cancel
-                                        </button>
-                                    </div>
-                                    <?php endif; ?>
                                 </div>
                             </div>
+
+                            <!-- Actions -->
+                            <?php if ($apt['status'] === 'pending'): ?>
+                            <div class="appointment-actions">
+                                <button class="icon-btn icon-btn-primary" title="Reschedule" onclick="openRescheduleModal(<?php echo $apt['appointment_id']; ?>)">
+                                    <i data-lucide="calendar-clock" style="width: 1.25rem; height: 1.25rem;"></i>
+                                </button>
+                                <button class="icon-btn icon-btn-danger" title="Cancel" onclick="openCancelModal(<?php echo $apt['appointment_id']; ?>)">
+                                    <i data-lucide="x" style="width: 1.25rem; height: 1.25rem;"></i>
+                                </button>
+                            </div>
+                            <?php elseif ($apt['status'] === 'confirmed'): ?>
+                            <div class="appointment-actions">
+                                <button class="icon-btn icon-btn-danger" title="Cancel" onclick="openCancelModal(<?php echo $apt['appointment_id']; ?>)">
+                                    <i data-lucide="x" style="width: 1.25rem; height: 1.25rem;"></i>
+                                </button>
+                            </div>
+                            <?php endif; ?>
                         </div>
                         <?php endforeach; ?>
                     </div>
@@ -184,38 +169,30 @@ foreach ($appointments as $apt) {
                             $dateDisplay = $date->format('M j, Y');
                             $time = new DateTime($apt['appointment_time']);
                             $timeDisplay = $time->format('g:i A');
-                            $image = !empty($apt['primary_image']) 
-                                ? htmlspecialchars($apt['primary_image'])
+                            $image = !empty($apt['property_image']) 
+                                ? htmlspecialchars($apt['property_image'])
                                 : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400';
                         ?>
-                        <div class="card card-glass appointment-card" style="opacity: 0.7; animation-delay: <?php echo $index * 0.1; ?>s;">
-                            <div class="appointment-card-content" style="display: flex; flex-direction: column; gap: 1.25rem; padding: 1.25rem;">
-                                <div class="appointment-image">
-                                    <img src="<?php echo $image; ?>" alt="<?php echo htmlspecialchars($apt['title']); ?>">
-                                </div>
-                                <div class="appointment-details">
-                                    <div class="appointment-header">
-                                        <div class="appointment-title">
-                                            <h3><?php echo htmlspecialchars($apt['title']); ?></h3>
-                                            <div class="appointment-landlord">
-                                                <i data-lucide="user"></i>
-                                                <span>with <?php echo $landlordName; ?></span>
-                                            </div>
-                                        </div>
-                                        <span class="appointment-status <?php echo $apt['status']; ?>">
-                                            <i data-lucide="check-circle"></i>
-                                            <span><?php echo ucfirst($apt['status']); ?></span>
-                                        </span>
+                        <div class="card appointment-card" style="opacity: 0.7; animation-delay: <?php echo $index * 0.1; ?>s;">
+                            <div class="appointment-image">
+                                <img src="<?php echo $image; ?>" alt="<?php echo htmlspecialchars($apt['property_title'] ?? 'Property'); ?>">
+                                <span class="status-badge-overlay status-<?php echo $apt['status']; ?>"><?php echo ucfirst($apt['status']); ?></span>
+                            </div>
+                            <div class="appointment-details">
+                                <div class="appointment-header">
+                                    <div class="appointment-title">
+                                        <h3><?php echo htmlspecialchars($apt['property_title'] ?? 'Untitled Property'); ?></h3>
                                     </div>
-                                    <div class="appointment-info">
-                                        <div class="appointment-info-item">
-                                            <i data-lucide="calendar"></i>
-                                            <span><?php echo $dateDisplay; ?></span>
-                                        </div>
-                                        <div class="appointment-info-item">
-                                            <i data-lucide="clock"></i>
-                                            <span><?php echo $timeDisplay; ?></span>
-                                        </div>
+                                </div>
+                                <div class="appointment-meta-row">
+                                    <span class="meta-item"><i data-lucide="calendar"></i> <?php echo $dateDisplay; ?></span>
+                                    <span class="meta-item"><i data-lucide="clock"></i> <?php echo $timeDisplay; ?></span>
+                                </div>
+                                <div class="appointment-landlord-row">
+                                    <img src="<?php echo $landlord['profile_photo'] ?? 'https://ui-avatars.com/api/?name=' . urlencode($landlordName); ?>" alt="Landlord" class="landlord-avatar-xs">
+                                    <div class="landlord-info-text">
+                                        <span class="landlord-name"><?php echo $landlordName; ?></span>
+                                        <span class="landlord-role-badge">Landlord</span>
                                     </div>
                                 </div>
                             </div>
@@ -236,17 +213,154 @@ foreach ($appointments as $apt) {
             </div>
         </div>
     </div>
+
+    <!-- Cancel Confirmation Modal -->
+    <div id="cancelModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Cancel Appointment</h3>
+                <button class="close-modal" onclick="closeModal('cancelModal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel this appointment? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('cancelModal')">Keep Appointment</button>
+                <button id="confirmCancelBtn" class="btn btn-danger">Yes, Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reschedule Modal -->
+    <div id="rescheduleModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Reschedule Appointment</h3>
+                <button class="close-modal" onclick="closeModal('rescheduleModal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 1rem; color: #6b7280; font-size: 0.875rem;">Choose a new date and time for your viewing.</p>
+                <div class="form-group">
+                    <label class="form-label">New Date</label>
+                    <input type="date" id="rescheduleDate" class="form-input" min="<?php echo date('Y-m-d'); ?>">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">New Time</label>
+                    <input type="time" id="rescheduleTime" class="form-input">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('rescheduleModal')">Cancel</button>
+                <button id="confirmRescheduleBtn" class="btn btn-primary">Confirm Reschedule</button>
+            </div>
+        </div>
+    </div>
     
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>lucide.createIcons();</script>
     
     <script>
-        function cancelAppointment(appointmentId) {
-            if (confirm('Are you sure you want to cancel this appointment?')) {
-                // TODO: Implement cancel via AJAX
-                alert('Cancel functionality coming soon!');
+        let currentAppointmentId = null;
+
+        function openCancelModal(id) {
+            currentAppointmentId = id;
+            document.getElementById('cancelModal').classList.add('show');
+        }
+
+        function openRescheduleModal(id) {
+            currentAppointmentId = id;
+            document.getElementById('rescheduleModal').classList.add('show');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+            currentAppointmentId = null;
+        }
+
+        // Close modals on outside click
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.classList.remove('show');
+                currentAppointmentId = null;
             }
         }
+
+        // Handle Cancel
+        document.getElementById('confirmCancelBtn').addEventListener('click', async function() {
+            if (!currentAppointmentId) return;
+
+            this.disabled = true;
+            this.innerHTML = 'Cancelling...';
+
+            try {
+                const formData = new FormData();
+                formData.append('appointment_id', currentAppointmentId);
+                formData.append('status', 'cancelled');
+
+                const response = await fetch('/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/controllers/AppointmentController.php?action=update_status', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    alert(result.message || 'Failed to cancel appointment');
+                    this.disabled = false;
+                    this.innerHTML = 'Yes, Cancel';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred');
+                this.disabled = false;
+                this.innerHTML = 'Yes, Cancel';
+            }
+        });
+
+        // Handle Reschedule
+        document.getElementById('confirmRescheduleBtn').addEventListener('click', async function() {
+            if (!currentAppointmentId) return;
+
+            const date = document.getElementById('rescheduleDate').value;
+            const time = document.getElementById('rescheduleTime').value;
+
+            if (!date || !time) {
+                alert('Please select both date and time');
+                return;
+            }
+
+            this.disabled = true;
+            this.innerHTML = 'Rescheduling...';
+
+            try {
+                const formData = new FormData();
+                formData.append('appointment_id', currentAppointmentId);
+                formData.append('date', date);
+                formData.append('time', time);
+
+                const response = await fetch('/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/controllers/AppointmentController.php?action=reschedule', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    alert(result.message || 'Failed to reschedule appointment');
+                    this.disabled = false;
+                    this.innerHTML = 'Confirm Reschedule';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred');
+                this.disabled = false;
+                this.innerHTML = 'Confirm Reschedule';
+            }
+        });
     </script>
 </body>
 </html>

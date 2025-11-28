@@ -8,11 +8,76 @@ $current_page = basename($_SERVER['PHP_SELF']);
 $role = $_SESSION['role'] ?? 'guest';
 
 // Get notification count
-$notificationCount = 0;
+$nav_notificationCount = 0;
+$nav_unreadMessages = 0;
+$nav_upcomingAppointments = 0; // For seekers
+$nav_pendingAppointments = 0; // For landlords
+$nav_pendingListings = 0; // For admin
+$nav_pendingReports = 0; // For admin
+$nav_unverifiedLandlords = 0; // For admin
+
 if (isset($_SESSION['user_id'])) {
     require_once __DIR__ . '/../../models/Notification.php';
+    require_once __DIR__ . '/../../models/Message.php';
+    require_once __DIR__ . '/../../models/Appointment.php';
+    require_once __DIR__ . '/../../models/Listing.php';
+    require_once __DIR__ . '/../../models/Report.php';
+    require_once __DIR__ . '/../../models/User.php';
+    
     $notificationModel = new Notification();
-    $notificationCount = $notificationModel->getUnreadCount($_SESSION['user_id']);
+    $messageModel = new Message();
+    $appointmentModel = new Appointment();
+    $listingModel = new Listing();
+    $reportModel = new Report();
+    $userModel = new User();
+    
+    $userId = $_SESSION['user_id'];
+    
+    // Get notification count
+    $nav_notificationCount = $notificationModel->getUnreadCount($userId);
+    
+    // Get specific counts for badges
+    $nav_roommateCount = $notificationModel->getUnreadCountByType($userId, 'match');
+    
+    // Messages
+    $nav_unreadMessages = $messageModel->getUnreadCount($userId);
+    
+    // Appointments (Seeker)
+    $nav_upcomingAppointments = 0;
+    $nav_showAppointmentBadge = false;
+    
+    if ($role === 'room_seeker') {
+        $nav_upcomingAppointments = $appointmentModel->getUpcomingCount($userId, 'seeker');
+        
+        // Check if seen
+        $latestApptTime = $appointmentModel->getLatestAppointmentTimestamp($userId, 'seeker');
+        $lastViewedAppt = $_SESSION['last_viewed_appointments_seeker'] ?? 0;
+        
+        if ($latestApptTime > $lastViewedAppt && $nav_upcomingAppointments > 0) {
+            $nav_showAppointmentBadge = true;
+        }
+    }
+    
+    // Appointments (Landlord)
+    $nav_pendingAppointments = 0;
+    if ($role === 'landlord') {
+        $nav_pendingAppointments = $appointmentModel->getPendingCount($userId);
+        
+        // Check if seen
+        $latestApptTime = $appointmentModel->getLatestAppointmentTimestamp($userId, 'landlord');
+        $lastViewedAppt = $_SESSION['last_viewed_appointments_landlord'] ?? 0;
+        
+        if ($latestApptTime > $lastViewedAppt && $nav_pendingAppointments > 0) {
+            $nav_showAppointmentBadge = true;
+        }
+    }
+    
+    // Admin counts
+    if ($role === 'admin') {
+        $nav_pendingListings = $listingModel->getPendingCount();
+        $nav_pendingReports = $reportModel->getPendingCount();
+        $nav_unverifiedLandlords = $userModel->getUnverifiedLandlordCount();
+    }
 }
 
 // Determine profile link based on role
@@ -50,17 +115,23 @@ if ($role === 'room_seeker') {
                 <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/seeker/roommate_finder.php" class="navbar-link <?php echo $current_page === 'roommate_finder.php' ? 'active' : ''; ?>">
                     <i data-lucide="users" class="nav-icon"></i>
                     <span>Roommates</span>
-                    <?php if ($notificationCount > 0): ?>
-                    <span class="notification-badge"><?php echo $notificationCount; ?></span>
+                    <?php if ($nav_roommateCount > 0): ?>
+                    <span class="notification-badge"><?php echo $nav_roommateCount; ?></span>
                     <?php endif; ?>
                 </a>
                 <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/seeker/appointments.php" class="navbar-link <?php echo $current_page === 'appointments.php' ? 'active' : ''; ?>">
                     <i data-lucide="calendar" class="nav-icon"></i>
                     <span>Appointments</span>
+                    <?php if ($nav_showAppointmentBadge): ?>
+                    <span class="notification-badge"><?php echo $nav_upcomingAppointments; ?></span>
+                    <?php endif; ?>
                 </a>
                 <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/seeker/messages.php" class="navbar-link <?php echo $current_page === 'messages.php' ? 'active' : ''; ?>">
                     <i data-lucide="message-square" class="nav-icon"></i>
                     <span>Messages</span>
+                    <?php if ($nav_unreadMessages > 0): ?>
+                    <span class="notification-badge"><?php echo $nav_unreadMessages; ?></span>
+                    <?php endif; ?>
                 </a>
             <?php elseif ($role === 'landlord'): ?>
                 <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/landlord/dashboard.php" class="navbar-link <?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>">
@@ -74,10 +145,16 @@ if ($role === 'room_seeker') {
                 <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/landlord/inquiries.php" class="navbar-link <?php echo $current_page === 'inquiries.php' ? 'active' : ''; ?>">
                     <i data-lucide="message-square" class="nav-icon"></i>
                     <span>Inquiries</span>
+                    <?php if ($nav_unreadMessages > 0): ?>
+                    <span class="notification-badge"><?php echo $nav_unreadMessages; ?></span>
+                    <?php endif; ?>
                 </a>
                 <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/landlord/appointments.php" class="navbar-link <?php echo $current_page === 'appointments.php' ? 'active' : ''; ?>">
                     <i data-lucide="calendar" class="nav-icon"></i>
                     <span>Appointments</span>
+                    <?php if ($nav_showAppointmentBadge): ?>
+                    <span class="notification-badge"><?php echo $nav_pendingAppointments; ?></span>
+                    <?php endif; ?>
                 </a>
             <?php elseif ($role === 'admin'): ?>
                 <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/admin/dashboard.php" class="navbar-link <?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>">
@@ -87,14 +164,23 @@ if ($role === 'room_seeker') {
                 <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/admin/users.php" class="navbar-link <?php echo $current_page === 'users.php' ? 'active' : ''; ?>">
                     <i data-lucide="users" class="nav-icon"></i>
                     <span>Users</span>
+                    <?php if ($nav_unverifiedLandlords > 0): ?>
+                    <span class="notification-badge"><?php echo $nav_unverifiedLandlords; ?></span>
+                    <?php endif; ?>
                 </a>
                 <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/admin/listings.php" class="navbar-link <?php echo $current_page === 'listings.php' ? 'active' : ''; ?>">
                     <i data-lucide="home" class="nav-icon"></i>
                     <span>Listings</span>
+                    <?php if ($nav_pendingListings > 0): ?>
+                    <span class="notification-badge"><?php echo $nav_pendingListings; ?></span>
+                    <?php endif; ?>
                 </a>
                 <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/admin/reports.php" class="navbar-link <?php echo $current_page === 'reports.php' ? 'active' : ''; ?>">
                     <i data-lucide="flag" class="nav-icon"></i>
                     <span>Reports</span>
+                    <?php if ($nav_pendingReports > 0): ?>
+                    <span class="notification-badge"><?php echo $nav_pendingReports; ?></span>
+                    <?php endif; ?>
                 </a>
                 <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/admin/notifications.php" class="navbar-link <?php echo $current_page === 'notifications.php' ? 'active' : ''; ?>">
                     <i data-lucide="bell" class="nav-icon"></i>
@@ -114,15 +200,15 @@ if ($role === 'room_seeker') {
                 <div class="notification-dropdown-container">
                     <button type="button" class="btn-notification" id="notificationBtn">
                         <i data-lucide="bell" style="width: 1.25rem; height: 1.25rem;"></i>
-                        <?php if ($notificationCount > 0): ?>
-                        <span class="notification-count-badge"><?php echo $notificationCount > 9 ? '9+' : $notificationCount; ?></span>
+                        <?php if ($nav_notificationCount > 0): ?>
+                        <span class="notification-count-badge"><?php echo $nav_notificationCount > 9 ? '9+' : $nav_notificationCount; ?></span>
                         <?php endif; ?>
                     </button>
                     
                     <div class="notification-dropdown" id="notificationDropdown">
                         <div class="notification-dropdown-header">
                             <h3>Notifications</h3>
-                            <?php if ($notificationCount > 0): ?>
+                            <?php if ($nav_notificationCount > 0): ?>
                             <button type="button" class="btn-mark-read" id="markAllReadBtn">Mark all as read</button>
                             <?php endif; ?>
                         </div>
@@ -136,57 +222,63 @@ if ($role === 'room_seeker') {
                                 <?php foreach ($notifications as $notif): 
                                     // Icon based on type (PHP 7.x compatible)
                                     // Icon based on type (PHP 7.x compatible)
+                                    // Determine Icon and Color based on type
+                                    $icon = 'bell';
+                                    $iconColor = '#6b7280'; // Default gray
+
                                     switch($notif['type']) {
                                         case 'match':
                                             $icon = 'heart';
+                                            $iconColor = '#ec4899'; // Pink
                                             break;
                                         case 'message':
                                             $icon = 'message-circle';
-                                            break;
-                                        case 'appointment':
-                                            $icon = 'calendar';
+                                            $iconColor = '#3b82f6'; // Blue
                                             break;
                                         case 'inquiry':
                                             $icon = 'mail';
+                                            $iconColor = '#8b5cf6'; // Purple
                                             break;
-                                        case 'system':
-                                            $icon = 'info';
+                                        
+                                        // Appointment Types
+                                        case 'appointment_request':
+                                            $icon = 'calendar-plus';
+                                            $iconColor = '#3b82f6'; // Blue
                                             break;
+                                        case 'appointment_reschedule':
+                                            $icon = 'calendar-clock';
+                                            $iconColor = '#f59e0b'; // Amber
+                                            break;
+                                        case 'appointment_update':
+                                        case 'appointment': // Fallback
+                                            $titleLower = strtolower($notif['title']);
+                                            if (strpos($titleLower, 'confirmed') !== false) {
+                                                $icon = 'check-circle';
+                                                $iconColor = '#10b981'; // Green
+                                            } elseif (strpos($titleLower, 'cancelled') !== false || strpos($titleLower, 'declined') !== false) {
+                                                $icon = 'x-circle';
+                                                $iconColor = '#ef4444'; // Red
+                                            } else {
+                                                $icon = 'calendar';
+                                                $iconColor = '#f59e0b'; // Amber
+                                            }
+                                            break;
+
+                                        // Listing Types
                                         case 'listing_approved':
                                             $icon = 'check-circle';
-                                            break;
-                                        case 'listing_rejected':
-                                            $icon = 'x-circle';
-                                            break;
-                                        default:
-                                            $icon = 'bell';
-                                    }
-                                    
-                                    // Icon color based on type (PHP 7.x compatible)
-                                    switch($notif['type']) {
-                                        case 'match':
-                                            $iconColor = '#10b981';
-                                            break;
-                                        case 'message':
-                                            $iconColor = '#3b82f6';
-                                            break;
-                                        case 'appointment':
-                                            $iconColor = '#f59e0b';
-                                            break;
-                                        case 'inquiry':
-                                            $iconColor = '#8b5cf6';
-                                            break;
-                                        case 'system':
-                                            $iconColor = '#3b82f6';
-                                            break;
-                                        case 'listing_approved':
                                             $iconColor = '#10b981'; // Green
                                             break;
                                         case 'listing_rejected':
+                                            $icon = 'x-circle';
                                             $iconColor = '#ef4444'; // Red
                                             break;
+                                            
+                                        case 'system':
                                         default:
-                                            $iconColor = '#6b7280';
+                                            $icon = 'info';
+                                            $iconColor = '#3b82f6'; // Blue
+                                            break;
                                     }
                                     
                                     // Format time using DB calculated difference
@@ -263,8 +355,8 @@ if ($role === 'room_seeker') {
                     <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/seeker/roommate_finder.php" class="mobile-nav-link">
                         <i data-lucide="users"></i>
                         <span>Roommates</span>
-                        <?php if ($notificationCount > 0): ?>
-                        <span class="mobile-notification-badge"><?php echo $notificationCount; ?></span>
+                        <?php if ($nav_notificationCount > 0): ?>
+                        <span class="mobile-notification-badge"><?php echo $nav_notificationCount; ?></span>
                         <?php endif; ?>
                     </a>
                     <a href="/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/views/seeker/appointments.php" class="mobile-nav-link">

@@ -6,25 +6,20 @@ session_start();
 $userId = $_SESSION['user_id'] ?? 1;
 $userName = $_SESSION['first_name'] ?? 'John';
 
-// Load models
-require_once __DIR__ . '/../../models/User.php';
-require_once __DIR__ . '/../../models/Listing.php';
-require_once __DIR__ . '/../../models/Message.php';
-require_once __DIR__ . '/../../models/Appointment.php';
-require_once __DIR__ . '/../../models/SavedListing.php';
+// Load Controller
+require_once __DIR__ . '/../../controllers/seeker/DashboardController.php';
+$dashboardController = new DashboardController();
+$data = $dashboardController->getDashboardData($userId);
 
-$userModel = new User();
-$listingModel = new Listing();
-$messageModel = new Message();
-$appointmentModel = new Appointment();
-$savedListingModel = new SavedListing();
-
-// Fetch dashboard data
-$unreadMessages = $messageModel->getUnreadCount($userId);
-$upcomingAppointments = $appointmentModel->getUpcoming($userId, 'seeker');
-$recommendedListings = $listingModel->getAvailable(2); // Get 2 listings
-$savedCount = $savedListingModel->getCount($userId);
-$savedListings = $savedListingModel->getSavedListings($userId);
+// Extract data
+$unreadMessages = $data['stats']['unread_messages'];
+$upcomingAppointments = $data['upcoming_appointments'];
+$recommendedListings = $data['recommended_listings'];
+$savedCount = $data['stats']['saved_rooms'];
+$savedListings = $data['saved_listings'];
+$matchCount = $data['stats']['matches'];
+$recentActivity = $data['recent_activity'];
+$matches = $data['matches_list'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -58,7 +53,7 @@ $savedListings = $savedListingModel->getSavedListings($userId);
                     $stats = [
                         ['icon' => 'heart', 'value' => $savedCount, 'label' => 'Saved Rooms', 'id' => 'savedCount'],
                         ['icon' => 'message-square', 'value' => $unreadMessages, 'label' => 'Messages'],
-                        ['icon' => 'users', 'value' => '0', 'label' => 'Matches'], // TODO: Implement matching
+                        ['icon' => 'users', 'value' => $matchCount, 'label' => 'Matches'],
                         ['icon' => 'calendar', 'value' => count($upcomingAppointments), 'label' => 'Viewings']
                     ];
                     foreach ($stats as $stat): ?>
@@ -96,7 +91,19 @@ $savedListings = $savedListingModel->getSavedListings($userId);
                                 foreach ($recommendedListings as $room): 
                                     $image = $room['primary_image'] ?? 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800';
                                     $availableText = !empty($room['available_from']) ? date('M j', strtotime($room['available_from'])) : 'Now';
-                                    $isSaved = $savedListingModel->isSaved($userId, $room['listing_id']);
+                                    // Check if saved (already fetched in controller? No, need to check individually or pass ID list)
+                                    // Actually, let's just use the model here for simplicity or update controller to return IDs
+                                    // For now, reusing model instance from global scope? No, it's in controller.
+                                    // I'll instantiate model here just for isSaved check or add logic to controller.
+                                    // Better: Controller returns is_saved flag in recommendedListings.
+                                    // For now, I'll just check against $savedListings IDs.
+                                    $isSaved = false;
+                                    foreach($savedListings as $s) {
+                                        if($s['listing_id'] == $room['listing_id']) {
+                                            $isSaved = true;
+                                            break;
+                                        }
+                                    }
                                 ?>
                                 <div class="room-card" style="position: relative;">
                                     <button class="room-card-favorite <?php echo $isSaved ? 'active' : ''; ?>" 
@@ -131,12 +138,36 @@ $savedListings = $savedListingModel->getSavedListings($userId);
                         <div class="card card-glass" style="padding: 1.25rem;">
                             <h3 style="font-size: 1.125rem; font-weight: 700; color: #000000; margin: 0 0 1rem 0;">Recent Activity</h3>
                             <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                <?php if (empty($recentActivity)): ?>
                                 <p style="color: rgba(0,0,0,0.5); text-align: center; padding: 2rem;">
-                                    Activity tracking coming soon...
+                                    No recent activity.
                                 </p>
-                                <?php
-                                // TODO: Implement activity logging system
-                                ?>
+                                <?php else: ?>
+                                    <?php foreach ($recentActivity as $activity): 
+                                        $timeAgo = 'Just now'; // Simplified time ago logic or use helper
+                                        $seconds = time() - strtotime($activity['created_at']);
+                                        if ($seconds < 60) $timeAgo = 'Just now';
+                                        elseif ($seconds < 3600) $timeAgo = floor($seconds/60) . 'm ago';
+                                        elseif ($seconds < 86400) $timeAgo = floor($seconds/3600) . 'h ago';
+                                        else $timeAgo = floor($seconds/86400) . 'd ago';
+                                        
+                                        $icon = 'activity';
+                                        if (strpos($activity['action'], 'login') !== false) $icon = 'log-in';
+                                        elseif (strpos($activity['action'], 'view') !== false) $icon = 'eye';
+                                        elseif (strpos($activity['action'], 'book') !== false) $icon = 'calendar';
+                                        elseif (strpos($activity['action'], 'save') !== false) $icon = 'heart';
+                                    ?>
+                                    <div style="display: flex; align-items: start; gap: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                                        <div style="background: rgba(59, 130, 246, 0.1); padding: 0.5rem; border-radius: 0.5rem;">
+                                            <i data-lucide="<?php echo $icon; ?>" style="width: 1rem; height: 1rem; color: #3b82f6;"></i>
+                                        </div>
+                                        <div>
+                                            <p style="font-size: 0.875rem; font-weight: 500; margin: 0 0 0.125rem 0;"><?php echo htmlspecialchars($activity['description']); ?></p>
+                                            <p style="font-size: 0.75rem; color: rgba(0,0,0,0.5); margin: 0;"><?php echo $timeAgo; ?></p>
+                                        </div>
+                                    </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>

@@ -30,6 +30,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'landlord') {
 }
 
 $landlordId = $_SESSION['user_id'];
+
+// Update last viewed timestamp for appointments badge
+$_SESSION['last_viewed_appointments_landlord'] = time();
+
 $appointmentModel = new Appointment();
 $userModel = new User();
 $listingModel = new Listing();
@@ -54,14 +58,16 @@ foreach ($appointments as &$appt) {
     }
     
     // Get listing details
-    $listing = $listingModel->getById($appt['listing_id']);
+    $listing = $listingModel->getWithImages($appt['listing_id']);
     if ($listing && is_array($listing)) {
         $appt['property'] = $listing['title'];
-        $appt['location'] = $listing['address'] . ', ' . $listing['city'];
+        $appt['location'] = $listing['location'];
+        
         // Get first image
-        if (!empty($listing['images'])) {
-            $images = is_array($listing['images']) ? $listing['images'] : json_decode($listing['images'], true);
-            $appt['propertyImage'] = $images[0] ?? 'https://via.placeholder.com/400x300?text=No+Image';
+        if (!empty($listing['images']) && is_array($listing['images'])) {
+            // listing_images table has image_url column
+            $firstImage = $listing['images'][0];
+            $appt['propertyImage'] = $firstImage['image_url'] ?? 'https://via.placeholder.com/400x300?text=No+Image';
         } else {
             $appt['propertyImage'] = 'https://via.placeholder.com/400x300?text=No+Image';
         }
@@ -98,6 +104,7 @@ foreach ($appointments as &$appt) {
         $appt['requestedDate'] = max(1, $diff->i) . ' minute' . ($diff->i > 1 ? 's' : '') . ' ago';
     }
 }
+unset($appt); // Break reference
 ?>
     <div class="landlord-page">
         <?php include __DIR__ . '/../includes/navbar.php'; ?>
@@ -113,101 +120,282 @@ foreach ($appointments as &$appt) {
 
             <!-- Appointments List -->
             <div style="display: flex; flex-direction: column; gap: 1rem;">
-                <?php
-                // Appointments already loaded from database at top of file
-                if (empty($appointments)):
-                ?>
-                    }
-                ?>
-                <div class="glass-card animate-slide-up" style="padding: 1.25rem; animation-delay: <?php echo $index * 0.1; ?>s;">
-                    <div class="appointment-card">
-                        <!-- Property Image -->
-                        <div style="flex-shrink: 0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                            <img src="<?php echo $appointment['propertyImage']; ?>" alt="<?php echo $appointment['property']; ?>" class="appointment-image">
+                <?php if (empty($appointments)): ?>
+                    <div class="glass-card" style="padding: 3rem; text-align: center;">
+                        <i data-lucide="calendar-x" style="width: 4rem; height: 4rem; color: rgba(0,0,0,0.3); margin: 0 auto 1rem;"></i>
+                        <h3 style="font-size: 1.25rem; font-weight: 700; color: #000000; margin-bottom: 0.5rem;">No Appointments Yet</h3>
+                        <p style="color: rgba(0,0,0,0.6);">You don't have any viewing requests at the moment.</p>
+                    </div>
+                <?php else: ?>
+                    <?php foreach ($appointments as $index => $appointment): 
+                        $statusColor = '';
+                        $statusClass = '';
+                        switch($appointment['status']) {
+                            case 'pending': 
+                                $statusColor = 'background: #fef3c7; color: #92400e;'; 
+                                $statusClass = 'status-warning';
+                                break;
+                            case 'confirmed': 
+                                $statusColor = 'background: #dcfce7; color: #166534;'; 
+                                $statusClass = 'status-success';
+                                break;
+                            case 'declined': 
+                                $statusColor = 'background: #fee2e2; color: #991b1b;'; 
+                                $statusClass = 'status-error';
+                                break;
+                            case 'completed': 
+                                $statusColor = 'background: #f3f4f6; color: #374151;'; 
+                                $statusClass = 'status-neutral';
+                                break;
+                            case 'cancelled': 
+                                $statusColor = 'background: #f3f4f6; color: #374151; text-decoration: line-through;'; 
+                                $statusClass = 'status-neutral';
+                                break;
+                        }
+                    ?>
+                    <div class="appointment-card-row animate-slide-up" style="animation-delay: <?php echo $index * 0.1; ?>s;">
+                        <!-- Image Section -->
+                        <div class="appointment-image-wrapper">
+                            <img src="<?php echo $appointment['propertyImage']; ?>" alt="<?php echo $appointment['property']; ?>" class="appointment-image-sm">
+                            <span class="status-badge-overlay" style="<?php echo $statusColor; ?>"><?php echo ucfirst($appointment['status']); ?></span>
                         </div>
 
-                        <!-- Content -->
-                        <div style="flex: 1; min-width: 0;">
-                            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.75rem;">
-                                <div style="flex: 1; min-width: 0;">
-                                    <h3 style="font-size: 1.125rem; font-weight: 700; color: #000; margin-bottom: 0.25rem;"><?php echo $appointment['property']; ?></h3>
-                                    <div style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.875rem; color: rgba(0,0,0,0.6);">
-                                        <i data-lucide="map-pin" style="width: 0.875rem; height: 0.875rem; flex-shrink: 0;"></i>
-                                        <span><?php echo $appointment['location']; ?></span>
-                                    </div>
-                                </div>
-                                <span style="padding: 0.25rem 0.75rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 600; flex-shrink: 0; <?php echo $statusColor; ?>">
-                                    <?php echo ucfirst($appointment['status']); ?>
-                                </span>
+                        <!-- Main Content -->
+                        <div class="appointment-content-wrapper">
+                            <div class="appointment-header">
+                                <h3 class="appointment-title"><?php echo $appointment['property']; ?></h3>
+                            </div>
+                            
+                            <div class="appointment-meta-row">
+                                <span class="meta-item"><i data-lucide="map-pin"></i> <?php echo $appointment['location']; ?></span>
+                                <span class="meta-item"><i data-lucide="calendar"></i> <?php echo $appointment['date']; ?></span>
+                                <span class="meta-item"><i data-lucide="clock"></i> <?php echo $appointment['time']; ?></span>
+                                <span class="meta-item"><i data-lucide="history"></i> Requested <?php echo $appointment['requestedDate']; ?></span>
                             </div>
 
-                            <!-- Tenant Info -->
-                            <div class="glass-subtle" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding: 0.75rem; border-radius: 0.75rem;">
-                                <img src="<?php echo $appointment['tenantAvatar']; ?>" alt="<?php echo $appointment['tenant']; ?>" style="width: 2.5rem; height: 2.5rem; border-radius: 9999px; object-fit: cover;">
-                                <div style="flex: 1; min-width: 0;">
-                                    <p style="font-weight: 600; font-size: 0.875rem; color: #000;"><?php echo $appointment['tenant']; ?></p>
-                                    <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.75rem; color: rgba(0,0,0,0.6);">
-                                        <div style="display: flex; align-items: center; gap: 0.25rem;">
-                                            <i data-lucide="mail" style="width: 0.75rem; height: 0.75rem;"></i>
-                                            <?php echo $appointment['email']; ?>
-                                        </div>
-                                        <div style="display: flex; align-items: center; gap: 0.25rem;">
-                                            <i data-lucide="phone" style="width: 0.75rem; height: 0.75rem;"></i>
-                                            <?php echo $appointment['phone']; ?>
-                                        </div>
-                                    </div>
+                            <!-- Tenant Profile -->
+                            <div class="tenant-profile-row">
+                                <img src="<?php echo $appointment['tenantAvatar']; ?>" alt="<?php echo $appointment['tenant']; ?>" class="tenant-avatar-xs">
+                                <div class="tenant-info-text">
+                                    <span class="tenant-name"><?php echo $appointment['tenant']; ?></span>
+                                    <span class="tenant-role-badge">Potential Tenant</span>
                                 </div>
-                                <p style="font-size: 0.75rem; color: rgba(0,0,0,0.5); flex-shrink: 0;">Requested <?php echo $appointment['requestedDate']; ?></p>
-                            </div>
-
-                            <!-- Appointment Details -->
-                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1rem;">
-                                <div style="display: flex; align-items: center; gap: 0.625rem;">
-                                    <div style="width: 2rem; height: 2rem; background-color: rgba(30, 58, 138, 0.2); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                        <i data-lucide="calendar" style="width: 1rem; height: 1rem; color: var(--deep-blue);"></i>
-                                    </div>
-                                    <div style="min-width: 0;">
-                                        <p style="font-size: 0.75rem; color: rgba(0,0,0,0.5);">Date</p>
-                                        <p style="font-size: 0.875rem; font-weight: 600; color: #000;"><?php echo $appointment['date']; ?></p>
-                                    </div>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 0.625rem;">
-                                    <div style="width: 2rem; height: 2rem; background-color: rgba(30, 58, 138, 0.2); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                        <i data-lucide="clock" style="width: 1rem; height: 1rem; color: var(--deep-blue);"></i>
-                                    </div>
-                                    <div style="min-width: 0;">
-                                        <p style="font-size: 0.75rem; color: rgba(0,0,0,0.5);">Time</p>
-                                        <p style="font-size: 0.875rem; font-weight: 600; color: #000;"><?php echo $appointment['time']; ?></p>
-                                    </div>
+                                <div style="margin-left: auto; display: flex; gap: 0.5rem;">
+                                    <a href="mailto:<?php echo $appointment['email']; ?>" class="icon-btn icon-btn-neutral" style="width: 1.5rem; height: 1.5rem;" title="Email Tenant">
+                                        <i data-lucide="mail" style="width: 0.8rem; height: 0.8rem;"></i>
+                                    </a>
+                                    <a href="tel:<?php echo $appointment['phone']; ?>" class="icon-btn icon-btn-neutral" style="width: 1.5rem; height: 1.5rem;" title="Call Tenant">
+                                        <i data-lucide="phone" style="width: 0.8rem; height: 0.8rem;"></i>
+                                    </a>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Actions -->
+                        <!-- Actions -->
+                        <div class="appointment-actions-col">
                             <?php if ($appointment['status'] === 'pending'): ?>
-                            <div style="display: flex; gap: 0.75rem;">
-                                <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="handleApprove(<?php echo $appointment['id']; ?>)">
-                                    <i data-lucide="check" style="width: 1rem; height: 1rem;"></i>
-                                    Approve & Notify
+                                <button class="icon-btn icon-btn-primary" title="Approve" onclick="openApproveModal(<?php echo $appointment['appointment_id']; ?>)">
+                                    <i data-lucide="check" style="width: 1.25rem; height: 1.25rem;"></i>
                                 </button>
-                                <button class="btn btn-ghost btn-sm" style="flex: 1;" onclick="handleDecline(<?php echo $appointment['id']; ?>)">
-                                    <i data-lucide="x" style="width: 1rem; height: 1rem;"></i>
-                                    Decline
+                                <button class="icon-btn icon-btn-danger" title="Decline" onclick="openDeclineModal(<?php echo $appointment['appointment_id']; ?>)">
+                                    <i data-lucide="x" style="width: 1.25rem; height: 1.25rem;"></i>
                                 </button>
-                            </div>
                             <?php elseif ($appointment['status'] === 'confirmed'): ?>
-                            <div style="display: flex; gap: 0.75rem;">
-                                <button class="btn btn-glass btn-sm" style="flex: 1; font-size: 0.875rem;">Reschedule</button>
-                                <button class="btn btn-ghost btn-sm" style="flex: 1; font-size: 0.875rem;">Cancel</button>
-                            </div>
+                                <button class="icon-btn icon-btn-neutral" title="Reschedule" onclick="openRescheduleModal(<?php echo $appointment['appointment_id']; ?>)">
+                                    <i data-lucide="calendar-clock" style="width: 1.25rem; height: 1.25rem;"></i>
+                                </button>
+                                <button class="icon-btn icon-btn-danger" title="Cancel" onclick="openDeclineModal(<?php echo $appointment['appointment_id']; ?>)">
+                                    <i data-lucide="ban" style="width: 1.25rem; height: 1.25rem;"></i>
+                                </button>
                             <?php endif; ?>
                         </div>
                     </div>
-                </div>
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
         </div>
     </div>
+
+    <!-- Approve Confirmation Modal -->
+    <div id="approveModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Approve Appointment</h3>
+                <button class="close-modal" onclick="closeModal('approveModal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to approve this viewing request? The tenant will be notified immediately.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('approveModal')">Cancel</button>
+                <button id="confirmApproveBtn" class="btn btn-primary">Yes, Approve</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Decline Confirmation Modal -->
+    <div id="declineModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Decline Appointment</h3>
+                <button class="close-modal" onclick="closeModal('declineModal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to decline this viewing request? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('declineModal')">Cancel</button>
+                <button id="confirmDeclineBtn" class="btn btn-danger" style="background: #ef4444; color: white;">Yes, Decline</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reschedule Modal -->
+    <div id="rescheduleModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Reschedule Appointment</h3>
+                <button class="close-modal" onclick="closeModal('rescheduleModal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 1rem; color: #6b7280;">Propose a new date and time for this viewing.</p>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div>
+                        <label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;">New Date</label>
+                        <input type="date" id="rescheduleDate" class="form-input" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;">New Time</label>
+                        <input type="time" id="rescheduleTime" class="form-input" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('rescheduleModal')">Cancel</button>
+                <button id="confirmRescheduleBtn" class="btn btn-primary">Confirm Reschedule</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>lucide.createIcons();</script>
+    <script>
+        let currentAppointmentId = null;
+
+        function openApproveModal(id) {
+            currentAppointmentId = id;
+            document.getElementById('approveModal').classList.add('show');
         }
+
+        function openDeclineModal(id) {
+            currentAppointmentId = id;
+            document.getElementById('declineModal').classList.add('show');
+        }
+
+        function openRescheduleModal(id) {
+            currentAppointmentId = id;
+            document.getElementById('rescheduleModal').classList.add('show');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+            currentAppointmentId = null;
+        }
+
+        // Close modals on outside click
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.classList.remove('show');
+                currentAppointmentId = null;
+            }
+        }
+
+        async function updateStatus(id, status) {
+            try {
+                const formData = new FormData();
+                formData.append('appointment_id', id);
+                formData.append('status', status);
+                
+                const response = await fetch('/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/controllers/AppointmentController.php?action=update_status', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    location.reload();
+                } else {
+                    alert(result.message || 'Failed to update status');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred');
+            }
+        }
+
+        // Handle Approve
+        document.getElementById('confirmApproveBtn').addEventListener('click', function() {
+            if (!currentAppointmentId) return;
+            
+            this.disabled = true;
+            this.innerHTML = 'Approving...';
+            
+            updateStatus(currentAppointmentId, 'confirmed');
+        });
+
+        // Handle Decline
+        document.getElementById('confirmDeclineBtn').addEventListener('click', function() {
+            if (!currentAppointmentId) return;
+            
+            this.disabled = true;
+            this.innerHTML = 'Declining...';
+            
+            updateStatus(currentAppointmentId, 'declined');
+        });
+
+        // Handle Reschedule
+        document.getElementById('confirmRescheduleBtn').addEventListener('click', async function() {
+            if (!currentAppointmentId) return;
+            
+            const date = document.getElementById('rescheduleDate').value;
+            const time = document.getElementById('rescheduleTime').value;
+
+            if (!date || !time) {
+                alert('Please select both date and time.');
+                return;
+            }
+
+            this.disabled = true;
+            this.innerHTML = 'Rescheduling...';
+
+            try {
+                const formData = new FormData();
+                formData.append('appointment_id', currentAppointmentId);
+                formData.append('date', date);
+                formData.append('time', time);
+                
+                const response = await fetch('/Advanced-Roommate-Apartment-Finder-Web-App-with-Email-Admin-Panel-/app/controllers/AppointmentController.php?action=reschedule', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    location.reload();
+                } else {
+                    alert(result.message || 'Failed to reschedule');
+                    this.disabled = false;
+                    this.innerHTML = 'Confirm Reschedule';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred');
+                this.disabled = false;
+                this.innerHTML = 'Confirm Reschedule';
+            }
+        });
     </script>
 </body>
 </html>

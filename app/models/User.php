@@ -284,4 +284,15 @@ class User extends BaseModel {
         $stmt->execute();
         return $stmt->fetchAll();
     }
+
+    /**
+     * Get unverified landlords count
+     * @return int
+     */
+    public function getUnverifiedLandlordCount() {
+        $sql = "SELECT COUNT(*) as count FROM {$this->table} WHERE is_verified = 0 AND role = 'landlord'";
+        $stmt = $this->conn->query($sql);
+        $result = $stmt->fetch();
+        return $result['count'] ?? 0;
+    }
 }
