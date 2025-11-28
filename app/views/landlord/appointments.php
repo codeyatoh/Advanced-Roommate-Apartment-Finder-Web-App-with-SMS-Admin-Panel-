@@ -14,6 +14,9 @@
 </head>
 <body>
 <?php
+// Set timezone to Philippine Time
+date_default_timezone_set('Asia/Manila');
+
 // Start session and load models
 session_start();
 require_once __DIR__ . '/../../models/Appointment.php';
