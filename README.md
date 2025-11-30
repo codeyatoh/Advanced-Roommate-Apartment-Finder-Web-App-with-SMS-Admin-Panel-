@@ -210,7 +210,7 @@ After importing the database, you can use these accounts:
 **Admin Account:**
 
 - Email: `admin@roomfinder.com`
-- Password: `admin123`
+- Password: `password`
 
 **Test Seeker:**
 
